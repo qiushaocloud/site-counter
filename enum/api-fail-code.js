@@ -1,0 +1,6 @@
+exports.FailResStateCode = {
+  FAILURE: 10000,
+  UNAUTHORIZED: 10001,
+  TIMEOUT: 10002,
+  INVALID_PARAMS: 10003
+};

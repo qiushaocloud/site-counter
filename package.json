@@ -1,0 +1,36 @@
+{
+  "name": "site-counter",
+  "version": "1.0.0",
+  "description": "The website minimalist counter server has more complete functions than busuanzi.",
+  "main": "app.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qiushaocloud/site-counter.git"
+  },
+  "keywords": [
+    "www.qiushaocloud.top",
+    "qiushaocloud",
+    "site-counter",
+    "busuanzi",
+    "site-pv",
+    "page-pv",
+    "site-uv",
+    "page-uv",
+    "today-pv",
+    "today-uv"
+  ],
+  "author": "qiushaocloud",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qiushaocloud/site-counter/issues"
+  },
+  "homepage": "https://github.com/qiushaocloud/site-counter#readme",
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.2"
+  }
+}
