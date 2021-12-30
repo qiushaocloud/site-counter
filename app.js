@@ -1,25 +1,100 @@
 const express = require('express');
 const apiControllers = require('./src/controllers');
 const dotenv = require('dotenv');
+const StaticRedis = require('./src/common-modules/static-redis');
 const {getLogger} = require('./src/log');
+
 const log = getLogger('App');
 const expressApp = express();
 dotenv.config();
+
+const PID = process.pid;
+
+// 监听未捕获的异常
+process.on('uncaughtException', (err) => {
+  const errMsg = (err && typeof err === 'object') ? {
+      message: err.message,
+      name: err.name,
+      stack: err.stack
+  } : '';
+
+  log.error('uncaughtException exception',
+    ' ,err:', err,
+    ' ,errMsg:', errMsg
+  );
+});
+
+// 监听未捕获的异常
+process.on('unhandledRejection', (err, promise) => {
+  const errMsg = (err && typeof err === 'object') ? {
+      message: err.message,
+      name: err.name,
+      stack: err.stack
+  } : '';
+
+  log.error('unhandledRejection exception',
+    ' ,err:', err,
+    ' ,promise:', promise,
+    ' ,errMsg:', errMsg
+  );
+});
 
 expressApp.use(express.json());
 expressApp.use(express.urlencoded({extended: false}));
 expressApp.use(apiControllers);
 
-const {API_PORT} = process.env;
+const {
+  API_PORT,
+  REDIS_HOST,
+  REDIS_PORT,
+  REDIS_PASSWD,
+  REDIS_DB
+} = process.env;
 
-log.info('run expressServer API_PORT:', API_PORT);
+const initStaticRedis = () => {
+  return new Promise((resolve, reject) => {
+    global.staticRedis = new StaticRedis();
 
-const expressServer = expressApp.listen(API_PORT);
+    global.staticRedis.connect(
+      REDIS_HOST,
+      REDIS_PORT,
+      REDIS_PASSWD,
+      (error) => {
+        if (error) {
+          log.error('initStaticRedis error:', error);
+          reject(error);
+          return;
+        }
 
-expressServer.on('listening',  () => {
-  log.info('recv server listening evt');
-});
+        log.info('initStaticRedis success');
+        resolve();
+      },
+      {
+        db: REDIS_DB
+      }
+    );
+  });
+};
 
-expressServer.on('error', (err) => {
-  log.error('recv server error evt, err:', err);
-});
+const runExpressServer = async () => {
+  try {
+    if (REDIS_HOST)
+      await initStaticRedis();
+
+    log.info('run expressServer API_PORT:', API_PORT, ' ,PID:', PID);
+
+    const expressServer = expressApp.listen(API_PORT);
+
+    expressServer.on('listening',  () => {
+      log.info('recv server listening evt');
+    });
+
+    expressServer.on('error', (err) => {
+      log.error('recv server error evt, err:', err);
+    });
+  }catch (err) {
+    log.error('runExpressServer err:', err);
+  }
+};
+
+runExpressServer();

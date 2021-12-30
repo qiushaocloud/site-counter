@@ -6,3 +6,4 @@ REDIS_DB = 0
 
 # server config
 API_PORT = 801
+API_SIGN_SECRET_KEY = 'API_SIGN_SECRET_KEY'

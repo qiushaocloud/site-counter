@@ -4,7 +4,7 @@ const router = express.Router();
 
 const {
   API_SIGN_SECRET_KEY = 'API_SIGN_SECRET_KEY',
-  API_SIGN_KEY_NAME = 'API_SIGN_KEY_NAME'
+  API_SIGN_KEY_NAME = 'sign'
 } = process.env;
 
 const runApiTs = Date.now();
