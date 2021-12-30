@@ -4,7 +4,7 @@
   "description": "The website minimalist counter server has more complete functions than busuanzi.",
   "main": "app.js",
   "scripts": {
-    "test": "test"
+    "lint": "npx eslint --fix --ext .js src"
   },
   "repository": {
     "type": "git",
@@ -32,5 +32,12 @@
     "crypto": "^1.0.1",
     "dotenv": "^10.0.0",
     "express": "^4.17.2"
+  },
+  "devDependencies": {
+    "eslint": "^7.13.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-tsdoc": "^0.2.7",
+    "prettier": "^2.5.1"
   }
 }

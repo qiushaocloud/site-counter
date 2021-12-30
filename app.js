@@ -1,7 +1,7 @@
 const express = require('express');
-const apiControllers = require('./controllers');
+const apiControllers = require('./src/controllers');
 const dotenv = require('dotenv');
-const {getLogger} = require('./log');
+const {getLogger} = require('./src/log');
 const log = getLogger('App');
 const expressApp = express();
 dotenv.config();
