@@ -4,11 +4,17 @@ const router = express.Router();
 
 const {
   API_SIGN_SECRET_KEY = 'API_SIGN_SECRET_KEY',
-  API_SIGN_KEY_NAME = 'sign'
+  API_SIGN_KEY_NAME = 'sign',
+  API_SIGN_NONCE_TS_KEY_NAME = 'nonce_ts'
 } = process.env;
 
+const CHECK_CACHE_SIGN_INTERVAL = 30 * 60 * 1000;
+const MAX_SAVE_SIGN_DURATION = 4 * CHECK_CACHE_SIGN_INTERVAL;
+
+const cacheSigns = {};
 const runApiTs = Date.now();
 let apiCount = 0;
+let oldCheckCacheSignTs = 0;
 
 const generateExpressReqInfo = (expressReq) => {
   const {
@@ -235,20 +241,51 @@ const getApiSign = (
   return crypto.createHash('SHA256').update(sign).digest('hex');
 }
 
+const checkCacheSigns = (nowTs) => {
+  for (const key in cacheSigns) {
+    const saveTs = cacheSigns[key];
+    if ((nowTs - saveTs) >= MAX_SAVE_SIGN_DURATION)
+      delete cacheSigns[key];
+  }
+};
+
 const verifySign = (
   expressReq,
   secretKey = API_SIGN_SECRET_KEY,
-  signKeyName = API_SIGN_KEY_NAME
+  signKeyName = API_SIGN_KEY_NAME,
+  nonceTsKeyName = API_SIGN_NONCE_TS_KEY_NAME
 ) => {
   const allParams = getAllReqParams(expressReq);
   const signTmp = allParams[signKeyName];
+  const nowTs = Date.now();
+
+  // 删除超过一定时间的历史 sign
+  if ((nowTs - oldCheckCacheSignTs) > CHECK_CACHE_SIGN_INTERVAL) {
+    oldCheckCacheSignTs = nowTs;
+    checkCacheSigns(nowTs);
+  }
 
   if (!signTmp)
     return false;
 
-  const sign = getApiSign(allParams, secretKey, signKeyName);
+  let nonceTs = undefined;
+  if (allParams.nonce) {
+    nonceTs = allParams[nonceTsKeyName];
+    // 签名已经使用过, 不能再使用了
+    if (!nonceTs || cacheSigns[signTmp])
+      return false;
+  }
 
-  return sign === signTmp;
+  const sign = getApiSign(allParams, secretKey, signKeyName);
+ 
+  const isOk = sign === signTmp;
+  if (!isOk)
+    return false;
+
+  if (nonceTs)
+    cacheSigns[signTmp] = nowTs;
+
+  return true;
 }
 
 module.exports = {

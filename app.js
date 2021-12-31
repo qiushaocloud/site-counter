@@ -2,6 +2,7 @@ const express = require('express');
 const apiControllers = require('./src/controllers');
 const dotenv = require('dotenv');
 const StaticRedis = require('./src/common-modules/static-redis');
+const CacheStaticRedis = require('./src/helepers/cache-redis/static-redis');
 const {getLogger} = require('./src/log');
 
 const log = getLogger('App');
@@ -54,6 +55,7 @@ const {
 const initStaticRedis = () => {
   return new Promise((resolve, reject) => {
     global.staticRedis = new StaticRedis();
+    global.cacheStaticRedis = new CacheStaticRedis(global.staticRedis);
 
     global.staticRedis.connect(
       REDIS_HOST,

@@ -5,6 +5,7 @@ const {
   getAllReqParams,
   API_SIGN_SECRET_KEY
 } = require('./router-base');
+const siteCounterHandler = require('./handlers/site-counter');
 const {getLogger} = require('../log');
 const log = getLogger('API');
 
@@ -22,11 +23,12 @@ productPostRouter(router, '/site_counter', (req, res) => {
   );
 
   const {
-    site_host_md5: siteHostMd5,
-    site_pathname_md5: sitePathnameMd5
+    site_md5: siteMd5,
+    site_page_md5: sitePageMd5,
+    is_histroy_session: isHistroySession
   } = allParams;
 
-  if (!siteHostMd5) {
+  if (!siteMd5) {
     log.error('invalid params, apiId:', apiId);
 
     res.status(401).send({
@@ -37,7 +39,7 @@ productPostRouter(router, '/site_counter', (req, res) => {
     return;
   }
 
-  if (!verifySign(req, siteHostMd5+API_SIGN_SECRET_KEY)) {
+  if (!verifySign(req, siteMd5+API_SIGN_SECRET_KEY)) {
     log.error('Unauthorized, invalid sign, apiId:', apiId);
 
     res.status(401).send({
@@ -47,6 +49,12 @@ productPostRouter(router, '/site_counter', (req, res) => {
 
     return;
   }
+
+  siteCounterHandler.incrSiteCount(
+    siteMd5,
+    sitePageMd5,
+    isHistroySession
+  );
 });
 
 module.exports = router;

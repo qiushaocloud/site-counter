@@ -1,4 +1,7 @@
 const redis = require('redis');
+const bluebird = require('bluebird');
+bluebird.promisifyAll(redis);
+
 const {getLogger} = require('../log');
 const log = getLogger('RedisManager');
 
