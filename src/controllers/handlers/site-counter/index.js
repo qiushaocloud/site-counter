@@ -12,6 +12,7 @@ class SiteCounterHandler {
   incrSiteCount (
     siteMd5,
     sitePageMd5,
+    isIncrSite,
     isHistroySession,
     onCallback
   ) {
@@ -19,6 +20,7 @@ class SiteCounterHandler {
       this._incrSiteCountByRedis(
         siteMd5,
         sitePageMd5,
+        isIncrSite,
         isHistroySession
       ).then((resResult) => {
         onCallback && onCallback(undefined, resResult);
@@ -31,6 +33,7 @@ class SiteCounterHandler {
   async _incrSiteCountByRedis (
     siteMd5,
     sitePageMd5,
+    isIncrSite,
     isHistroySession
   ) {
     const resResult = {
@@ -108,15 +111,24 @@ class SiteCounterHandler {
       resResult.yesterday['page_uv'] =  utils.toParseNumber(yesterdaySitePagePUvRes && yesterdaySitePagePUvRes[1]) || 0;
     }
 
-    const sitePvRes = await global.cacheStaticRedis.hincrAsync(siteMd5, 'site:pv');
-    resResult['site_pv'] =  utils.toParseNumber(sitePvRes) || 0;
-
-    if (!isHistroySession) {
-      const siteUvRes = await global.cacheStaticRedis.hincrAsync(siteMd5, 'site:uv');
-      resResult['site_uv'] =  utils.toParseNumber(siteUvRes) || 0;
-    }else{
-      const siteUvRes = await global.cacheStaticRedis.hgetAsync(siteMd5, 'site:uv');
-      resResult['site_uv'] =  utils.toParseNumber(siteUvRes) || 0;
+    if (isIncrSite) {
+      const sitePvRes = await global.cacheStaticRedis.hincrAsync(siteMd5, 'site:pv');
+      resResult['site_pv'] =  utils.toParseNumber(sitePvRes) || 0;
+  
+      if (!isHistroySession) {
+        const siteUvRes = await global.cacheStaticRedis.hincrAsync(siteMd5, 'site:uv');
+        resResult['site_uv'] =  utils.toParseNumber(siteUvRes) || 0;
+      }else{
+        const siteUvRes = await global.cacheStaticRedis.hgetAsync(siteMd5, 'site:uv');
+        resResult['site_uv'] =  utils.toParseNumber(siteUvRes) || 0;
+      }
+    }else {
+      const sitePUvRes = await global.cacheStaticRedis.hmgetAsync(siteMd5, [
+        'site:pv',
+        'site:uv'
+      ]);
+      resResult['site_pv'] =  utils.toParseNumber(sitePUvRes && sitePUvRes[0]) || 0;
+      resResult['site_uv'] =  utils.toParseNumber(sitePUvRes && sitePUvRes[1]) || 0;
     }
 
     const yesterdaySitePUvRes = await global.cacheStaticRedis.hmgetAsync(siteMd5, [
