@@ -39,4 +39,12 @@
     xhr.send(data);
   }
   
+  var apiResult = {};
+  
+  var timer = setInterval(function() {
+    var sitePvEle = document.getElementById('qiushaositecounter_value_site_pv');
+    var siteUvEle = document.getElementById('qiushaositecounter_value_site_uv');
+    var todaySitePvEle = document.getElementById('qiushaositecounter_value_today_site_pv');
+    var todaySiteUvEle = document.getElementById('qiushaositecounter_value_today_site_uv');
+  }, interval);
 })();
