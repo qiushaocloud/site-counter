@@ -40,7 +40,6 @@
     "eslint": "^7.13.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-tsdoc": "^0.2.7",
     "prettier": "^2.5.1"
   }
 }

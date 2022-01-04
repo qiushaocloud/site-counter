@@ -25,6 +25,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
   const {
     site_md5: siteMd5,
     site_page_md5: sitePageMd5,
+    is_incr_site: isIncrSite,
     is_histroy_session: isHistroySession
   } = allParams;
 
@@ -53,6 +54,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
   siteCounterHandler.incrSiteCount(
     siteMd5,
     sitePageMd5,
+    isIncrSite,
     isHistroySession,
     (err, result) => {
       if (err) {
