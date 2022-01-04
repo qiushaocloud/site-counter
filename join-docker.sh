@@ -1,2 +1,2 @@
-docker rm -f site-counter-server || true
-docker run -it --name site-counter-server -h site-counter-server qiushaocloud/site-counter
+docker rm -f qiushaocloud-site-counter-server || true
+docker run -it --name qiushaocloud-site-counter-server -h qiushaocloud-site-counter-server qiushaocloud/site-counter

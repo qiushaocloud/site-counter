@@ -11,4 +11,4 @@ RUN cd /root/site-counter \
 
 WORKDIR /root/site-counter
 
-CMD ["node /root/site-counter/app.js"]
+CMD ["node", "/root/site-counter/app.js"]

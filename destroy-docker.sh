@@ -1,1 +1,1 @@
-docker rm -f site-counter-server || true
+docker rm -f qiushaocloud-site-counter-server || true
