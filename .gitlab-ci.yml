@@ -16,7 +16,7 @@ deploy:
   only:
     - master
   script:
-    - docker login --username qiushaocloud --password LsVQg6J3iEX9GxDLo4W8
+    - docker login --username $DOCKER_HUB_USER_NAME --password $DOCKER_HUB_USER_PASSWORD
     - docker push qiushaocloud/site-counter:latest
   tags:
     - qiushaocloud-runner
