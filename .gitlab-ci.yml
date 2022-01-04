@@ -1,0 +1,22 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  only:
+    - master
+  script:
+    - docker build -t qiushaocloud/site-counter:latest .
+  tags:
+    - qiushaocloud-runner
+
+deploy:
+  stage: deploy
+  only:
+    - master
+  script:
+    - docker login --username qiushaocloud --password LsVQg6J3iEX9GxDLo4W8
+    - docker push qiushaocloud/site-counter:latest
+  tags:
+    - qiushaocloud-runner
