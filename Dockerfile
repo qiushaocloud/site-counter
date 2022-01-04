@@ -7,7 +7,7 @@ COPY ./.eslintignore /root/site-counter/.eslintignore
 COPY ./env.tpl /root/site-counter/.env
 
 RUN cd /root/site-counter \
-  npm i
+  && npm i
 
 WORKDIR /root/site-counter
 
