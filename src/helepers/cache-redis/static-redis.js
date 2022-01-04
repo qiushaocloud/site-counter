@@ -34,7 +34,7 @@ class CacheStaticRedis {
     });
   }
 
-  hgetAsync (
+  hmgetAsync (
     keyName,
     fieldNames
   ) {
@@ -109,7 +109,7 @@ class CacheStaticRedis {
       return;
 
     const nowTs = Date.now();
-    const {reqTs} = this._cacheReqs[commondId];
+    const reqTs = this._cacheReqs[commondId] && this._cacheReqs[commondId].reqTs;
     
     if (reqTs && (nowTs - reqTs) < MAX_CACHE_DURATION)
       return;

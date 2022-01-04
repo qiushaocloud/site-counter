@@ -13,7 +13,7 @@ const {
   FailResStateCode
 } = require('../enum/api-fail-code');
 
-productPostRouter(router, '/site_counter', (req, res) => {
+productPostRouter(router, '/site_counter', (apiId, req, res) => {
   const clientIp = req.ip;
   const allParams = getAllReqParams(req);
 
@@ -39,21 +39,34 @@ productPostRouter(router, '/site_counter', (req, res) => {
     return;
   }
 
-  if (!verifySign(req, siteMd5+API_SIGN_SECRET_KEY)) {
-    log.error('Unauthorized, invalid sign, apiId:', apiId);
+  // if (!verifySign(req, siteMd5+API_SIGN_SECRET_KEY)) {
+  //   log.error('Unauthorized, invalid sign, apiId:', apiId);
 
-    res.status(401).send({
-      code: FailResStateCode.UNAUTHORIZED,
-      message: 'invalid sign'
-    });
+  //   res.status(401).send({
+  //     code: FailResStateCode.UNAUTHORIZED,
+  //     message: 'invalid sign'
+  //   });
 
-    return;
-  }
+  //   return;
+  // }
 
   siteCounterHandler.incrSiteCount(
     siteMd5,
     sitePageMd5,
-    isHistroySession
+    isHistroySession,
+    (err, result) => {
+      if (err) {
+        log.error('incrSiteCount err:', err, ' ,apiId:', apiId);
+
+        res.status(401).send({
+          code: FailResStateCode.FAILURE,
+          message: typeof err === 'object' ? err.message : 'incrSiteCount err'
+        });
+        return;
+      }
+
+      res.json(result);
+    }
   );
 });
 

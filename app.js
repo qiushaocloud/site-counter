@@ -1,4 +1,5 @@
 const express = require('express');
+const formidable = require('express-formidable');
 const apiControllers = require('./src/controllers');
 const dotenv = require('dotenv');
 const StaticRedis = require('./src/common-modules/static-redis');
@@ -40,8 +41,7 @@ process.on('unhandledRejection', (err, promise) => {
   );
 });
 
-expressApp.use(express.json());
-expressApp.use(express.urlencoded({extended: false}));
+expressApp.use(formidable());
 expressApp.use(apiControllers);
 
 const {

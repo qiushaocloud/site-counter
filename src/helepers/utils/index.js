@@ -1,5 +1,5 @@
 class Utils {
-  getCurrFormatTs (date, isOnlyGetSec) {
+  getCurrFormatTs (date, isOnlyGetSec, isOnlyDay) {
     if (!date || typeof date === 'number') {
       if (typeof date === 'number')
         date = new Date(date);
@@ -15,19 +15,22 @@ class Utils {
     let seconds = date.getSeconds();
   
     if (month < 10)
-        month = '0' + month;
+      month = '0' + month;
   
     if (day < 10)
-        day = '0' + day;
+      day = '0' + day;
   
+    if (isOnlyDay)
+      return year + '-' + month + '-' + day; 
+    
     if (hours < 10)
-        hours = '0' + hours;
+      hours = '0' + hours;
   
     if (minutes < 10)
-        minutes = '0' + minutes;
+      minutes = '0' + minutes;
   
     if (seconds < 10)
-        seconds = '0' + seconds;
+      seconds = '0' + seconds;
   
     if (isOnlyGetSec)
       return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
@@ -40,6 +43,23 @@ class Utils {
       milliseconds = '0' + milliseconds;
 
     return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds + '.' + milliseconds;
+  }
+
+  /* 是否是数字 */
+  isNumber(arg) {
+    return (typeof arg === 'number' && !isNaN(arg));
+  }
+
+  /* 转为数字 */
+  toParseNumber(arg) {
+    if (arg === undefined || arg === null || arg === '')
+      return undefined;
+
+    const num = Number(arg);
+    if (this.isNumber(num))
+      return num;
+
+    return undefined;
   }
 }
 
