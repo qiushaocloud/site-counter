@@ -5,21 +5,21 @@ const log = getLogger('ApiHandler');
 class SiteCounterHandler {
   constructor () {
     this._siteSaveings = {}; // 
-    this._cacheSites = {}; // { siteMd5: { sitePv, siteUv, pages: { sitePageMd5: { pagePv, pageUv } } } }
-    this._cacheCheckUpdateYesterDays = {}; // {siteMd5: [checkTs, formatCheckDay]}
+    this._cacheSites = {}; // { siteHost: { sitePv, siteUv, pages: { sitePagePathname: { pagePv, pageUv } } } }
+    this._cacheCheckUpdateYesterDays = {}; // {siteHost: [checkTs, formatCheckDay]}
   }
 
   incrSiteCount (
-    siteMd5,
-    sitePageMd5,
+    siteHost,
+    sitePagePathname,
     isIncrSite,
     isHistroySession,
     onCallback
   ) {
     if (global.cacheStaticRedis) {
       this._incrSiteCountByRedis(
-        siteMd5,
-        sitePageMd5,
+        siteHost,
+        sitePagePathname,
         isIncrSite,
         isHistroySession
       ).then((resResult) => {
@@ -31,8 +31,8 @@ class SiteCounterHandler {
   }
 
   async _incrSiteCountByRedis (
-    siteMd5,
-    sitePageMd5,
+    siteHost,
+    sitePagePathname,
     isIncrSite,
     isHistroySession
   ) {
@@ -51,25 +51,25 @@ class SiteCounterHandler {
 
     const currFormatDay = utils.getCurrFormatTs(undefined, undefined, true);
 
-    const siteCheckUpdateYesterDay = this._cacheCheckUpdateYesterDays[siteMd5];
+    const siteCheckUpdateYesterDay = this._cacheCheckUpdateYesterDays[siteHost];
     if (!siteCheckUpdateYesterDay || siteCheckUpdateYesterDay[1] !== currFormatDay) {
       const redisClient = global.staticRedis && global.staticRedis.getRedisClient();
       if (!redisClient)
         throw new Error('redisClient is empty');
       
-      this._cacheCheckUpdateYesterDays[siteMd5] = [Date.now(), currFormatDay];
+      this._cacheCheckUpdateYesterDays[siteHost] = [Date.now(), currFormatDay];
 
-      const siteUpdateFormatDay = await redisClient.hgetAsync(siteMd5, 'site:format_yester_day');
+      const siteUpdateFormatDay = await redisClient.hgetAsync(siteHost, 'site:format_yester_day');
 
       if (!siteUpdateFormatDay) {
-        await redisClient.hsetAsync(siteMd5, 'site:format_yester_day', currFormatDay);
+        await redisClient.hsetAsync(siteHost, 'site:format_yester_day', currFormatDay);
       } else if (
         siteUpdateFormatDay
         && siteUpdateFormatDay !== currFormatDay
         && (utils.toParseNumber(currFormatDay.replace(/-/g, '')) > utils.toParseNumber(siteUpdateFormatDay.replace(/-/g, '')))
       ) {
         if (siteUpdateFormatDay && siteUpdateFormatDay !== currFormatDay) {
-          const siteAllRes = await redisClient.hgetallAsync(siteMd5);
+          const siteAllRes = await redisClient.hgetallAsync(siteHost);
           const saveYesterdayJson = {};
           for (const key in siteAllRes) {
             if (/(:pv|:uv)/g.test(key) && !/yesterday/g.test(key)) {
@@ -81,30 +81,30 @@ class SiteCounterHandler {
             }
           }
 
-          await redisClient.hmsetAsync(siteMd5, saveYesterdayJson);
+          await redisClient.hmsetAsync(siteHost, saveYesterdayJson);
         }
 
-        await redisClient.hsetAsync(siteMd5, 'site:format_yester_day', currFormatDay);
+        await redisClient.hsetAsync(siteHost, 'site:format_yester_day', currFormatDay);
       }
     }
 
-    if (sitePageMd5) {
-      const sitePagePvRes = await global.cacheStaticRedis.hincrAsync(siteMd5, sitePageMd5+':pv');
+    if (sitePagePathname) {
+      const sitePagePvRes = await global.cacheStaticRedis.hincrAsync(siteHost, sitePagePathname+':pv');
       resResult['page_pv'] = utils.toParseNumber(sitePagePvRes) || 0;
 
       if (!isHistroySession) {
-        const sitePageUvRes = await global.cacheStaticRedis.hincrAsync(siteMd5, sitePageMd5+':uv');
+        const sitePageUvRes = await global.cacheStaticRedis.hincrAsync(siteHost, sitePagePathname+':uv');
         resResult['page_uv'] =  utils.toParseNumber(sitePageUvRes) || 0;
       }else {
-        const sitePageUvRes = await global.cacheStaticRedis.hgetAsync(siteMd5, sitePageMd5+':uv');
+        const sitePageUvRes = await global.cacheStaticRedis.hgetAsync(siteHost, sitePagePathname+':uv');
         resResult['page_uv'] =  utils.toParseNumber(sitePageUvRes) || 0;
       }
 
       const yesterdaySitePagePUvRes = await global.cacheStaticRedis.hmgetAsync(
-        siteMd5,
+        siteHost,
         [
-          'yesterday:'+sitePageMd5+':pv',
-          'yesterday:'+sitePageMd5+':uv',
+          'yesterday:'+sitePagePathname+':pv',
+          'yesterday:'+sitePagePathname+':uv',
         ]
       );
       resResult.yesterday['page_pv'] =  utils.toParseNumber(yesterdaySitePagePUvRes && yesterdaySitePagePUvRes[0]) || 0;
@@ -112,18 +112,18 @@ class SiteCounterHandler {
     }
 
     if (isIncrSite) {
-      const sitePvRes = await global.cacheStaticRedis.hincrAsync(siteMd5, 'site:pv');
+      const sitePvRes = await global.cacheStaticRedis.hincrAsync(siteHost, 'site:pv');
       resResult['site_pv'] =  utils.toParseNumber(sitePvRes) || 0;
   
       if (!isHistroySession) {
-        const siteUvRes = await global.cacheStaticRedis.hincrAsync(siteMd5, 'site:uv');
+        const siteUvRes = await global.cacheStaticRedis.hincrAsync(siteHost, 'site:uv');
         resResult['site_uv'] =  utils.toParseNumber(siteUvRes) || 0;
       }else{
-        const siteUvRes = await global.cacheStaticRedis.hgetAsync(siteMd5, 'site:uv');
+        const siteUvRes = await global.cacheStaticRedis.hgetAsync(siteHost, 'site:uv');
         resResult['site_uv'] =  utils.toParseNumber(siteUvRes) || 0;
       }
     }else {
-      const sitePUvRes = await global.cacheStaticRedis.hmgetAsync(siteMd5, [
+      const sitePUvRes = await global.cacheStaticRedis.hmgetAsync(siteHost, [
         'site:pv',
         'site:uv'
       ]);
@@ -131,7 +131,7 @@ class SiteCounterHandler {
       resResult['site_uv'] =  utils.toParseNumber(sitePUvRes && sitePUvRes[1]) || 0;
     }
 
-    const yesterdaySitePUvRes = await global.cacheStaticRedis.hmgetAsync(siteMd5, [
+    const yesterdaySitePUvRes = await global.cacheStaticRedis.hmgetAsync(siteHost, [
       'yesterday:site:pv',
       'yesterday:site:uv'
     ]);

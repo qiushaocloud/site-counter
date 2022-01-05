@@ -12,6 +12,7 @@ const log = getLogger('API');
 const {
   FailResStateCode
 } = require('../enum/api-fail-code');
+const utils = require('../helepers/utils');
 
 productPostRouter(router, '/site_counter', (apiId, req, res) => {
   const clientIp = req.ip;
@@ -23,13 +24,13 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
   );
 
   const {
-    site_md5: siteMd5,
-    site_page_md5: sitePageMd5,
+    site_host: siteHost,
+    site_page_pathname: sitePagePathname,
     is_incr_site: isIncrSite,
     is_histroy_session: isHistroySession
   } = allParams;
 
-  if (!siteMd5) {
+  if (!siteHost) {
     log.error('invalid params, apiId:', apiId);
 
     res.status(401).send({
@@ -40,7 +41,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
     return;
   }
 
-  // if (!verifySign(req, siteMd5+API_SIGN_SECRET_KEY)) {
+  // if (!verifySign(req, siteHost+API_SIGN_SECRET_KEY)) {
   //   log.error('Unauthorized, invalid sign, apiId:', apiId);
 
   //   res.status(401).send({
@@ -52,10 +53,10 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
   // }
 
   siteCounterHandler.incrSiteCount(
-    siteMd5,
-    sitePageMd5,
-    isIncrSite,
-    isHistroySession,
+    siteHost,
+    sitePagePathname,
+    utils.toParseBoolean(isIncrSite),
+    utils.toParseBoolean(isHistroySession),
     (err, result) => {
       if (err) {
         log.error('incrSiteCount err:', err, ' ,apiId:', apiId);
