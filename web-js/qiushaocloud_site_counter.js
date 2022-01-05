@@ -1,6 +1,7 @@
 (function(){
   var CUSTOM_HOST = 'www.qiushaocloud.top';
-  var MAX_SAVE_SESSION_DURATION = 24 * 60 * 60 * 1000;
+  var maxSaveSessionDuration = window.localStorage.getItem('qiushaositecounter_max_save_session_duration');
+  var MAX_SAVE_SESSION_DURATION = maxSaveSessionDuration ? Number(maxSaveSessionDuration) : 24 * 60 * 60 * 1000;
 
   function reqSiteCounterAPI (
     siteHost,
