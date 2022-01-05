@@ -61,6 +61,28 @@ class Utils {
 
     return undefined;
   }
+
+  /* 转为布尔类型*/
+  toParseBoolean (arg) {
+    let isBool = false;
+    
+    if (!(arg === undefined || arg === null || arg === '')) {
+      if (typeof arg === 'boolean') {
+        isBool = arg;
+      } else if (typeof arg === 'number') {
+        isBool = !!arg;
+      } else if (typeof arg === 'string') {
+        const argNum = Number(arg);
+        if (typeof argNum === 'number' && !isNaN(argNum)) {
+          isBool = !!argNum;
+        } else {
+          isBool = (arg === 'true');
+        }
+      }
+    }
+
+    return isBool;
+  }
 }
 
 module.exports = new Utils();
