@@ -82,7 +82,6 @@
     var isHistroySession = false;
 
     saveSiteTs = saveSiteTs ? Number(saveSiteTs) : undefined;
-
     if (saveSiteTs) {
       var currDate = new Date();
       var currYear = currDate.getFullYear();
@@ -104,7 +103,6 @@
         isHistroySession = true;
     }
       
-
     if (hasSiteEle || hasSitePageEle) {
       var siteHost = window.location.host;
       var sitePagePathname = undefined;
@@ -119,6 +117,7 @@
         isIncredSitePage = true;
       }
 
+      window.localStorage.setItem('qiushaositecounter_session_save_ts', Date.now());
       reqSiteCounterAPI(
         siteHost,
         sitePagePathname,
