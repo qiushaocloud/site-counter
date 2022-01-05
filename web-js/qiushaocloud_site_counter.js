@@ -32,7 +32,6 @@
   
     xhr.addEventListener("readystatechange", function() {
       if(this.readyState === 4) {
-        console.log(this.responseText);
         if (this.status >= 200 && this.status < 300 ){
           onCallback(undefined, this.responseText);
         }else{
