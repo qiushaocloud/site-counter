@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 const {
-  API_SIGN_SECRET_KEY = 'API_SIGN_SECRET_KEY',
+  API_SIGN_SECRET_KEY = 'QIU_SHAO_CLOUD_SECRET_KEY',
   API_SIGN_KEY_NAME = 'sign',
   API_SIGN_NONCE_TS_KEY_NAME = 'nonce_ts'
 } = process.env;
@@ -217,10 +217,26 @@ const getAllReqParams = (expressReq) => {
   return Object.assign({}, query || {}, fields || {}, body || {});
 };
 
+
+function customEncrypt (str, secretKey, customEncryptTs) {
+  ranNum = customEncryptTs ? Number(customEncryptTs) : 1234567890123;
+
+  for (var i = 0; i < str.length; i++) {
+    var character = str.charCodeAt(i);
+    var charIndex = character%secretKey.length;
+    var secretCode = secretKey.charCodeAt(character%secretKey.length);
+    ranNum += (character * charIndex * (secretCode + character) + (ranNum % character));
+  }
+
+  return customEncryptTs+'_'+ranNum;
+}
+
 const getApiSign = (
   requestData,
   secretKey,
-  signKeyName
+  signKeyName,
+  nonceTsKeyName,
+  isCustomEncrypt
 ) => {
   const keys = Object.keys(requestData).sort();
   let sign = '';
@@ -235,6 +251,9 @@ const getApiSign = (
 
     sign += (key + requestData[key]);
   }
+
+  if (isCustomEncrypt)
+    return customEncrypt(sign, secretKey, nonceTsKeyName ? requestData[nonceTsKeyName] : undefined);
 
   sign += secretKey;
 
@@ -253,7 +272,8 @@ const verifySign = (
   expressReq,
   secretKey = API_SIGN_SECRET_KEY,
   signKeyName = API_SIGN_KEY_NAME,
-  nonceTsKeyName = API_SIGN_NONCE_TS_KEY_NAME
+  nonceTsKeyName = API_SIGN_NONCE_TS_KEY_NAME,
+  isCustomEncrypt
 ) => {
   const allParams = getAllReqParams(expressReq);
   const signTmp = allParams[signKeyName];
@@ -276,8 +296,8 @@ const verifySign = (
       return false;
   }
 
-  const sign = getApiSign(allParams, secretKey, signKeyName);
- 
+  const sign = getApiSign(allParams, secretKey, signKeyName, nonceTsKeyName, isCustomEncrypt);
+
   const isOk = sign === signTmp;
   if (!isOk)
     return false;

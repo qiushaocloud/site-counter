@@ -178,14 +178,13 @@
       site_page_pathname: sitePagePathname,
       is_incr_site: isIncrSite,
       is_histroy_session: isHistroySession,
-      nonce: 'nonce_'+Date.now(),
-      ts: Date.now()
+      nonce_ts: Date.now()
     };
 
     var secretKeyEle = document.getElementById('qiushaocloud_sitecounter_secret_key');
     var secretKeyEleVal = secretKeyEle ? secretKeyEle.innerHTML : '';
 
-    var sign = getCustomApiSign(reqJson, secretKeyEleVal || CUSTOM_SECRET_KEY);
+    var sign = getCustomApiSign(reqJson, siteHost + (secretKeyEleVal || CUSTOM_SECRET_KEY));
     reqJson.sign = sign;
 
     var data = new FormData();
@@ -205,6 +204,7 @@
         if (this.status >= 200 && this.status < 300 ){
           onCallback(undefined, this.responseText);
         }else{
+          console.error('Error status:'+this.status, this.responseText);
           onCallback('Error status:'+this.status, this.responseText);
         }
       }
@@ -219,8 +219,8 @@
     xhr.send(data);
   }
 
-  function customEncrypt (str, secretKey, ranNum) {
-    ranNum = ranNum || 1234567890123;
+  function customEncrypt (str, secretKey, customEncryptTs) {
+    ranNum = customEncryptTs || 1234567890123;
   
     for (var i = 0; i < str.length; i++) {
       var character = str.charCodeAt(i);
@@ -229,18 +229,24 @@
       ranNum += (character * charIndex * (secretCode + character) + (ranNum % character));
     }
   
-    return ranNum;
+    return customEncryptTs+'_'+ranNum;
   }
 
   function getCustomApiSign (requestData, secretKey) {
     var sign = '';
 
+    var keys = [];
     for (var key in requestData) {
+      keys.push(key);
+    }
+    keys.sort();
+
+    for (var i=0, len=keys.length; i<len; i++) {
+      var key = keys[i];
       sign += (key + requestData[key]);
     }
-    sign += secretKey;
 
-    return customEncrypt(sign, secretKey, requestData.ts);
+    return customEncrypt(sign, secretKey, requestData['nonce_ts']);
 
     // 您可以使用 sha256 加密签名，对应服务器也使用 sha256 即可
     // return sha256Encrypt(sign);

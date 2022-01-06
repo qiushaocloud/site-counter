@@ -41,16 +41,16 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
     return;
   }
 
-  // if (!verifySign(req, siteHost+API_SIGN_SECRET_KEY)) {
-  //   log.error('Unauthorized, invalid sign, apiId:', apiId);
+  if (!verifySign(req, siteHost+API_SIGN_SECRET_KEY, undefined, undefined, true)) {
+    log.error('Unauthorized, invalid sign, apiId:', apiId);
 
-  //   res.status(401).send({
-  //     code: FailResStateCode.UNAUTHORIZED,
-  //     message: 'invalid sign'
-  //   });
+    res.status(401).send({
+      code: FailResStateCode.UNAUTHORIZED,
+      message: 'invalid sign'
+    });
 
-  //   return;
-  // }
+    return;
+  }
 
   siteCounterHandler.incrSiteCount(
     siteHost,
