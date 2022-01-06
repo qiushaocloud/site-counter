@@ -256,7 +256,6 @@ const getApiSign = (
     return customEncrypt(sign, secretKey, nonceTsKeyName ? requestData[nonceTsKeyName] : undefined);
 
   sign += secretKey;
-
   return crypto.createHash('SHA256').update(sign).digest('hex');
 }
 
