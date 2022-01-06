@@ -1,54 +1,39 @@
-(function(){
-  var CUSTOM_HOST = 'www.qiushaocloud.top';
-  var maxSaveSessionDuration = window.localStorage.getItem('qiushaositecounter_max_save_session_duration');
-  var MAX_SAVE_SESSION_DURATION = maxSaveSessionDuration ? Number(maxSaveSessionDuration) : 24 * 60 * 60 * 1000;
+(function(){  
+  console.info(
+    '欢迎使用 qiushaocloud/site-counter，作者：邱少羽梦，作者博客: https://www.qiushaocloud.top'
+  );
 
-  function reqSiteCounterAPI (
-    siteHost,
-    sitePagePathname,
-    isIncrSite,
-    isHistroySession,
-    onCallback
-  ) {
-    var reqJson = {
-      site_host: siteHost,
-      site_page_pathname: sitePagePathname,
-      is_incr_site: isIncrSite,
-      is_histroy_session: isHistroySession,
-    };
-
-
-    var data = new FormData();
-    for (var key in reqJson) {
-      var val = reqJson[key];
-      if (val === undefined)
-        continue;
+  setTimeout(function () {
+    var addHeadStr = '<meta property="og:site_counter_author" content="邱少羽梦"></meta>'
+      + '<meta property="og:site_counter_author_blog" content="https://www.qiushaocloud.top"></meta>';
     
-      data.append(key, val);
-    }
+    if (document.head)
+      document.head.innerHTML += addHeadStr;
+  }, 500);
 
-    var xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
-  
-    xhr.addEventListener("readystatechange", function() {
-      if(this.readyState === 4) {
-        if (this.status >= 200 && this.status < 300 ){
-          onCallback(undefined, this.responseText);
-        }else{
-          onCallback('Error status:'+this.status, this.responseText);
-        }
-      }
-    });
-  
-    var apiHost = window.localStorage.getItem('qiushaositecounter_api_host') || CUSTOM_HOST;
-    var protocol = window.location.protocol;
-    var apiAddr = /(https:\/\/|http:\/\/)/g.test(apiHost) ? apiHost : ((protocol === 'file:' ? 'https:' : protocol)+'//'+apiHost);
+  var maxSaveSessionDuration = window.localStorage.getItem('qiushaocloud_sitecounter_max_session_duration');
+  var MAX_SAVE_SESSION_DURATION = maxSaveSessionDuration ? Number(maxSaveSessionDuration) : 24 * 60 * 60 * 1000;
+  var CUSTOM_HOST = 'www.qiushaocloud.top';
 
-    xhr.open("POST", apiAddr + "/site_counter", true);
-  
-    xhr.send(data);
+  var randomChars = [
+    'R', 'L', 'U', '_',
+    'V', 'J', 'A', 'S',
+    '_', 'E', 'M', 'S',
+    'U', 'G'
+  ];
+  let addChatCodeNum = 0;
+  for (var key in randomChars) {
+    var code = randomChars[key].charCodeAt();
+    addChatCodeNum += (39*code - code%5);
   }
-  
+
+  var CUSTOM_SECRET_KEY = '';
+  var SECRET_KEY_CHAR_CODE_STR = '43974-43966-43978-43988-43976-43965-43958-43972-43988-43960-43969-43972-43978-43961-43988-43976-43962-43960-43975-43962-43977-43988-43968-43962-43982';
+  var SECRET_KEY_CHAR_CODE_ARR = SECRET_KEY_CHAR_CODE_STR.split('-');
+  for (var key in SECRET_KEY_CHAR_CODE_ARR) {
+    CUSTOM_SECRET_KEY += String.fromCharCode(SECRET_KEY_CHAR_CODE_ARR[key] - addChatCodeNum);
+  }
+
   var apiResult = {};
   var isIncredSite = false;
   var isIncredSitePage = false;
@@ -57,28 +42,35 @@
   
   timer = setInterval(function() {
     currCheckCount++;
+    if (currCheckCount % 10 !== 2)
+      return;
 
-    var sitePvEle = document.getElementById('qiushaositecounter_value_site_pv');
-    var siteUvEle = document.getElementById('qiushaositecounter_value_site_uv');
-    var todaySitePvEle = document.getElementById('qiushaositecounter_value_today_site_pv');
-    var todaySiteUvEle = document.getElementById('qiushaositecounter_value_today_site_uv');
+    var sitePvEle = document.getElementById('qiushaocloud_sitecounter_value_site_pv');
+    var siteUvEle = document.getElementById('qiushaocloud_sitecounter_value_site_uv');
+    var todaySitePvEle = document.getElementById('qiushaocloud_sitecounter_value_today_site_pv');
+    var todaySiteUvEle = document.getElementById('qiushaocloud_sitecounter_value_today_site_uv');
     
-    var sitePagePvEle = document.getElementById('qiushaositecounter_value_site_page_pv');
-    var sitePageUvEle = document.getElementById('qiushaositecounter_value_site_page_uv');
-    var todaySitePagePvEle = document.getElementById('qiushaositecounter_value_today_site_page_pv');
-    var todaySitePageUvEle = document.getElementById('qiushaositecounter_value_today_site_page_uv');
+    var sitePagePvEle = document.getElementById('qiushaocloud_sitecounter_value_site_page_pv');
+    var sitePageUvEle = document.getElementById('qiushaocloud_sitecounter_value_site_page_uv');
+    var todaySitePagePvEle = document.getElementById('qiushaocloud_sitecounter_value_today_site_page_pv');
+    var todaySitePageUvEle = document.getElementById('qiushaocloud_sitecounter_value_today_site_page_uv');
 
     var hasSiteEle = !!(sitePvEle || siteUvEle || todaySitePvEle || todaySiteUvEle);
     var hasSitePageEle = !!(sitePagePvEle || sitePageUvEle || todaySitePagePvEle || todaySitePageUvEle);
 
-    if ((isIncredSite && isIncredSitePage) || currCheckCount > 180) {
+    if ((isIncredSite && isIncredSitePage) || currCheckCount > 1800) {
       timer && clearInterval(timer);
       timer = undefined;
+
+      // 移除带有签名 key 的节点元素
+      var secretKeyEle = document.getElementById('qiushaocloud_sitecounter_secret_key');
+      if (secretKeyEle)
+        secretKeyEle.parentNode.removeChild(secretKeyEle);
       return;
     }
 
     var nowTs = Date.now();
-    var saveSiteTs = window.localStorage.getItem('qiushaositecounter_session_save_ts');
+    var saveSiteTs = window.localStorage.getItem('qiushaocloud_sitecounter_session_save_ts');
     var isHistroySession = false;
 
     saveSiteTs = saveSiteTs ? Number(saveSiteTs) : undefined;
@@ -117,7 +109,7 @@
         isIncredSitePage = true;
       }
 
-      window.localStorage.setItem('qiushaositecounter_session_save_ts', Date.now());
+      window.localStorage.setItem('qiushaocloud_sitecounter_session_save_ts', Date.now());
       reqSiteCounterAPI(
         siteHost,
         sitePagePathname,
@@ -143,6 +135,17 @@
           var todaySitePagePv = sitePagePv - (yesterday.page_pv || 0);
           var todaySitePageUv = sitePageUv - (yesterday.page_uv || 0);
 
+          console.info(
+            '总访问量:', sitePv,
+            ' ,总访客量:', siteUv,
+            ' ,今日访问量:', todaySitePv,
+            ' ,今日访客量:', todaySiteUv,
+            ' ,本页面总访问量:', sitePagePv,
+            ' ,本页面总访客量:', sitePageUv,
+            ' ,本页面今日访问量:', todaySitePagePv,
+            ' ,本页面今日访客量:', todaySitePageUv
+          );
+
           sitePvEle && (sitePvEle.innerHTML = sitePv);
           siteUvEle && (siteUvEle.innerHTML = siteUv);
           todaySitePvEle && (todaySitePvEle.innerHTML = todaySitePv);
@@ -155,5 +158,82 @@
         }
       );
     }
-  }, 1000);
+  }, 100);
+
+  function reqSiteCounterAPI (
+    siteHost,
+    sitePagePathname,
+    isIncrSite,
+    isHistroySession,
+    onCallback
+  ) {
+    var reqJson = {
+      site_host: siteHost,
+      site_page_pathname: sitePagePathname,
+      is_incr_site: isIncrSite,
+      is_histroy_session: isHistroySession,
+    };
+
+    var secretKeyEle = document.getElementById('qiushaocloud_sitecounter_secret_key');
+    var secretKeyEleVal = secretKeyEle ? secretKeyEle.innerHTML : '';
+
+    var sign = getCustomApiSign(reqJson, secretKeyEleVal || CUSTOM_SECRET_KEY);
+
+    var data = new FormData();
+    for (var key in reqJson) {
+      var val = reqJson[key];
+      if (val === undefined)
+        continue;
+    
+      data.append(key, val);
+    }
+
+    var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+  
+    xhr.addEventListener("readystatechange", function() {
+      if(this.readyState === 4) {
+        if (this.status >= 200 && this.status < 300 ){
+          onCallback(undefined, this.responseText);
+        }else{
+          onCallback('Error status:'+this.status, this.responseText);
+        }
+      }
+    });
+  
+    var apiHost = window.localStorage.getItem('qiushaocloud_sitecounter_api_host') || CUSTOM_HOST;
+    var protocol = window.location.protocol;
+    var apiAddr = /(https:\/\/|http:\/\/)/g.test(apiHost) ? apiHost : ((protocol === 'file:' ? 'https:' : protocol)+'//'+apiHost);
+
+    xhr.open("POST", apiAddr + "/site_counter", true);
+  
+    xhr.send(data);
+  }
+
+  function customEncrypt (str, secretKey, ranNum) {
+    ranNum = ranNum || 1234567890123;
+  
+    for (var i = 0; i < str.length; i++) {
+      var character = str.charCodeAt(i);
+      var charIndex = character%secretKey.length;
+      var secretCode = secretKey.charCodeAt(character%secretKey.length);
+      ranNum += (character * charIndex * (secretCode + character) + (ranNum % character));
+    }
+  
+    return ranNum;
+  }
+
+  function getCustomApiSign (requestData, secretKey) {
+    var sign = '';
+
+    for (var key in requestData) {
+      sign += (key + requestData[key]);
+    }
+    sign += secretKey;
+
+    return customEncrypt(sign, secretKey, requestData.ts);
+
+    // 您可以使用 sha256 加密签名，对应服务器也使用 sha256 即可
+    // return sha256Encrypt(sign);
+  };
 })();

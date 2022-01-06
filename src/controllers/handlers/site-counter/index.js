@@ -2,6 +2,8 @@ const utils = require('../../../helepers/utils');
 const {getLogger} = require('../../../log');
 const log = getLogger('ApiHandler');
 
+const SITE_COUNTER_PREFIX = 'sitecounter:';
+
 class SiteCounterHandler {
   constructor () {
     this._siteSaveings = {}; // 
@@ -59,17 +61,17 @@ class SiteCounterHandler {
       
       this._cacheCheckUpdateYesterDays[siteHost] = [Date.now(), currFormatDay];
 
-      const siteUpdateFormatDay = await redisClient.hgetAsync(siteHost, 'site:format_yester_day');
+      const siteUpdateFormatDay = await redisClient.hgetAsync(SITE_COUNTER_PREFIX+siteHost, 'site:format_yester_day');
 
       if (!siteUpdateFormatDay) {
-        await redisClient.hsetAsync(siteHost, 'site:format_yester_day', currFormatDay);
+        await redisClient.hsetAsync(SITE_COUNTER_PREFIX+siteHost, 'site:format_yester_day', currFormatDay);
       } else if (
         siteUpdateFormatDay
         && siteUpdateFormatDay !== currFormatDay
         && (utils.toParseNumber(currFormatDay.replace(/-/g, '')) > utils.toParseNumber(siteUpdateFormatDay.replace(/-/g, '')))
       ) {
         if (siteUpdateFormatDay && siteUpdateFormatDay !== currFormatDay) {
-          const siteAllRes = await redisClient.hgetallAsync(siteHost);
+          const siteAllRes = await redisClient.hgetallAsync(SITE_COUNTER_PREFIX+siteHost);
           const saveYesterdayJson = {};
           for (const key in siteAllRes) {
             if (/(:pv|:uv)/g.test(key) && !/yesterday/g.test(key)) {
@@ -81,27 +83,27 @@ class SiteCounterHandler {
             }
           }
 
-          await redisClient.hmsetAsync(siteHost, saveYesterdayJson);
+          await redisClient.hmsetAsync(SITE_COUNTER_PREFIX+siteHost, saveYesterdayJson);
         }
 
-        await redisClient.hsetAsync(siteHost, 'site:format_yester_day', currFormatDay);
+        await redisClient.hsetAsync(SITE_COUNTER_PREFIX+siteHost, 'site:format_yester_day', currFormatDay);
       }
     }
 
     if (sitePagePathname) {
-      const sitePagePvRes = await global.cacheStaticRedis.hincrAsync(siteHost, sitePagePathname+':pv');
+      const sitePagePvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':pv');
       resResult['page_pv'] = utils.toParseNumber(sitePagePvRes) || 0;
 
       if (!isHistroySession) {
-        const sitePageUvRes = await global.cacheStaticRedis.hincrAsync(siteHost, sitePagePathname+':uv');
+        const sitePageUvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':uv');
         resResult['page_uv'] =  utils.toParseNumber(sitePageUvRes) || 0;
       }else {
-        const sitePageUvRes = await global.cacheStaticRedis.hgetAsync(siteHost, sitePagePathname+':uv');
+        const sitePageUvRes = await global.cacheStaticRedis.hgetAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':uv');
         resResult['page_uv'] =  utils.toParseNumber(sitePageUvRes) || 0;
       }
 
       const yesterdaySitePagePUvRes = await global.cacheStaticRedis.hmgetAsync(
-        siteHost,
+        SITE_COUNTER_PREFIX+siteHost,
         [
           'yesterday:'+sitePagePathname+':pv',
           'yesterday:'+sitePagePathname+':uv',
@@ -112,18 +114,18 @@ class SiteCounterHandler {
     }
 
     if (isIncrSite) {
-      const sitePvRes = await global.cacheStaticRedis.hincrAsync(siteHost, 'site:pv');
+      const sitePvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, 'site:pv');
       resResult['site_pv'] =  utils.toParseNumber(sitePvRes) || 0;
   
       if (!isHistroySession) {
-        const siteUvRes = await global.cacheStaticRedis.hincrAsync(siteHost, 'site:uv');
+        const siteUvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, 'site:uv');
         resResult['site_uv'] =  utils.toParseNumber(siteUvRes) || 0;
       }else{
-        const siteUvRes = await global.cacheStaticRedis.hgetAsync(siteHost, 'site:uv');
+        const siteUvRes = await global.cacheStaticRedis.hgetAsync(SITE_COUNTER_PREFIX+siteHost, 'site:uv');
         resResult['site_uv'] =  utils.toParseNumber(siteUvRes) || 0;
       }
     }else {
-      const sitePUvRes = await global.cacheStaticRedis.hmgetAsync(siteHost, [
+      const sitePUvRes = await global.cacheStaticRedis.hmgetAsync(SITE_COUNTER_PREFIX+siteHost, [
         'site:pv',
         'site:uv'
       ]);
@@ -131,7 +133,7 @@ class SiteCounterHandler {
       resResult['site_uv'] =  utils.toParseNumber(sitePUvRes && sitePUvRes[1]) || 0;
     }
 
-    const yesterdaySitePUvRes = await global.cacheStaticRedis.hmgetAsync(siteHost, [
+    const yesterdaySitePUvRes = await global.cacheStaticRedis.hmgetAsync(SITE_COUNTER_PREFIX+siteHost, [
       'yesterday:site:pv',
       'yesterday:site:uv'
     ]);
