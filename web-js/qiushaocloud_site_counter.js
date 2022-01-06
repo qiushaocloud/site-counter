@@ -69,6 +69,12 @@
       return;
     }
 
+    if (!(hasSiteEle || hasSitePageEle) && !isIncredSite)
+      return;
+
+    if (!hasSitePageEle && isIncredSite && !isIncredSitePage)
+      return;
+
     var nowTs = Date.now();
     var saveSiteTs = window.localStorage.getItem('qiushaocloud_sitecounter_session_save_ts');
     var isHistroySession = false;
