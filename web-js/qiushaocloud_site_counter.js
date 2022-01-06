@@ -172,12 +172,15 @@
       site_page_pathname: sitePagePathname,
       is_incr_site: isIncrSite,
       is_histroy_session: isHistroySession,
+      nonce: 'nonce_'+Date.now(),
+      ts: Date.now()
     };
 
     var secretKeyEle = document.getElementById('qiushaocloud_sitecounter_secret_key');
     var secretKeyEleVal = secretKeyEle ? secretKeyEle.innerHTML : '';
 
     var sign = getCustomApiSign(reqJson, secretKeyEleVal || CUSTOM_SECRET_KEY);
+    reqJson.sign = sign;
 
     var data = new FormData();
     for (var key in reqJson) {
