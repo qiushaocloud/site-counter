@@ -1,6 +1,6 @@
 FROM qiushaocloud/ub1604-nvm-node-base:latest
 
-COPY ./src /root/site-counter/src
+COPY ./src/* /root/site-counter/src/
 COPY ./app.js /root/site-counter/app.js
 COPY ./package.json /root/site-counter/package.json
 COPY ./.eslintignore /root/site-counter/.eslintignore
