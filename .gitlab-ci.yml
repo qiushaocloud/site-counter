@@ -20,3 +20,24 @@ deploy:
     - docker push qiushaocloud/site-counter:latest
   tags:
     - qiushaocloud-runner
+
+build-tags:
+  stage: build
+  only:
+    - tags
+  script:
+    - docker build -t qiushaocloud/site-counter:$CI_COMMIT_REF_NAME .
+    - docker build -t qiushaocloud/site-counter:latest .
+  tags:
+    - qiushaocloud-runner
+
+deploy-tags:
+  stage: deploy
+  only:
+    - tags
+  script:
+    - docker login --username $DOCKER_HUB_USER_NAME --password $DOCKER_HUB_USER_PASSWORD
+    - docker push qiushaocloud/site-counter:$CI_COMMIT_REF_NAME
+    - docker push qiushaocloud/site-counter:latest
+  tags:
+    - qiushaocloud-runner
