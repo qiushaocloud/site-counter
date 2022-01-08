@@ -89,7 +89,7 @@
         + '-' + (currMonth < 10 ? '0'+currMonth : currMonth)
         + '-' + (currDay < 10 ? '0'+currDay : currDay);
 
-      var saveDate = new Date();
+      var saveDate = new Date(saveSiteTs);
       var saveYear = saveDate.getFullYear();
       var saveMonth = saveDate.getMonth() + 1;
       var saveDay = saveDate.getDate();

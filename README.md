@@ -28,7 +28,7 @@
 #### 分享者信息
 
 1. 分享者邮箱: qiushaocloud@126.com
-2. [分享者网站](https://www.qiushaocloud.top)
+2. [分享者博客](https://www.qiushaocloud.top)
 3. [分享者自己搭建的 gitlab](https://www.qiushaocloud.top/gitlab/qiushaocloud) 
 3. [分享者 gitee](https://gitee.com/qiushaocloud/dashboard/projects) 
 3. [分享者 github](https://github.com/qiushaocloud?tab=repositories) 
