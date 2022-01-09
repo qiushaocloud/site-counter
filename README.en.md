@@ -98,7 +98,7 @@ window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaoclo
 
 
 
-#### Sharer information
+#### Open source is not easy, if it is helpful to you, please move your little hand, give the author a star, and please pay more attention to the sharer "[Qiushaocloud.top)"
 
 * Sharer Email: [qiushaocloud@126.com](mailto:qiushaocloud@126.com)
 * [Sharer Blog](https://www.qiushaocloud.top)

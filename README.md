@@ -98,7 +98,7 @@ window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaoclo
 
 
 
-#### 分享者信息
+#### 开源不易，如果对您有帮助，请您动一动您的小手，给作者点 Star，也请您多多关注分享者「[邱少羽梦](https://www.qiushaocloud.top)」
 
 * 分享者邮箱: [qiushaocloud@126.com](mailto:qiushaocloud@126.com)
 * [分享者博客](https://www.qiushaocloud.top)
