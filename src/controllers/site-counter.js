@@ -21,9 +21,15 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
 
   log.debug('call /site_counter, allParams:', allParams,
     ' ,clientIp:', clientIp,
+    ' ,user-agent:', req.headers['user-agent'],
     ' ,apiId:', apiId
   );
-  ipsLog.info('request /site_counter api, clientIp:', clientIp, ' ,apiId:', apiId);
+  ipsLog.info(
+    'request /site_counter api',
+    ' ,clientIp:', clientIp,
+    ' ,user-agent:', req.headers['user-agent'],
+    ' ,apiId:', apiId
+    );
 
   const {
     site_host: siteHost,
