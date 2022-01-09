@@ -1,140 +1,83 @@
-const utils = require('../helepers/utils');
+const path = require('path');
+const log4js = require('log4js');
 
-const LOG_LEVEL_MAP = {
-  TRACE: 1,
-  DEBUG: 2,
-  LOG: 3,
-  INFO: 4,
-  WARN: 5,
-  ERROR: 6,
-  FATAL: 7,
-  NONE: 8
-};
+const LOG_DIR = path.resolve(__dirname, '../../logs')
 
-class Log {
-  logLevel = 'DEBUG';
-  logLevelInt = LOG_LEVEL_MAP.DEBUG;
-
-  constructor (logLevel) {
-    if (logLevel !== undefined && LOG_LEVEL_MAP[logLevel] === undefined) {
-      this.logLevel = logLevel;
-      this.logLevelInt = LOG_LEVEL_MAP[logLevel];
+log4js.configure({
+  appenders: {
+    console:{ // 输出到控制台
+      type : 'console',
+    },
+    log_file:{ // 输出到文件
+      type : 'file',
+      filename: `${LOG_DIR}/site-counter-normal.log`,
+      maxLogSize : 20971520,
+      backups : 10,
+      encoding : 'utf-8'
+    },
+    ips_data_file:{ // 输出到日期文件
+      type: "dateFile",
+      filename: `${LOG_DIR}/site-counter-ips.log`,
+      alwaysIncludePattern: true,
+      daysToKeep:10,
+      encoding : 'utf-8'
+    },
+    error_file:{ // 输出到error log
+      type: "dateFile",
+      filename: `${LOG_DIR}/site-counter-error.log`,
+      alwaysIncludePattern: true,
+      daysToKeep:10,
+      encoding : 'utf-8'
+    }
+  },
+  categories: {
+    default:{
+      appenders:[
+        'console',
+        'log_file'
+      ],
+      level:'debug'
+    },
+    counterRequestIps:{
+      appenders:[
+        'console',
+        'ips_data_file'
+      ],
+      level:'info'
+    },
+    console:{
+      appenders:[
+        'console'
+      ],
+      level:'debug'
+    },
+    debug_log:{
+      appenders:[
+        'console',
+        'log_file'
+      ],
+      level:'debug'
+    },
+    info_log:{
+      appenders:[
+        'console',
+        'log_file'
+      ],
+      level:'info'
+    },
+    warn_log:{
+      appenders:[
+        'error_file'
+      ],
+      level:'warn'
+    },
+    error_log:{
+      appenders:[
+        'error_file'
+      ],
+      level:'error'
     }
   }
+});
 
-  setLogLevel (logLevel) {
-    if (LOG_LEVEL_MAP[logLevel] === undefined)
-      return;
-
-    this.logLevel = logLevel;
-    this.logLevelInt = LOG_LEVEL_MAP[logLevel];
-  }
-
-  trace (...args) {
-    if (this.logLevelInt > LOG_LEVEL_MAP.DEBUG)
-      return;
-
-    console.trace(
-      utils.getCurrFormatTs(),
-      'DEBUG',
-      ...args,
-      new Error('err stack').stack
-    );
-  }
-
-  debug (...args) {
-    if (this.logLevelInt > LOG_LEVEL_MAP.DEBUG)
-      return;
-
-    console.debug(utils.getCurrFormatTs(), 'DEBUG', ...args);
-  }
-
-  log (...args) {
-    console.log(utils.getCurrFormatTs(), 'LOG', ...args);
-  }
-
-  info (...args) {
-    console.info(utils.getCurrFormatTs(), 'INFO', ...args);
-  }
-
-  warn (...args) {
-    console.warn(utils.getCurrFormatTs(), 'WARN', ...args);
-  }
-
-  error (...args) {
-    console.error(utils.getCurrFormatTs(), 'ERROR', ...args);
-  }
-
-  fatal (...args) {
-    console.fatal(utils.getCurrFormatTs(), 'FATAL', ...args);
-  }
-
-  _printLog (method, ...args) {
-    const methodUpperCase = method.toUpperCase();
- 
-    if (this.logLevelInt > LOG_LEVEL_MAP[methodUpperCase])
-      return;
-
-    if (method === 'trace') {
-      console.trace(
-        utils.getCurrFormatTs(),
-        methodUpperCase,
-        ...args,
-        new Error('err stack').stack
-      );
-
-      return;
-    }
-
-    console[method](
-      utils.getCurrFormatTs(),
-      methodUpperCase,
-      ...args
-    );
-  }
-}
-
-const logInstances = {};
-const logLevelConfig = {};
-
-const getLogger = (loggerCategoryName, logLevel) => {
-  let logInstance = logInstances[loggerCategoryName];
-
-  if (!logInstance) {
-    if (logLevel !== undefined && LOG_LEVEL_MAP[logLevel] === undefined)
-      logLevelConfig[loggerCategoryName] = logLevel;
-
-    logInstance = new Log(logLevelConfig[loggerCategoryName]);
-    logInstances[loggerCategoryName] = logInstance;
-  }
-
-  return logInstance;
-}
-
-const updateCategoryLogLevel = (logLevel) => {
-  if (LOG_LEVEL_MAP[logLevel] === undefined)
-    return;
-
-  const logInstance = logInstances[loggerCategoryName];
-  if (!logInstance)
-    return;
-
-  logLevelConfig[loggerCategoryName] = logLevel;
-  logInstance.setLogLevel(logLevel);  
-}
-
-const initLogLevelConfig = (logLevelConfigArg) => {
-  for (const key in logLevelConfigArg) {
-    const logLevel = logLevelConfigArg[key];
-    if (LOG_LEVEL_MAP[logLevel] === undefined)
-      continue;
-
-    logLevelConfig[key] = val;
-  }
-};
-
-module.exports = {
-  getLogger,
-  updateCategoryLogLevel,
-  initLogLevelConfig
-};
+module.exports = log4js;

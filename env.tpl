@@ -10,3 +10,6 @@ API_SIGN_SECRET_KEY = 'QIU_SHAO_CLOUD_SECRET_KEY'
 
 # docker config
 EXPOSE_API_PORT = 80
+
+# volumes 配置
+LOGS_DIR = './logs'

@@ -8,3 +8,4 @@ services:
       - $EXPOSE_API_PORT:$API_PORT
     volumes:
       - .env:/root/site-counter/.env
+      - $LOGS_DIR:/root/site-counter/logs

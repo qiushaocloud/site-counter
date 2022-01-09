@@ -8,6 +8,7 @@ const {
 const siteCounterHandler = require('./handlers/site-counter');
 const {getLogger} = require('../log');
 const log = getLogger('API');
+const ipsLog = getLogger('counterRequestIps');
 
 const {
   FailResStateCode
@@ -22,6 +23,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
     ' ,clientIp:', clientIp,
     ' ,apiId:', apiId
   );
+  ipsLog.info('request /site_counter api, clientIp:', clientIp, ' ,apiId:', apiId);
 
   const {
     site_host: siteHost,
