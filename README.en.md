@@ -85,7 +85,7 @@ window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaoclo
 2. Go to the root directory of site-counter
 3. Copy env.tpl as .env, linux command: cp env.tpl .env
 4. Modify the .env file according to your situation
-5. Execute ./run-docker
+5. Execute ./run-docker.sh
 
 
 
