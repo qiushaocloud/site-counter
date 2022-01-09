@@ -16,7 +16,7 @@ const {
 const utils = require('../helepers/utils');
 
 productPostRouter(router, '/site_counter', (apiId, req, res) => {
-  const clientIp = req.ip;
+  const clientIp = req.headers['x-forwarded-for'] || req.ip;
   const allParams = getAllReqParams(req);
 
   log.debug('call /site_counter, allParams:', allParams,
