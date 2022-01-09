@@ -27,7 +27,8 @@ build-tags:
     - tags
   script:
     - docker build -t qiushaocloud/site-counter:$CI_COMMIT_REF_NAME .
-    - docker build -t qiushaocloud/site-counter:latest .
+    - docker tag qiushaocloud/site-counter:$CI_COMMIT_REF_NAME qiushaocloud/site-counter:latest
+    # - docker build -t qiushaocloud/site-counter:latest .
   tags:
     - qiushaocloud-runner
 
