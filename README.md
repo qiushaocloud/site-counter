@@ -1,13 +1,13 @@
 # site-counter
 
 
-#### 介绍
+### 介绍
 
 这是一个极简网页计数器，功能和 busuanzi (不蒜子 - 极简网页计数器) 类似，比 busuanzi 功能更多，支持今日统计。
 
 
 
-#### 功能
+### 功能
 
 1. 累计站点总访问量(站点 pv)
 2. 累计站点总访客量(站点 uv)
@@ -19,8 +19,9 @@
 8. 累计站点某页面今日访客量(站点页面今日 uv)
 
 
+### 快速上手
 
-#### 前端使用
+#### 前端简易使用
 
 1. 引入 qiushaocloud_site_counter.min.js, 比如: `<script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>`
 2. 界面中您根据您的需求，引入相应的节点元素 ID
@@ -51,6 +52,8 @@ window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaoclo
 
 
 
+
+### 不使用作者搭建的服务器，自己搭建服务器教程
 #### 打包发布 qiushaocloud_site_counter.min.js 和 qiushaocloud_site_counter.min.js
 
 1. 进入 site-counter 根目录

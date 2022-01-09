@@ -1,13 +1,13 @@
 # site-counter
 
 
-#### introduce
+### introduce
 
 This is a minimalist web page counter, similar in function to busuanzi (not garlic - minimalist web page counter), with more functions than busuanzi, and supports today's statistics.
 
 
 
-#### Features
+### Features
 
 1. Cumulative total site visits (site pv)
 2. Cumulative total site visitors (site uv)
@@ -19,8 +19,9 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
 8. Accumulate the number of visitors to a certain page of the site today (the uv of the site page today)
 
 
+### Quick start
 
-#### Front-end usage
+#### Front-end easy to use
 
 1. Import qiushaocloud_site_counter.min.js, for example: `<script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>`
 2. In the interface, you can introduce the corresponding node element ID according to your needs
@@ -51,6 +52,8 @@ window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaoclo
 
 
 
+
+### Build your own server tutorial without using the server built by the author
 #### Package and release qiushaocloud_site_counter.min.js and qiushaocloud_site_counter.min.js
 
 1. Go to the root directory of site-counter
