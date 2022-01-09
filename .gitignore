@@ -2,6 +2,6 @@ package-lock.json
 /.idea
 .DS_Store
 /node_modules
-.env
+/.env
 yarn.lock
 .gitee

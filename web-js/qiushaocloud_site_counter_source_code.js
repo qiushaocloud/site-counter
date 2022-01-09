@@ -13,7 +13,7 @@
 
   var maxSaveSessionDuration = window.localStorage.getItem('qiushaocloud_sitecounter_max_session_duration');
   var MAX_SAVE_SESSION_DURATION = maxSaveSessionDuration ? Number(maxSaveSessionDuration) : 24 * 60 * 60 * 1000;
-  var CUSTOM_HOST = '$CUSTOM_HOST';
+  var YOUR_SERVER_HOST = '$YOUR_SERVER_HOST';
 
   var randomChars = [
     'R', 'L', 'U', '_',
@@ -27,11 +27,11 @@
     addChatCodeNum += (39*code - code%5);
   }
 
-  var CUSTOM_SECRET_KEY = '';
+  var API_SIGN_SECRET_KEY = '';
   var SECRET_KEY_CHAR_CODE_STR = '$SECRET_KEY_CHAR_CODE_STR';
   var SECRET_KEY_CHAR_CODE_ARR = SECRET_KEY_CHAR_CODE_STR.split('-');
   for (var key in SECRET_KEY_CHAR_CODE_ARR) {
-    CUSTOM_SECRET_KEY += String.fromCharCode(SECRET_KEY_CHAR_CODE_ARR[key] - addChatCodeNum);
+    API_SIGN_SECRET_KEY += String.fromCharCode(SECRET_KEY_CHAR_CODE_ARR[key] - addChatCodeNum);
   }
 
   var apiResult = {};
@@ -184,7 +184,7 @@
     var secretKeyEle = document.getElementById('qiushaocloud_sitecounter_secret_key');
     var secretKeyEleVal = secretKeyEle ? secretKeyEle.innerHTML : '';
 
-    var sign = getCustomApiSign(reqJson, siteHost + (secretKeyEleVal || CUSTOM_SECRET_KEY));
+    var sign = getCustomApiSign(reqJson, siteHost + (secretKeyEleVal || API_SIGN_SECRET_KEY));
     reqJson.sign = sign;
 
     var data = new FormData();
@@ -210,7 +210,7 @@
       }
     });
   
-    var apiHost = window.localStorage.getItem('qiushaocloud_sitecounter_api_host') || CUSTOM_HOST;
+    var apiHost = window.localStorage.getItem('qiushaocloud_sitecounter_api_host') || YOUR_SERVER_HOST;
     var protocol = window.location.protocol;
     var apiAddr = /(https:\/\/|http:\/\/)/g.test(apiHost) ? apiHost : ((protocol === 'file:' ? 'https:' : protocol)+'//'+apiHost);
 
