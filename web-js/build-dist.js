@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const UglifyJS = require('uglify-js');
 const JavaScriptObfuscator = require('javascript-obfuscator');
-let buildConfig = JSON.parse(fs.readFileSync(path.join(__dirname, './build-js-config.json')));
+let buildConfig = JSON.parse(fs.readFileSync(path.join(__dirname, './build-dist-config.json')));
 
 const argv = process.argv;
 const PID = process.pid;
@@ -22,10 +22,10 @@ for (const key in CUSTOM_SECRET_KEY) {
 const SECRET_KEY_CHAR_CODE_STR = secretKeyCharCodeArr.join('-');
 
 console.log(
-  '请运行命令: node build-js.js 或者 node build-js.js $CUSTOM_HOST $CUSTOM_SECRET_KEY',
+  '请运行命令: node build-dist.js 或者 node build-dist.js $CUSTOM_HOST $CUSTOM_SECRET_KEY',
   '\n$CUSTOM_HOST: 您 web 界面请求服务器的地址, 默认值: www.qiushaocloud.top【格式如：www.qiushaocloud.top 或者 https://www.qiushaocloud.top:443】',
   '\n$CUSTOM_SECRET_KEY: 您 web 界面请求服务器接口的签名 secretKey, 默认值: QIU_SHAO_CLOUD_SECRET_KEY',
-  '\n可以从 build-js-config.json 配置 CUSTOM_HOST CUSTOM_SECRET_KEY'
+  '\n可以从 build-dist-config.json 配置 CUSTOM_HOST CUSTOM_SECRET_KEY'
 );
 
 console.log(
@@ -41,7 +41,7 @@ console.log(
 );
 
 fs.readFile(
-  path.join(__dirname, './qiushaocloud_site_counter.js'),
+  path.join(__dirname, './qiushaocloud_site_counter_source_code.js'),
   'utf8',
   (readErr, data) => {
     if (readErr) {
@@ -74,8 +74,16 @@ fs.readFile(
     minFileContent = obfuscationResult.getObfuscatedCode();
     // console.log(minFileContent);
 
+    const distDir = path.join(__dirname, '../dist');
+    try {
+      fs.statSync(distDir);
+    } catch(err) {
+      console.log('dir not exist', distDir);
+      fs.mkdirSync(distDir, {recursive: true});
+    }
+
     fs.writeFile(
-      path.join(__dirname, './qiushaocloud_site_counter.js'),
+      path.join(__dirname, '../dist/qiushaocloud_site_counter.js'),
       fileContent,
       'utf8',
       (writeErr) => {
@@ -88,7 +96,7 @@ fs.readFile(
     });
 
     fs.writeFile(
-      path.join(__dirname, './qiushaocloud_site_counter.min.js'),
+      path.join(__dirname, '../dist/qiushaocloud_site_counter.min.js'),
       minFileContent,
       'utf8',
       (writeErr) => {
