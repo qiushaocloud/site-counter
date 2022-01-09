@@ -52,6 +52,10 @@ const {
   REDIS_DB
 } = process.env;
 
+if (!API_PORT) {
+  throw new Error('.env is not exist or config err');
+}
+
 const initStaticRedis = () => {
   return new Promise((resolve, reject) => {
     global.staticRedis = new StaticRedis();
