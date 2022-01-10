@@ -96,7 +96,7 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
 
 
 
-#### Package docker image in linux environment [You can directly pull the open source image without modifying the code: docker pull qiushaocloud/site-counter]
+#### Package docker image in linux environment [If you don't need to modify the code, you can directly pull the open source image: docker pull qiushaocloud/site-counter]
 
 1. Install the docker environment
 2. Go to the root directory of site-counter

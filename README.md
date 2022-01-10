@@ -96,7 +96,7 @@
 
 
 
-#### linux 环境下打包 docker 镜像【您可以不需要修改代码，可以直接拉取开源镜像: docker pull qiushaocloud/site-counter】
+#### linux 环境下打包 docker 镜像【您如果不需要修改代码，可以直接拉取开源镜像: docker pull qiushaocloud/site-counter】
 
 1. 安装好 docker 环境
 2. 进入 site-counter 根目录
