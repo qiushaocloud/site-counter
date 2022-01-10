@@ -27,11 +27,14 @@
     addChatCodeNum += (39*code - code%5);
   }
 
-  var API_SIGN_SECRET_KEY = '';
-  var SECRET_KEY_CHAR_CODE_STR = '$SECRET_KEY_CHAR_CODE_STR';
-  var SECRET_KEY_CHAR_CODE_ARR = SECRET_KEY_CHAR_CODE_STR.split('-');
-  for (var key in SECRET_KEY_CHAR_CODE_ARR) {
-    API_SIGN_SECRET_KEY += String.fromCharCode(SECRET_KEY_CHAR_CODE_ARR[key] - addChatCodeNum);
+  var API_SIGN_SECRET_KEY = window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY || '';
+  delete window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY;
+  if (!API_SIGN_SECRET_KEY) {
+    var SECRET_KEY_CHAR_CODE_STR = '$SECRET_KEY_CHAR_CODE_STR';
+    var SECRET_KEY_CHAR_CODE_ARR = SECRET_KEY_CHAR_CODE_STR.split('-');
+    for (var key in SECRET_KEY_CHAR_CODE_ARR) {
+      API_SIGN_SECRET_KEY += String.fromCharCode(SECRET_KEY_CHAR_CODE_ARR[key] - addChatCodeNum);
+    }
   }
 
   var apiResult = {};
@@ -61,11 +64,6 @@
     if ((isIncredSite && isIncredSitePage) || currCheckCount > 1800) {
       timer && clearInterval(timer);
       timer = undefined;
-
-      // 移除带有签名 key 的节点元素
-      var secretKeyEle = document.getElementById('qiushaocloud_sitecounter_secret_key');
-      if (secretKeyEle)
-        secretKeyEle.parentNode.removeChild(secretKeyEle);
       return;
     }
 
@@ -181,11 +179,7 @@
       nonce_ts: Date.now()
     };
 
-    var secretKeyEle = document.getElementById('qiushaocloud_sitecounter_secret_key');
-    var secretKeyEleVal = secretKeyEle ? secretKeyEle.innerHTML : '';
-
-    var sign = getCustomApiSign(reqJson, siteHost + (secretKeyEleVal || API_SIGN_SECRET_KEY));
-    reqJson.sign = sign;
+    reqJson.sign = getCustomApiSign(reqJson, siteHost + API_SIGN_SECRET_KEY);
 
     var data = new FormData();
     for (var key in reqJson) {

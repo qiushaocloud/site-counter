@@ -40,13 +40,31 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
 
 #### Front-end advanced features
 
-1. Set the maximum duration of the visitor session, the default is 24h [for example, if you set 1h, then the visitor will not be a new visitor if he visits again within 1 hour, and if he visits after 1 hour, it will be regarded as a new visitor. It should be noted that no matter how long it is set, once it crosses the sky. , then the second visit is a new visitor]
-`window.localStorage.setItem('qiushaocloud_sitecounter_max_session_duration', 24 * 60 * 60 * 1000);`
+1. Set the maximum duration of the visitor session, the default is 24h [for example, if you set 1h, then the visitor who visits again within 1h is not a new visitor, and the visitor after 1h is regarded as a new visitor. It should be noted that no matter how long it is set, once it crosses the sky. , then the second visit is a new visitor]
+``` javascript
+    <script>
+        window.localStorage.setItem('qiushaocloud_sitecounter_max_session_duration', 24 * 60 * 60 * 1000);
+    </script>
+
+    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+````
 2. Set the server address requested by the interface. After setting, the request will be based on the address you set. If not set, the default interface is [www.qiushaocloud.top](https://www.qiushaocloud.top) [Note: www.qiushaocloud.top. top builds a service for individuals, it cannot ensure that the interface request is ok, it is recommended that you build the server yourself]
 ``` javascript
-// The setting format is: www.qiushaocloud.top or https://www.qiushaocloud.top:443
-window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaocloud.top');
-//window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'https://www.qiushaocloud.top:443');
+    <script>
+        // The setting format is: www.qiushaocloud.top or https://www.qiushaocloud.top:443
+        window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaocloud.top');
+        //window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'https://www.qiushaocloud.top:443');
+    </script>
+
+    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+````
+3. Set the signature secretKey of the interface request. When qiushaocloud_site_counter.min.js is loaded, it will delete window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY
+``` javascript
+    <script>
+        window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY = 'Signature key you need to set';
+    </script>
+    
+    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ````
 
 

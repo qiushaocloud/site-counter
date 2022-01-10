@@ -41,12 +41,30 @@
 #### 前端高级功能
 
 1. 设置访客 session 最大时长，默认 24h【例如您设置 1h, 那么 1h 内访客再次访问不算新访客，1h 后再访问则视为新访客，需要注意，无论设置多长时间，一旦跨天了，那么再次访问都是新访客】
-`window.localStorage.setItem('qiushaocloud_sitecounter_max_session_duration', 24 * 60 * 60 * 1000);`
+``` javascript
+    <script>
+        window.localStorage.setItem('qiushaocloud_sitecounter_max_session_duration', 24 * 60 * 60 * 1000);
+    </script>
+
+    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+```
 2. 设置接口请求的服务器地址，设置后会以您设置的地址请求，不设置默认以 [www.qiushaocloud.top](https://www.qiushaocloud.top) 请求接口【注意：www.qiushaocloud.top 为个人搭建服务，不能确保接口请求没问题，建议您自己搭建服务器哦】
 ``` javascript
-// 设置格式为：www.qiushaocloud.top 或者 https://www.qiushaocloud.top:443
-window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaocloud.top');
-//window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'https://www.qiushaocloud.top:443');
+    <script>
+        // 设置格式为：www.qiushaocloud.top 或者 https://www.qiushaocloud.top:443
+        window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaocloud.top');
+        //window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'https://www.qiushaocloud.top:443');
+    </script>
+
+    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+```
+3. 设置接口请求的签名secretKey, 当 qiushaocloud_site_counter.min.js 加载完成后会删除 window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY
+``` javascript
+    <script>
+        window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY = '您需要设置的签名key';
+    </script>
+    
+    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
 
 
