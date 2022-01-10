@@ -67,6 +67,20 @@
     
     <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
+4. 设置页面ID，当需要统计页面 PV/UV, 但是您页面是通过地址栏参数来区分不同页面的(比如: https://yourAddr/yourPathname?page_id=xxx)，您这时候就能用上此用法了
+``` javascript
+    <script>
+        /**
+         * 统计此界面时以 window.location.pathname + window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID 进行统计
+         * 例如您的地址: https://yourAddr/yourPathname?page_id=abc 和 https://yourAddr/yourPathname?page_id=def 表示两篇不同的文章
+         * 您将 page_id 设置给 window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID, 如: window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = `${page_id}`
+         * 在统计时将以 ${yourPathname}+'adb' 以及 ${yourPathname}+'def' 分别对您这两篇文章进行统计
+        **/
+        window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = '您需要设置的页面ID';
+    </script>
+    
+    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+```
 
 
 

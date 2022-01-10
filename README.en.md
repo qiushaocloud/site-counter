@@ -67,6 +67,20 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
     
     <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ````
+4. Set the page ID. When you need to count the PV/UV of the page, but your page is distinguished by the address bar parameters (for example: https://yourAddr/yourPathname?page_id=xxx), you can use it at this time this usage
+``` javascript
+    <script>
+        /**
+         * Use window.location.pathname + window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID to count this interface
+         * For example your address: https://yourAddr/yourPathname?page_id=abc and https://yourAddr/yourPathname?page_id=def represent two different articles
+         * You set page_id to window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID, eg: window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = `${page_id}`
+         * When counting, the two articles of yours will be counted by ${yourPathname}+'adb' and ${yourPathname}+'def' respectively
+        **/
+        window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = 'The page ID you need to set';
+    </script>
+    
+    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+````
 
 
 

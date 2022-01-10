@@ -109,7 +109,7 @@
       
       isIncredSite = true;
       if (hasSitePageEle) {
-        sitePagePathname = window.location.pathname;
+        sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
         isIncredSitePage = true;
       }
 
