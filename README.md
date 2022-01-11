@@ -86,13 +86,13 @@
 
 
 ### 不使用作者搭建的服务器，自己搭建服务器教程
-#### 打包发布 qiushaocloud_site_counter.min.js 和 qiushaocloud_site_counter.min.js
+#### 打包发布 qiushaocloud_site_counter.js 和 qiushaocloud_site_counter.min.js
 
 1. 进入 site-counter 根目录
 2. 编辑 site-counter/web-js/.env，配置 YOUR_SERVER_HOST 和 API_SIGN_SECRET_KEY，YOUR_SERVER_HOST 为您服务器的地址，API_SIGN_SECRET_KEY 为您定义的签名 key
 3. 安装依赖: npm run yarn-install
 4. 打包: npm run build-dist
-5. 打包后在 site-counter/dist 下面就有 qiushaocloud_site_counter.min.js 和 qiushaocloud_site_counter.min.js
+5. 打包后在 site-counter/dist 下面就有 qiushaocloud_site_counter.js 和 qiushaocloud_site_counter.min.js
 
 
 

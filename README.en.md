@@ -86,13 +86,13 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
 
 
 ### Build your own server tutorial without using the server built by the author
-#### Package and release qiushaocloud_site_counter.min.js and qiushaocloud_site_counter.min.js
+#### Package and release qiushaocloud_site_counter.js and qiushaocloud_site_counter.min.js
 
 1. Go to the root directory of site-counter
 2. Edit site-counter/web-js/.env, configure YOUR_SERVER_HOST and API_SIGN_SECRET_KEY, where YOUR_SERVER_HOST is the address of your server, and API_SIGN_SECRET_KEY is your defined signature key
 3. Install dependencies: npm run yarn-install
 4. Packaging: npm run build-dist
-5. After packaging, there are qiushaocloud_site_counter.min.js and qiushaocloud_site_counter.min.js under site-counter/dist
+5. After packaging, there are qiushaocloud_site_counter.js and qiushaocloud_site_counter.min.js under site-counter/dist
 
 
 
