@@ -18,6 +18,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
 
   log.debug('call /site_counter, allParams:', allParams,
     ' ,clientIp:', clientIp,
+    ' ,req.ip:', req.ip,
     ' ,user-agent:', req.headers['user-agent'],
     ' ,apiId:', apiId
   );

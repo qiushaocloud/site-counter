@@ -22,27 +22,29 @@ productGetRouter(router, '/', (apiId, req, res) => {
 });
 
 productGetRouter(router, '/get_ip_location', (apiId, req, res) => {
-  const clientIp = req.headers['x-forwarded-for'] || req.ip;
+  const clientIps = (req.headers['x-forwarded-for'] || req.ip).replace(/ /g, '').split(',');
   const searchIp = getReqParams(req, 'ip');
+  const lastClientIp = clientIps[clientIps.length - 1];
 
   log.debug('call /get_ip_location',
     ' ,searchIp:', searchIp,
-    ' ,clientIp:', clientIp,
+    ' ,clientIps:', clientIps,
+    ' ,req.ip:', req.ip,
     ' ,user-agent:', req.headers['user-agent'],
     ' ,apiId:', apiId
   );
 
   const axiosConfig = {
     method: 'get',
-    url: `http://yuanxiapi.cn/api/iplocation?ip=${searchIp || clientIp}`
+    url: `http://yuanxiapi.cn/api/iplocation?ip=${searchIp || lastClientIp}`
   };
 
   axios(axiosConfig)
     .then((response) => {
-      const {code, ip, location} = response;
-      if (code !== 200) {
+      const {code, ip, location} = response.data;
+      if (Number(code) !== 200) {
         log.info('get_ip_location api is fail',
-          ',response:', response,
+          ',response:', response.data,
           ' ,apiId:', apiId
         );
 
@@ -54,14 +56,17 @@ productGetRouter(router, '/get_ip_location', (apiId, req, res) => {
       }
     
       log.debug('get_ip_location api success',
-        ',response:', response,
+        ',response:', response.data,
         ' ,apiId:', apiId
       );
 
-      res.json({
+      const resultJson = {
         ip,
-        location
-      });
+        location,
+        client_ips: clientIps
+      };
+
+      res.json(resultJson);
     })
     .catch((error) => {
       log.error('get_ip_location catch error:', error, ' ,apiId:', apiId);
