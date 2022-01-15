@@ -4,7 +4,10 @@
   "description": "This is a minimalist web page counter, similar in function to busuanzi (not garlic - minimalist web page counter), with more functions than busuanzi, and supports today's statistics.",
   "main": "app.js",
   "scripts": {
-    "lint": "npx eslint --fix --ext .js src"
+    "yarn-install": "yarn install --ignore-engines",
+    "build-dist": "node web-js/build-dist.js",
+    "lint": "npx eslint --fix --ext .js src",
+    "run-serve": "node app.js"
   },
   "repository": {
     "type": "git",
@@ -29,6 +32,7 @@
   },
   "homepage": "https://github.com/qiushaocloud/site-counter#readme",
   "dependencies": {
+    "axios": "^0.24.0",
     "bluebird": "^3.7.2",
     "crypto": "^1.0.1",
     "dotenv": "^10.0.0",

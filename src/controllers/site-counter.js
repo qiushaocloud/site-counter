@@ -7,13 +7,10 @@ const {
 } = require('./router-base');
 const siteCounterHandler = require('./handlers/site-counter');
 const {getLogger} = require('../log');
-const log = getLogger('API');
 const ipsLog = getLogger('RequestIps');
-
-const {
-  FailResStateCode
-} = require('../enum/api-fail-code');
+const {FailResStateCode} = require('../enum/api-fail-code');
 const utils = require('../helepers/utils');
+const log = getLogger('API');
 
 productPostRouter(router, '/incr_site_count', (apiId, req, res) => {
   const clientIp = req.headers['x-forwarded-for'] || req.ip;
@@ -21,6 +18,7 @@ productPostRouter(router, '/incr_site_count', (apiId, req, res) => {
 
   log.debug('call /incr_site_count, allParams:', allParams,
     ' ,clientIp:', clientIp,
+    ' ,req.ip:', req.ip,
     ' ,user-agent:', req.headers['user-agent'],
     ' ,apiId:', apiId
   );
