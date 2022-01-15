@@ -42,6 +42,7 @@ productGetRouter(router, '/get_ip_location', (apiId, req, res) => {
   axios(axiosConfig)
     .then((response) => {
       const {code, ip, location} = response.data;
+      
       if (Number(code) !== 200) {
         log.info('get_ip_location api is fail',
           ',response:', response.data,
