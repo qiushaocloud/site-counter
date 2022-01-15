@@ -8,24 +8,24 @@ const {
 const siteCounterHandler = require('./handlers/site-counter');
 const {getLogger} = require('../log');
 const log = getLogger('API');
-const ipsLog = getLogger('counterRequestIps');
+const ipsLog = getLogger('RequestIps');
 
 const {
   FailResStateCode
 } = require('../enum/api-fail-code');
 const utils = require('../helepers/utils');
 
-productPostRouter(router, '/site_counter', (apiId, req, res) => {
+productPostRouter(router, '/incr_site_count', (apiId, req, res) => {
   const clientIp = req.headers['x-forwarded-for'] || req.ip;
   const allParams = getAllReqParams(req);
 
-  log.debug('call /site_counter, allParams:', allParams,
+  log.debug('call /incr_site_count, allParams:', allParams,
     ' ,clientIp:', clientIp,
     ' ,user-agent:', req.headers['user-agent'],
     ' ,apiId:', apiId
   );
   ipsLog.info(
-    'request /site_counter api',
+    'request /incr_site_count api',
     ' ,clientIp:', clientIp,
     ' ,user-agent:', req.headers['user-agent'],
     ' ,apiId:', apiId
