@@ -3,7 +3,7 @@ CURR_DIR=$(cd "$(dirname "$0")"; pwd)
 gitName=`grep -E "url = .*.git" $CURR_DIR/.git/config|awk -F 'qiushaocloud/' '{print $2}'`
 
 # 推送到自建的 gitlab
-git remote set-url origin ssh://git@www.qiushaocloud.top:61123/qiushaocloud/$gitName
+git remote set-url origin ssh://git@www.qiushaocloud.top:61023/qiushaocloud/$gitName
 git push
 
 # 推送到 gitee
