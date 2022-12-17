@@ -58,8 +58,12 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
     return;
   }
 
+  let siteHostTmp = siteHost;
+  if (siteHost.split(".").length === 2) {
+    siteHostTmp = 'www.'+siteHost;
+  }
   siteCounterHandler.incrSiteCount(
-    siteHost,
+    siteHostTmp,
     sitePagePathname,
     utils.toParseBoolean(isIncrSite),
     utils.toParseBoolean(isHistroySession),
