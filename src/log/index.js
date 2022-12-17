@@ -38,7 +38,7 @@ log4js.configure({
       ],
       level:'debug'
     },
-    counterRequestIps:{
+    RequestIps:{
       appenders:[
         'console',
         'ips_data_file'
