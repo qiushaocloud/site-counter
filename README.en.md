@@ -23,7 +23,7 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
 
 #### Front-end easy to use
 
-1. Import qiushaocloud_site_counter.min.js, for example: `<script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>`
+1. Import qiushaocloud_site_counter.min.js, for example: `<script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>`
 2. In the interface, you can introduce the corresponding node element ID according to your needs
 ```html
     <p>Total visits: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
@@ -47,7 +47,7 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
         window.localStorage.setItem('qiushaocloud_sitecounter_max_session_duration', 24 * 60 * 60 * 1000);
     </script>
 
-    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ````
 2. Set the server address requested by the interface. After setting, the request will be based on the address you set. If not set, the default interface is [www.qiushaocloud.top](https://www.qiushaocloud.top) [Note: www.qiushaocloud.top. top builds a service for individuals, it cannot ensure that the interface request is ok, it is recommended that you build the server yourself]
 ``` javascript
@@ -57,7 +57,7 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
         //window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'https://www.qiushaocloud.top:443');
     </script>
 
-    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ````
 3. Set the signature secretKey of the interface request. When qiushaocloud_site_counter.min.js is loaded, it will delete window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY
 ``` javascript
@@ -65,7 +65,7 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
         window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY = 'Signature key you need to set';
     </script>
     
-    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ````
 4. Set the page ID. When you need to count the PV/UV of the page, but your page is distinguished by the address bar parameters (for example: https://yourAddr/yourPathname?page_id=xxx), you can use it at this time this usage
 ``` javascript
@@ -79,7 +79,7 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
         window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = 'The page ID you need to set';
     </script>
     
-    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ````
 
 
@@ -137,6 +137,6 @@ This is a minimalist web page counter, similar in function to busuanzi (not garl
 
 * Sharer Email: [qiushaocloud@126.com](mailto:qiushaocloud@126.com)
 * [Sharer Blog](https://www.qiushaocloud.top)
-* [gitlab built by the sharer himself](https://www.qiushaocloud.top/gitlab/qiushaocloud)
+* [gitlab built by the sharer himself](https://gitlab.qiushaocloud.top/qiushaocloud)
 * [Shared by gitee](https://gitee.com/qiushaocloud/dashboard/projects)
 * [Shared by github](https://github.com/qiushaocloud?tab=repositories)

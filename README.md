@@ -23,7 +23,7 @@
 
 #### 前端简易使用
 
-1. 引入 qiushaocloud_site_counter.min.js, 比如: `<script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>`
+1. 引入 qiushaocloud_site_counter.min.js, 比如: `<script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>`
 2. 界面中您根据您的需求，引入相应的节点元素 ID
 ```html
     <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
@@ -47,7 +47,7 @@
         window.localStorage.setItem('qiushaocloud_sitecounter_max_session_duration', 24 * 60 * 60 * 1000);
     </script>
 
-    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
 2. 设置接口请求的服务器地址，设置后会以您设置的地址请求，不设置默认以 [www.qiushaocloud.top](https://www.qiushaocloud.top) 请求接口【注意：www.qiushaocloud.top 为个人搭建服务，不能确保接口请求没问题，建议您自己搭建服务器哦】
 ``` javascript
@@ -57,7 +57,7 @@
         //window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'https://www.qiushaocloud.top:443');
     </script>
 
-    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
 3. 设置接口请求的签名secretKey, 当 qiushaocloud_site_counter.min.js 加载完成后会删除 window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY
 ``` javascript
@@ -65,7 +65,7 @@
         window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY = '您需要设置的签名key';
     </script>
     
-    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
 4. 设置页面ID，当需要统计页面 PV/UV, 但是您页面是通过地址栏参数来区分不同页面的(比如: https://yourAddr/yourPathname?page_id=xxx)，您这时候就能用上此用法了
 ``` javascript
@@ -79,7 +79,7 @@
         window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = '您需要设置的页面ID';
     </script>
     
-    <script async src="//cdn.jsdelivr.net/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
 
 
@@ -137,6 +137,6 @@
 
 * 分享者邮箱: [qiushaocloud@126.com](mailto:qiushaocloud@126.com)
 * [分享者博客](https://www.qiushaocloud.top)
-* [分享者自己搭建的 gitlab](https://www.qiushaocloud.top/gitlab/qiushaocloud) 
+* [分享者自己搭建的 gitlab](https://gitlab.qiushaocloud.top/qiushaocloud) 
 * [分享者 gitee](https://gitee.com/qiushaocloud/dashboard/projects) 
 * [分享者 github](https://github.com/qiushaocloud?tab=repositories) 
