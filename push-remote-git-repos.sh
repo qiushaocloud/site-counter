@@ -1,6 +1,17 @@
 CURR_DIR=$(cd "$(dirname "$0")"; pwd)
 
+echo "config git user name and email"
+git config --global user.email "qiushaocloud@126.com"
+git config --global user.name "qiushaocloud"
+
+echo "git remote -v"
+echo `git remote -v`
+
+echo "cp config"
+cp -ra $CURR_DIR/.git/config $CURR_DIR/.git/config.bak
+
 gitName=`grep -E "url = .*.git" $CURR_DIR/.git/config|awk -F 'qiushaocloud/' '{print $2}'`
+echo "gitName: $gitName"
 
 # 推送到 gitee
 echo "推送到 gitee: git@gitee.com:qiushaocloud/$gitName"
@@ -31,3 +42,6 @@ git push
 echo "推送到自建的 gitlab: ssh://git@gitlab.qiushaocloud.top:61023/qiushaocloud/$gitName"
 git remote set-url origin ssh://git@gitlab.qiushaocloud.top:61023/qiushaocloud/$gitName
 git push
+
+echo "mv config"
+mv $CURR_DIR/.git/config.bak $CURR_DIR/.git/config
