@@ -1,6 +1,16 @@
 stages:
+  - sync-code
   - build
   - deploy
+
+sync-code:
+  stage: sync-code
+  only:
+    - master
+  script:
+    - bash push-remote-git-repos.sh
+  tags:
+    - qiushaocloud-runner
 
 build:
   stage: build
