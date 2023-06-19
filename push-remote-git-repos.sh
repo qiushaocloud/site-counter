@@ -1,9 +1,5 @@
 CURR_DIR=$(cd "$(dirname "$0")"; pwd)
 
-echo "config git user name and email"
-git config --global user.email "qiushaocloud@126.com"
-git config --global user.name "qiushaocloud"
-
 echo "git remote -v"
 echo `git remote -v`
 
