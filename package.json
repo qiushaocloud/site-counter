@@ -1,6 +1,6 @@
 {
   "name": "site-counter",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "description": "This is a minimalist web page counter, similar in function to busuanzi (not garlic - minimalist web page counter), with more functions than busuanzi, and supports today's statistics.",
   "main": "app.js",
   "scripts": {
