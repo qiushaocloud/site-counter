@@ -1,14 +1,16 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
 const express = require('express');
 const formidable = require('express-formidable');
 const apiControllers = require('./src/controllers');
-const dotenv = require('dotenv');
 const StaticRedis = require('./src/common-modules/static-redis');
 const CacheStaticRedis = require('./src/helepers/cache-redis/static-redis');
 const {getLogger} = require('./src/log');
 
 const log = getLogger('App');
 const expressApp = express();
-dotenv.config();
+
 
 const PID = process.pid;
 
