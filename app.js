@@ -1,6 +1,4 @@
-const dotenv = require('dotenv');
-dotenv.config();
-
+require('dotenv').config();
 const express = require('express');
 const formidable = require('express-formidable');
 const apiControllers = require('./src/controllers');
@@ -10,8 +8,6 @@ const {getLogger} = require('./src/log');
 
 const log = getLogger('App');
 const expressApp = express();
-
-
 const PID = process.pid;
 
 // 监听未捕获的异常
