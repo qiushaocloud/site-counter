@@ -155,8 +155,8 @@
           todaySitePvEle && (todaySitePvEle.innerHTML = todaySitePv);
           todaySiteUvEle && (todaySiteUvEle.innerHTML = todaySiteUv);
 
-          sitePagePvEle && (sitePagePvEle.innerHTML = sitePageUv);
-          sitePageUvEle && (sitePageUvEle.innerHTML = siteUv);
+          sitePagePvEle && (sitePagePvEle.innerHTML = sitePagePv);
+          sitePageUvEle && (sitePageUvEle.innerHTML = sitePageUv);
           todaySitePagePvEle && (todaySitePagePvEle.innerHTML = todaySitePagePv);
           todaySitePageUvEle && (todaySitePageUvEle.innerHTML = todaySitePageUv);
         }
