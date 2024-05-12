@@ -10,6 +10,7 @@ API_SIGN_SECRET_KEY = 'QIU_SHAO_CLOUD_SECRET_KEY'
 
 # docker config
 EXPOSE_API_PORT = 80
+NODE_ENV = 'development' # development or production
 
 # volumes 配置
 LOGS_DIR = './logs'
