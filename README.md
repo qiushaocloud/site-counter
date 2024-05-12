@@ -123,6 +123,11 @@
 5. 执行 ./run-docker.sh
 
 
+#### 在线演示站点
+* [邱少羽梦博客演示站点: https://www.qiushaocloud.top/2022/01/10/site-counter](https://www.qiushaocloud.top/2022/01/10/site-counter)
+* [测试 demo 代码地址: https://github.com/qiushaocloud/cdn-static/blob/master/blog/qiushaocloud-site-counter-test-demo.html](https://github.com/qiushaocloud/cdn-static/blob/master/blog/qiushaocloud-site-counter-test-demo.html)
+* [测试 demo 效果地址: https://www.qiushaocloud.top/common-static/qiushaocloud-site-counter-test-demo.html](https://www.qiushaocloud.top/common-static/qiushaocloud-site-counter-test-demo.html)
+
 
 #### 参与贡献
 
