@@ -7,15 +7,25 @@ const {getLogger} = require('../log');
 const log = getLogger('API');
 
 const cacheGravatarImageRedirectResults = {}; // 缓存已经请求过的 gravatar 图片的重定向结果，格式: {gravatarImageUrl: {redirectUrl, saveTs}}
-let gravatarOfficialDefaultImageBase64 = null; // 官方默认头像的 base64 图片缓存
+const gravatarOfficialDefaultImageBase64s = {}; // 缓存官方默认头像的 base64 图片缓存，格式：{md5Length: {base64, saveTs}}
 
-// 定期清理 cacheGravatarImageRedirectResults 缓存，每隔 10 分钟执行一次
+// 定期清理缓存，每隔 10 分钟执行一次
 setInterval(() => {
   const now = Date.now();
+
+  // 清理 cacheGravatarImageRedirectResults 缓存
   for (const gravatarImageUrl in cacheGravatarImageRedirectResults) {
     const {saveTs} = cacheGravatarImageRedirectResults[gravatarImageUrl];
     if (now - saveTs > 30 * 60 * 1000) { // 如果缓存时间超过 30 分钟，则清理掉该缓存
       delete cacheGravatarImageRedirectResults[gravatarImageUrl];
+    }
+  }
+
+  // 清理 gravatarOfficialDefaultImageBase64s 缓存
+  for (const md5Length in gravatarOfficialDefaultImageBase64s) {
+    const {saveTs} = gravatarOfficialDefaultImageBase64s[md5Length];
+    if (now - saveTs > 120 * 60 * 1000) { // 如果缓存时间超过 120 分钟，则清理掉该缓存
+      delete gravatarOfficialDefaultImageBase64s[md5Length];
     }
   }
 }, 10 * 60 * 1000);
@@ -38,17 +48,26 @@ const requestImageBase64 = async (imgUrl) => {
   }
 }
 
-const getGravatarOfficialDefaultImageBase64 = async () => {
-  if (gravatarOfficialDefaultImageBase64)
-    return gravatarOfficialDefaultImageBase64; // 如果缓存中有官方默认头像的 base64 图片，则直接返回
+const getGravatarOfficialDefaultImageBase64 = async (avatarMd5) => {
+  const md5Length = (avatarMd5 && typeof avatarMd5 === 'string') ? avatarMd5.length : 32;
+
+  if (gravatarOfficialDefaultImageBase64s[md5Length])
+    return gravatarOfficialDefaultImageBase64s[md5Length].base64; // 如果缓存中有官方默认头像的 base64 图片，则直接返回
 
   const gravatarAddr = `${process.env.GRAVATAR_ADDR || 'https://gravatar.com'}/avatar/`; // 如果环境变量配置了 GRAVATAR_ADDR 则使用该地址，否则使用默认地址 https://gravatar.com'
-  const officialDefaultImageUrl = `${gravatarAddr}gravatarOfficialDefaultImage${Date.now()}`; // 官方默认头像的地址
+  let officialMd5 = '1234567890abcdfghijklmnopqrstuvwxyz'.substring(0, md5Length); // 官方默认头像的 md5 值，获取与 md5Length 相同长度的值
+  if (officialMd5.length !== md5Length) {
+    while (officialMd5.length < md5Length) {
+      officialMd5 += officialMd5; // 如果官方默认头像的 md5 值长度小于 md5Length，则重复该值
+      officialMd5 = officialMd5.substring(0, md5Length); // 截取 md5Length 长度的 md5 值
+    }
+  }
+  let officialDefaultImageUrl = `${gravatarAddr}${officialMd5}`; // 官方默认头像的地址
   const officialDefaultImageBase64 = await requestImageBase64(officialDefaultImageUrl); // 请求官方默认头像的 base64 图片
   if (officialDefaultImageBase64) {
-    gravatarOfficialDefaultImageBase64 = officialDefaultImageBase64; // 缓存官方默认头像的 base64 图片
-    log.info('getGravatarOfficialDefaultImageBase64 success officialDefaultImageUrl:', officialDefaultImageUrl, ' ,gravatarOfficialDefaultImageBase64:', gravatarOfficialDefaultImageBase64);
-    return gravatarOfficialDefaultImageBase64;
+    gravatarOfficialDefaultImageBase64s[md5Length] = {base64: officialDefaultImageBase64, saveTs: Date.now()}; // 缓存官方默认头像的 base64 图片
+    log.info('getGravatarOfficialDefaultImageBase64 success officialDefaultImageUrl:', officialDefaultImageUrl, ' ,officialDefaultImageBase64:', officialDefaultImageBase64);
+    return officialDefaultImageBase64;
   }
 
   log.info('getGravatarOfficialDefaultImageBase64 officialDefaultImageBase64 is null')
@@ -85,7 +104,7 @@ productGetRouter(router, '/site_proxy/gravatar_image/avatar/:avatarMd5', async (
       return res.redirect(defaultGravatarImageUrl); // 请求 gravatarImageUrl 图片失败，则重定向到默认图片
     }
 
-    const officialDefaultImageBase64 = await getGravatarOfficialDefaultImageBase64(); // 获取官方默认头像的base64
+    const officialDefaultImageBase64 = await getGravatarOfficialDefaultImageBase64(avatarMd5); // 获取官方默认头像的base64
     if (officialDefaultImageBase64 && gravatarImageBase64 === officialDefaultImageBase64) { // 如果 gravatarImageUrl 加载的图片为官方默认头像的base64，则重定向到默认图片
       log.debug('/site_proxy/gravatar_image/:avatarMd5 gravatarImage is officialDefaultImageBase64, redirect defaultGravatarImageUrl:', defaultGravatarImageUrl, ' ,gravatarImageUrl:', gravatarImageUrl);
       cacheGravatarImageRedirectResults[gravatarImageUrl] = {redirectUrl: defaultGravatarImageUrl, saveTs: Date.now()}; // 缓存该 gravatar 图片的重定向结果
