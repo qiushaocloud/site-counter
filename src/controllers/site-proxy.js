@@ -43,7 +43,7 @@ const getGravatarOfficialDefaultImageBase64 = async () => {
     return gravatarOfficialDefaultImageBase64; // 如果缓存中有官方默认头像的 base64 图片，则直接返回
 
   const gravatarAddr = `${process.env.GRAVATAR_ADDR || 'https://gravatar.com'}/avatar/`; // 如果环境变量配置了 GRAVATAR_ADDR 则使用该地址，否则使用默认地址 https://gravatar.com'
-  const officialDefaultImageUrl = `${gravatarAddr}/gravatarOfficialDefaultImage${Date.now()}`; // 官方默认头像的地址
+  const officialDefaultImageUrl = `${gravatarAddr}gravatarOfficialDefaultImage${Date.now()}`; // 官方默认头像的地址
   const officialDefaultImageBase64 = await requestImageBase64(officialDefaultImageUrl); // 请求官方默认头像的 base64 图片
   if (officialDefaultImageBase64) {
     gravatarOfficialDefaultImageBase64 = officialDefaultImageBase64; // 缓存官方默认头像的 base64 图片
@@ -60,7 +60,7 @@ productGetRouter(router, '/site_proxy/gravatar_image/avatar/:avatarMd5', async (
   const clientIp = req.headers['x-forwarded-for'] || req.ip;
   const {avatarMd5} = req.params;
   const gravatarAddr = `${process.env.GRAVATAR_ADDR || 'https://gravatar.com'}/avatar/`; // 如果环境变量配置了 GRAVATAR_ADDR 则使用该地址，否则使用默认地址 https://gravatar.com'
-  const gravatarImageUrl = `${gravatarAddr}/${avatarMd5}`; // 完整的gravatar图片地址
+  const gravatarImageUrl = `${gravatarAddr}${avatarMd5}`; // 完整的gravatar图片地址
 
   log.debug('call /site_proxy/gravatar_image/:avatarMd5',
     ' ,avatarMd5:', avatarMd5,
