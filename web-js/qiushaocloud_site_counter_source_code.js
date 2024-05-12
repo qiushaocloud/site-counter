@@ -131,6 +131,22 @@
             isSitePageHistroySession = true;
         }
       }
+      
+      // 清理 qiushaocloud_sitecounter_session_save_ts 过期数据，只要超过3天的数据都清理掉
+      var saveSiteTsKeys = Object.keys(window.localStorage).filter(function (key) {
+        return key.indexOf('qiushaocloud_sitecounter_session_save_ts') === 0;
+      });
+      for (var i=0, len=saveSiteTsKeys.length; i<len; i++) {
+        var saveSiteTsKey = saveSiteTsKeys[i];
+        var saveSiteTsVal = window.localStorage.getItem(saveSiteTsKey);
+        var saveSiteTsValTs = saveSiteTsVal ? Number(saveSiteTsVal) : undefined;
+        if (typeof saveSiteTsValTs === 'number' && saveSiteTsValTs && !isNaN(saveSiteTsValTs)) {
+          var saveSiteTsDiff = (Date.now() - saveSiteTsValTs) / 1000;
+          if (saveSiteTsDiff > 3 * 24 * 60 * 60) {
+            window.localStorage.removeItem(saveSiteTsKey);
+          }
+        }
+      }
 
       window.localStorage.setItem('qiushaocloud_sitecounter_session_save_ts', Date.now());
       if (sitePagePathname) {
