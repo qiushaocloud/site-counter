@@ -33,7 +33,8 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
     site_host: siteHost,
     site_page_pathname: sitePagePathname,
     is_incr_site: isIncrSite,
-    is_histroy_session: isHistroySession
+    is_histroy_session: isHistroySession,
+    is_histroy_session_page: isHistroySessionPage
   } = allParams;
 
   if (!siteHost) {
@@ -67,6 +68,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
     sitePagePathname,
     utils.toParseBoolean(isIncrSite),
     utils.toParseBoolean(isHistroySession),
+    isHistroySessionPage === undefined ? undefined : utils.toParseBoolean(isHistroySessionPage),
     (err, result) => {
       if (err) {
         log.error('incrSiteCount err:', err, ' ,apiId:', apiId);

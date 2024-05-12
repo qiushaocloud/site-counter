@@ -73,36 +73,15 @@
     if (!hasSitePageEle && isIncredSite && !isIncredSitePage)
       return;
 
-    var nowTs = Date.now();
-    var saveSiteTs = window.localStorage.getItem('qiushaocloud_sitecounter_session_save_ts');
-    var isHistroySession = false;
-
-    saveSiteTs = saveSiteTs ? Number(saveSiteTs) : undefined;
-    if (saveSiteTs) {
-      var currDate = new Date();
-      var currYear = currDate.getFullYear();
-      var currMonth = currDate.getMonth() + 1;
-      var currDay = currDate.getDate();
-      var currFormatDay = currYear
-        + '-' + (currMonth < 10 ? '0'+currMonth : currMonth)
-        + '-' + (currDay < 10 ? '0'+currDay : currDay);
-
-      var saveDate = new Date(saveSiteTs);
-      var saveYear = saveDate.getFullYear();
-      var saveMonth = saveDate.getMonth() + 1;
-      var saveDay = saveDate.getDate();
-      var saveFormatDay = saveYear
-        + '-' + (saveMonth < 10 ? '0'+saveMonth : saveMonth)
-        + '-' + (saveDay < 10 ? '0'+saveDay : saveDay);
-
-      if (currFormatDay === saveFormatDay && ((nowTs - saveSiteTs) < MAX_SAVE_SESSION_DURATION))
-        isHistroySession = true;
-    }
-      
     if (hasSiteEle || hasSitePageEle) {
       var siteHost = window.location.host;
       var sitePagePathname = undefined;
       var isIncrSite = !isIncredSite;
+      var nowTs = Date.now();
+      var saveSiteTs = window.localStorage.getItem('qiushaocloud_sitecounter_session_save_ts');
+      var isSiteHistroySession = false;
+      var saveSitePageTs = undefined;
+      var isSitePageHistroySession = undefined;
 
       if (window.location.protocol === 'file:' && !siteHost)
         siteHost = 'local_file_site';
@@ -111,14 +90,59 @@
       if (hasSitePageEle) {
         sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
         isIncredSitePage = true;
+        saveSitePageTs = window.localStorage.getItem('qiushaocloud_sitecounter_session_save_ts:page:' + sitePagePathname);
+        isSitePageHistroySession = false;
+        saveSitePageTs = saveSitePageTs ? Number(saveSitePageTs) : undefined;
+      }
+
+      saveSiteTs = saveSiteTs ? Number(saveSiteTs) : undefined;
+      if (saveSiteTs || saveSitePageTs) {
+        var currDate = new Date();
+        var currYear = currDate.getFullYear();
+        var currMonth = currDate.getMonth() + 1;
+        var currDay = currDate.getDate();
+        var currFormatDay = currYear
+          + '-' + (currMonth < 10 ? '0'+currMonth : currMonth)
+          + '-' + (currDay < 10 ? '0'+currDay : currDay);
+
+        if (saveSiteTs) {
+          var saveDate = new Date(saveSiteTs);
+          var saveYear = saveDate.getFullYear();
+          var saveMonth = saveDate.getMonth() + 1;
+          var saveDay = saveDate.getDate();
+          var saveFormatDay = saveYear
+            + '-' + (saveMonth < 10 ? '0'+saveMonth : saveMonth)
+            + '-' + (saveDay < 10 ? '0'+saveDay : saveDay);
+  
+          if (currFormatDay === saveFormatDay && ((nowTs - saveSiteTs) < MAX_SAVE_SESSION_DURATION))
+            isSiteHistroySession = true;
+        }
+        
+        if (saveSitePageTs) {
+          var saveDate = new Date(saveSitePageTs);
+          var saveYear = saveDate.getFullYear();
+          var saveMonth = saveDate.getMonth() + 1;
+          var saveDay = saveDate.getDate();
+          var saveFormatDay = saveYear
+            + '-' + (saveMonth < 10 ? '0'+saveMonth : saveMonth)
+            + '-' + (saveDay < 10 ? '0'+saveDay : saveDay);
+  
+          if (currFormatDay === saveFormatDay && ((nowTs - saveSitePageTs) < MAX_SAVE_SESSION_DURATION))
+            isSitePageHistroySession = true;
+        }
       }
 
       window.localStorage.setItem('qiushaocloud_sitecounter_session_save_ts', Date.now());
+      if (sitePagePathname) {
+        window.localStorage.setItem('qiushaocloud_sitecounter_session_save_ts:page:' + sitePagePathname, Date.now());
+      }
+      
       reqSiteCounterAPI(
         siteHost,
         sitePagePathname,
         isIncrSite,
-        isHistroySession,
+        isSiteHistroySession,
+        isSitePageHistroySession,
         function (err, res) {
           if (err) {
             console.error('reqSiteCounterAPI err:', err);
@@ -168,16 +192,20 @@
     siteHost,
     sitePagePathname,
     isIncrSite,
-    isHistroySession,
+    isSiteHistroySession,
+    isSitePageHistroySession,
     onCallback
   ) {
     var reqJson = {
       site_host: siteHost,
       site_page_pathname: sitePagePathname,
       is_incr_site: isIncrSite,
-      is_histroy_session: isHistroySession,
+      is_histroy_session: isSiteHistroySession,
       nonce_ts: Date.now()
     };
+    if (isSitePageHistroySession !== undefined) {
+      reqJson.is_histroy_session_page = isSitePageHistroySession;
+    }
 
     reqJson.sign = getCustomApiSign(reqJson, siteHost + API_SIGN_SECRET_KEY);
 

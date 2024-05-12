@@ -16,6 +16,7 @@ class SiteCounterHandler {
     sitePagePathname,
     isIncrSite,
     isHistroySession,
+    isHistroySessionPage,
     onCallback
   ) {
     if (global.cacheStaticRedis) {
@@ -23,7 +24,8 @@ class SiteCounterHandler {
         siteHost,
         sitePagePathname,
         isIncrSite,
-        isHistroySession
+        isHistroySession,
+        isHistroySessionPage
       ).then((resResult) => {
         onCallback && onCallback(undefined, resResult);
       }).catch((err) => {
@@ -36,7 +38,8 @@ class SiteCounterHandler {
     siteHost,
     sitePagePathname,
     isIncrSite,
-    isHistroySession
+    isHistroySession,
+    isHistroySessionPage
   ) {
     const resResult = {
       // site_pv: 0,
@@ -94,7 +97,7 @@ class SiteCounterHandler {
       const sitePagePvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':pv');
       resResult['page_pv'] = utils.toParseNumber(sitePagePvRes) || 0;
 
-      if (!isHistroySession) {
+      if (!isHistroySession || !isHistroySessionPage) {
         const sitePageUvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':uv');
         resResult['page_uv'] =  utils.toParseNumber(sitePageUvRes) || 0;
       }else {
