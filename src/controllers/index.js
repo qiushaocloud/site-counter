@@ -1,4 +1,5 @@
 require('./site-counter');
+require('./site-proxy');
 const axios = require('axios');
 const {getLogger} = require('../log');
 const {FailResStateCode} = require('../enum/api-fail-code');

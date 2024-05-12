@@ -36,7 +36,7 @@ log4js.configure({
         'console',
         'log_file'
       ],
-      level:'debug'
+      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
     },
     RequestIps:{
       appenders:[
@@ -49,7 +49,7 @@ log4js.configure({
       appenders:[
         'console'
       ],
-      level:'debug'
+      level: 'debug'
     },
     debug_log:{
       appenders:[
