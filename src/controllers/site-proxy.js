@@ -22,8 +22,8 @@ setInterval(() => {
 
 const requestImageBase64 = async (imgUrl) => {
   try {
-    const res = await axios.get(imgUrl, {responseType: 'arraybuffer'});
-    if (res.status === 200) {
+    const response = await axios.get(imgUrl, {responseType: 'arraybuffer'});
+    if (response.status === 200) {
       // 将响应数据转换成 base64
       const base64 = Buffer.from(response.data, 'binary').toString('base64');
       // log.debug('requestImageBase64 success imgUrl:', imgUrl, ' ,base64:', base64);
