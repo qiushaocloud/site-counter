@@ -7,7 +7,7 @@ const {getLogger} = require('../log');
 const log = getLogger('API');
 
 const cacheGravatarImageRedirectResults = {}; // 缓存已经请求过的 gravatar 图片的重定向结果，格式: {gravatarImageUrl: {redirectUrl, saveTs}}
-const gravatarOfficialDefaultImageBase64s = {}; // 缓存官方默认头像的 base64 图片缓存，格式：{md5Length: {base64, saveTs}}
+const gravatarOfficialDefaultImageBase64s = {}; // 缓存官方默认头像的 base64 图片缓存，格式：{officialMd5Length: {base64, saveTs}}
 
 // 定期清理缓存，每隔 10 分钟执行一次
 setInterval(() => {
@@ -22,10 +22,10 @@ setInterval(() => {
   }
 
   // 清理 gravatarOfficialDefaultImageBase64s 缓存
-  for (const md5Length in gravatarOfficialDefaultImageBase64s) {
-    const {saveTs} = gravatarOfficialDefaultImageBase64s[md5Length];
+  for (const officialMd5Length in gravatarOfficialDefaultImageBase64s) {
+    const {saveTs} = gravatarOfficialDefaultImageBase64s[officialMd5Length];
     if (now - saveTs > 120 * 60 * 1000) { // 如果缓存时间超过 120 分钟，则清理掉该缓存
-      delete gravatarOfficialDefaultImageBase64s[md5Length];
+      delete gravatarOfficialDefaultImageBase64s[officialMd5Length];
     }
   }
 }, 10 * 60 * 1000);
@@ -49,23 +49,17 @@ const requestImageBase64 = async (imgUrl) => {
 }
 
 const getGravatarOfficialDefaultImageBase64 = async (avatarMd5) => {
-  const md5Length = (avatarMd5 && typeof avatarMd5 === 'string') ? avatarMd5.length : 32;
+  const officialMd5Length = ((avatarMd5 && typeof avatarMd5 === 'string') ? avatarMd5.length : 32) - 1;
 
-  if (gravatarOfficialDefaultImageBase64s[md5Length])
-    return gravatarOfficialDefaultImageBase64s[md5Length].base64; // 如果缓存中有官方默认头像的 base64 图片，则直接返回
+  if (gravatarOfficialDefaultImageBase64s[officialMd5Length])
+    return gravatarOfficialDefaultImageBase64s[officialMd5Length].base64; // 如果缓存中有官方默认头像的 base64 图片，则直接返回
 
   const gravatarAddr = `${process.env.GRAVATAR_ADDR || 'https://gravatar.com'}/avatar/`; // 如果环境变量配置了 GRAVATAR_ADDR 则使用该地址，否则使用默认地址 https://gravatar.com'
-  let officialMd5 = '1234567890abcdfghijklmnopqrstuvwxyz'.substring(0, md5Length); // 官方默认头像的 md5 值，获取与 md5Length 相同长度的值
-  if (officialMd5.length !== md5Length) {
-    while (officialMd5.length < md5Length) {
-      officialMd5 += officialMd5; // 如果官方默认头像的 md5 值长度小于 md5Length，则重复该值
-      officialMd5 = officialMd5.substring(0, md5Length); // 截取 md5Length 长度的 md5 值
-    }
-  }
+  let officialMd5 = avatarMd5.substring(0, officialMd5Length); // 官方默认头像的 md5 值
   let officialDefaultImageUrl = `${gravatarAddr}${officialMd5}`; // 官方默认头像的地址
   const officialDefaultImageBase64 = await requestImageBase64(officialDefaultImageUrl); // 请求官方默认头像的 base64 图片
   if (officialDefaultImageBase64) {
-    gravatarOfficialDefaultImageBase64s[md5Length] = {base64: officialDefaultImageBase64, saveTs: Date.now()}; // 缓存官方默认头像的 base64 图片
+    gravatarOfficialDefaultImageBase64s[officialMd5Length] = {base64: officialDefaultImageBase64, saveTs: Date.now()}; // 缓存官方默认头像的 base64 图片
     log.info('getGravatarOfficialDefaultImageBase64 success officialDefaultImageUrl:', officialDefaultImageUrl, ' ,officialDefaultImageBase64:', officialDefaultImageBase64);
     return officialDefaultImageBase64;
   }
