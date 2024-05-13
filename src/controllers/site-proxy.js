@@ -45,7 +45,7 @@ productGetRouter(router, '/site_proxy/gravatar_image/avatar/:avatarHash', async 
   const gravatarAddr = `${process.env.GRAVATAR_ADDR || 'https://gravatar.com'}/avatar/`; // 如果环境变量配置了 GRAVATAR_ADDR 则使用该地址，否则使用默认地址 https://gravatar.com'
   const gravatarImageUrl = `${gravatarAddr}${avatarHash}${requestParamsStr ? `?${requestParamsStr}` : ''}`; // 完整的gravatar图片地址
 
-  log.debug('call /site_proxy/gravatar_image/:avatarHash',
+  log.debug('call /site_proxy/gravatar_image/avatar/:avatarHash',
     ' ,avatarHash:', avatarHash,
     ' ,gravatarImageUrl:', gravatarImageUrl,
     ' ,clientIp:', clientIp,
