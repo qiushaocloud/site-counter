@@ -2,15 +2,66 @@ const {
   router,
   productGetRouter,
 } = require('./router-base');
+const axios = require('axios');
 const {getLogger} = require('../log');
 const log = getLogger('API');
+
+const cacheAvatarIsExistsResults = {}; // 缓存头像是否存在的结果，格式：{avatarHash: {isExists, saveTs}}
+
+// 定期清理缓存，每隔 5 分钟执行一次
+setInterval(() => {
+  const now = Date.now();
+
+  // 清理 cacheGravatarImageRedirectResults 缓存
+  for (const avatarHash in cacheAvatarIsExistsResults) {
+    const {saveTs} = cacheAvatarIsExistsResults[avatarHash];
+    if (now - saveTs > 30 * 60 * 1000) { // 如果缓存时间超过 30 分钟，则清理掉该缓存
+      delete cacheAvatarIsExistsResults[avatarHash];
+    }
+  }
+}, 5 * 60 * 1000);
+
+// 检测 gravatar 头像是否存在
+const checkGravatarImageExists = async (avatarHash) => {
+  if (cacheAvatarIsExistsResults[avatarHash] !== undefined) {
+    return cacheAvatarIsExistsResults[avatarHash].isExists;
+  }
+
+  const gravatarAddr = `${process.env.GRAVATAR_ADDR || 'https://gravatar.com'}/avatar/`; // 如果环境变量配置了 GRAVATAR_ADDR 则使用该地址，否则使用默认地址 https://gravatar.com'
+  const gravatarImageUrl = `${gravatarAddr}${avatarHash}?d=404`; // 完整的gravatar图片地址
+  try {
+    const response = await axios.head(gravatarImageUrl, {timeout: 10000});
+    if (response.status === 200) {
+      log.debug('checkGravatarImageExists response status 200, file exists, gravatarImageUrl:', gravatarImageUrl);
+      cacheAvatarIsExistsResults[avatarHash] = {isExists: true, saveTs: Date.now()};
+      return true;
+    }
+
+    if (response.status === 404) {
+      log.debug('checkGravatarImageExists response status 404, file not found, gravatarImageUrl:', gravatarImageUrl);
+      cacheAvatarIsExistsResults[avatarHash] = {isExists: false, saveTs: Date.now()};
+      return false;
+    }
+
+    return false;
+  } catch (err) {
+    if (err.response && err.response.status === 404) {
+      log.debug('checkGravatarImageExists catch err status 404, file not found, gravatarImageUrl:', gravatarImageUrl);
+      cacheAvatarIsExistsResults[avatarHash] = {isExists: false, saveTs: Date.now()};
+      return false;
+    }
+
+    log.error('checkGravatarImageExists catch err:', err.message, ' ,gravatarImageUrl:', gravatarImageUrl);
+    delete cacheAvatarIsExistsResults[avatarHash];
+    return null;
+  }
+}
 
 // gravatar 头像代理获取，格式例如：/site_proxy/gravatar_image/avatar/8dc1e9ca2ba0c4164b10c45660b3788c 表示请求 https://gravatar.com/avatar/8dc1e9ca2ba0c4164b10c45660b3788c
 productGetRouter(router, '/site_proxy/gravatar_image/avatar/:avatarHash', async (apiId, req, res) => {
   const clientIp = req.headers['x-forwarded-for'] || req.ip;
   const {avatarHash} = req.params;
   const defaultGravatarImageUrl = process.env.DEFAULT_GRAVATAR_IMAGE_URL; // 默认加载的头像地址
-  let query = req.query;
 
   /*
   Gravatar 是一个全球通用的头像服务，允许用户在各种网站上使用同一个头像。在 Gravatar 链接中，有几个参数需要说明：
@@ -28,17 +79,13 @@ productGetRouter(router, '/site_proxy/gravatar_image/avatar/:avatarHash', async 
       imgUrl: 一个自定义的默认图片，需要对 url 进行编码。如：https://example.com/my_custom_image.png 编码后 https%3A%2F%2Fexample.com%2Fmy_custom_image.png
    */
 
+  let query = req.query;
   if (query && query.d) { // query.d: 当没有与电子邮件哈希相关联的图像时，应采取的操作。
     if (decodeURIComponent(query.d).indexOf('/site_proxy/gravatar_image/avatar/') !== -1) { // 如果 query.d 再次指向本接口，则直接修改 d=mm
       log.debug('modify query.d to mm, apiId:', apiId);
       query = {...query}
       query.d = 'mm';
     }
-  } else if (defaultGravatarImageUrl) { // 没有 query.d，则使用默认的头像
-    query = {...query}
-    // defaultGravatarImageUrl 需要进行编码，防止 defaultGravatarImageUrl 重复编码
-    query.d = encodeURIComponent(decodeURIComponent(defaultGravatarImageUrl));
-    query.d += `${query.d.indexOf('?') === -1 ? '?' : '&'}ts=${Date.now()}&rand=${Math.ceil(Math.random() * 10000000)}`; // 增加随机参数，防止缓存
   }
 
   // 获取完整的请求参数，格式如：d=mm&s=80
@@ -55,5 +102,17 @@ productGetRouter(router, '/site_proxy/gravatar_image/avatar/:avatarHash', async 
     ' ,apiId:', apiId
   );
 
+  if (!(query && query.d) && defaultGravatarImageUrl) { // 没有 query.d，则使用默认的头像
+    const isExists = await checkGravatarImageExists(avatarHash);
+    if (!isExists) { // 不存在，则重定向到默认的头像地址
+      log.debug('not found gravatar image, redirect defaultGravatarImageUrl:', defaultGravatarImageUrl);
+      return res.redirect(defaultGravatarImageUrl);
+    }
+
+    log.debug('check gravatar image exists, redirect gravatarImageUrl:', gravatarImageUrl);
+    return res.redirect(gravatarImageUrl);
+  }
+  
+  log.debug('not config defaultGravatarImageUrl, redirect gravatarImageUrl:', gravatarImageUrl);
   res.redirect(gravatarImageUrl);
 });
