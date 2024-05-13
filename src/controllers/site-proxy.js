@@ -86,6 +86,10 @@ productGetRouter(router, '/site_proxy/gravatar_image/avatar/:avatarHash', async 
       query = {...query}
       query.d = 'mm';
     }
+  } else if (process.env.DEFAULT_GRAVATAR_PARAM_D) { // 没有 query.d，则使用默认的参数d
+    query = {...query}
+    // defaultGravatarImageUrl 需要进行编码，防止 defaultGravatarImageUrl 重复编码
+    query.d = encodeURIComponent(decodeURIComponent(process.env.DEFAULT_GRAVATAR_PARAM_D));
   }
 
   // 获取完整的请求参数，格式如：d=mm&s=80

@@ -21,3 +21,5 @@ NODE_ENV = 'development'
 GRAVATAR_ADDR = 'https://gravatar.com'
 # 默认头像地址, 配置了后，gravatar 没有图片时会使用这个地址作为头像，您可以配置成动态头像地址，如：https://api.7585.net.cn/sjtx/api.php?lx=c1 或 https://www.loliapi.com/acg/pp/
 DEFAULT_GRAVATAR_IMAGE_URL = ''
+# 默认 gravatar 头像参数，如果有值，则 DEFAULT_GRAVATAR_IMAGE_URL 配置无效，使用这个配置，不需要在服务区检测头像存不存在，而是由 gravatar 自己检测，但是 gravatar 会缓存头像，因此不适合随机头像
+DEFAULT_GRAVATAR_PARAM_D = ''
