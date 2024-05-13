@@ -38,6 +38,7 @@ productGetRouter(router, '/site_proxy/gravatar_image/avatar/:avatarHash', async 
     query = {...query}
     // defaultGravatarImageUrl 需要进行编码，防止 defaultGravatarImageUrl 重复编码
     query.d = encodeURIComponent(decodeURIComponent(defaultGravatarImageUrl));
+    query.d += `${query.d.indexOf('?') === -1 ? '?' : '&'}ts=${Date.now()}&rand=${Math.ceil(Math.random() * 10000000)}`; // 增加随机参数，防止缓存
   }
 
   // 获取完整的请求参数，格式如：d=mm&s=80
