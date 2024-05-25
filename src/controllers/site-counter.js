@@ -40,7 +40,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
   if (!siteHost) {
     log.error('invalid params, apiId:', apiId);
 
-    res.status(401).send({
+    res.status(400).send({
       code: FailResStateCode.INVALID_PARAMS,
       message: 'invalid params'
     });
@@ -73,7 +73,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
       if (err) {
         log.error('incrSiteCount err:', err, ' ,apiId:', apiId);
 
-        res.status(401).send({
+        res.status(400).send({
           code: FailResStateCode.FAILURE,
           message: typeof err === 'object' ? err.message : 'incrSiteCount err'
         });

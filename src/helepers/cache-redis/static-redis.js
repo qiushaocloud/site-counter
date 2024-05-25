@@ -103,6 +103,86 @@ class CacheStaticRedis {
     });
   }
 
+  getAsync (keyName) {
+    return new Promise((resolve, reject) => {
+      const commondId = 'getAsync:' + keyName;
+      const redisMethod = 'GET';
+      const cacheCammond = this._getOrInitCacheCommond(commondId, redisMethod, [keyName]);
+      
+      cacheCammond.onCbs.push((err, res) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(res);
+      });
+
+      this._execCommond(commondId);
+    });
+  }
+
+  incrAsync (keyName) {
+    return new Promise((resolve, reject) => {
+      const commondId = 'incrAsync:' + keyName;
+      const redisMethod = 'INCRBY';
+      const cacheCammond = this._getOrInitCacheCommond(commondId, redisMethod, [keyName, 0]);
+      
+      cacheCammond.args[cacheCammond.args.length -1] += 1;
+      cacheCammond.onCbs.push((err, res) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(res);
+      });
+
+      this._execCommond(commondId);
+    });
+  }
+
+  incrbyAsync (keyName, incrNum) {
+    return new Promise((resolve, reject) => {
+      const commondId = 'incrbyAsync:' + keyName;
+      const redisMethod = 'INCRBY';
+      const cacheCammond = this._getOrInitCacheCommond(commondId, redisMethod, [keyName, 0]);
+      
+      cacheCammond.args[cacheCammond.args.length -1] += incrNum;
+      cacheCammond.onCbs.push((err, res) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(res);
+      });
+
+      this._execCommond(commondId);
+    });
+  }
+
+  setAsync (keyName, value, expire) {
+    return new Promise((resolve, reject) => {
+      const commondId ='setAsync:' + keyName;
+      const redisMethod = 'SET';
+      const cacheCammond = this._getOrInitCacheCommond(commondId, redisMethod, [keyName, value, -1]);
+      
+      cacheCammond.args[cacheCammond.args.length -2] = value;
+      expire !== undefined && (cacheCammond.args[cacheCammond.args.length -1] = expire);
+      cacheCammond.onCbs.push((err, res) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(res);
+      });
+
+      this._execCommond(commondId);
+    });
+  }
+
   _execCommond (commondId) {
     const cacheCammond = this._cacheCammonds[commondId];
     if (!cacheCammond)

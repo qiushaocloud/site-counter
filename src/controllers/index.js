@@ -50,7 +50,7 @@ productGetRouter(router, '/get_ip_location', (apiId, req, res) => {
           ' ,apiId:', apiId
         );
 
-        res.status(401).send({
+        res.status(400).send({
           code: FailResStateCode.FAILURE,
           message: 'get_ip_location api fail, code:' + code
         });
@@ -72,7 +72,7 @@ productGetRouter(router, '/get_ip_location', (apiId, req, res) => {
     })
     .catch((error) => {
       log.error('get_ip_location catch error:', error, ' ,apiId:', apiId);
-      res.status(401).send({
+      res.status(400).send({
         code: FailResStateCode.FAILURE,
         message: 'get_ip_location catch error'
       });
