@@ -34,57 +34,96 @@ const deepAssign = (target, source) => {
             target[key] = source[key];
         }
     }
+
+    return target;
+}
+
+const getPromiseCallback = (resolve, reject) => {
+    return (err, res) => {
+		if (err) return reject && reject(err);
+        resolve && resolve(res);
+    }
 }
 
 class IpService {
     #ip2RegionSearcher;
     #ip2RegionConfig = {
         mode: 2, // 1: 完全基于文件的查询 | 2: 缓存 VectorIndex 索引 | 3: 缓存整个 xdb 数据
-        dbPath: '../../libs/ip2region/data/ip2region2.xdb', // 指定ip2region数据文件路径
+        dbPath: '../../libs/ip2region/data/ip2region.xdb', // 指定ip2region数据文件路径
         bindingPath: '../../libs/ip2region/binding/nodejs/index.js' // 指定nodejs binding文件路径
     }
-    #apiConfig = {
-        method: 'GET',
-        // url: 'http://yuanxiapi.cn/api/iplocation?ip={{ip}}',
-        url: 'http://ip-api.com/json/{{ip}}?lang=zh-CN',
-        headers: undefined,
-        timeout: 10000,
-        params: undefined,
-        data: undefined,
-        responseType: 'json',
-        responseKeyMap: {
-            // location: 'location',
-            location: '',
-            regexMatch: {
-                key: 'location',
-                patterns: [
-                    '^(中国)(.*?省|.*?自治区)?(.*?市)?(.*?区|.*?县)?(.+)$',
-                    '^(.*) (.*?)(.*?)(.*?)(.*?)$',
-                    '^(.*国)(.*?)(.*?)(.*?)(.*?)$'
-                ]
-            },
-            // country: '',
-            country: 'country',
-            regionCode: '',
-            // province: '',
-            province: 'regionName',
-            // city: '',
-            city: 'city',
-            district: '',
-            // isp: ''
-            isp: 'isp'
+	#useApiUrl = 'http://ip-api.com/json/{{ip}}?lang=zh-CN';
+    #preApiConfigMap = {
+        'http://yuanxiapi.cn/api/iplocation?ip={{ip}}': {
+            responseKeyMap: {
+                location: 'location',
+                regexMatch: {
+                	key: 'location',
+                	patterns: [
+                        '^(中国)(.*?省|.*?自治区)?(.*?市)?(.*?区|.*?县)?(.+)$',
+                        '^(.*) (.*?)(.*?)(.*?)(.*?)$',
+                        '^(.*国)(.*?)(.*?)(.*?)(.*?)$'
+                	]
+            	}
+            }   
+        },
+        'http://ip-api.com/json/{{ip}}?lang=zh-CN': {
+        	responseKeyMap: {
+                location: '',
+                country: 'country',
+            	regionCode: '',
+            	province: 'regionName',
+	            city: 'city',
+    	        district: '',
+        	    isp: 'isp'
+            }
         }
+    }
+    get #apiConfig () {
+        const config = {
+        	method: 'GET',
+			url: this.#useApiUrl,
+        	headers: undefined,
+        	timeout: 10000,
+        	params: undefined,
+        	data: undefined,
+       		responseType: 'json',
+        	responseKeyMap: {
+            	location: '',
+            	location: '',
+            	regexMatch: {
+                	key: '',
+                	patterns: []
+            	},
+            	country: '',
+            	regionCode: '',
+            	province: '',
+            	city: '',
+    	        district: '',
+	            isp: ''
+        	}
+        }
+        
+        deepAssign(config, this.#preApiConfigMap[this.#useApiUrl] || {});
+
+        return config;
     }
     #cacheIp2RegionRequests = {};
     #cacheApiRequests = {};
     
-    setApiConfig (apiConfig) {
-        Object.assign(this.#apiConfig, apiConfig);
+	setUseApiUrl (url) {
+        this.#useApiUrl = url;
+    }
+
+    setPreApiConfig (apiUrl, apiConfig) {
+        let preApiConfig = this.#preApiConfigMap[apiUrl];
+		!preApiConfig && (this.#preApiConfigMap[apiUrl] = {});
+        deepAssign(preApiConfig, apiConfig);
     }
 
     setIp2RegionConfig (ip2RegionConfig) {
         const { mode: oldMode, dbPath: oldDbPath } = this.#ip2RegionConfig;
-        Object.assign(this.#ip2RegionConfig, ip2RegionConfig);
+        deepAssign(this.#ip2RegionConfig, ip2RegionConfig);
 
         if (this.#ip2RegionConfig.mode !== oldMode || this.#ip2RegionConfig.dbPath !== oldDbPath) {
             this.#ip2RegionSearcher = null;
@@ -93,6 +132,7 @@ class IpService {
 
     async searchByIpApi (ip) {
         const startTs = Date.now();
+        let reqUrl;
         try {
             const {
                 method,
@@ -105,9 +145,10 @@ class IpService {
                 responseKeyMap = {}
             } = this.#apiConfig;
 
+            reqUrl = url.replace('{{ip}}', ip);
             const axiosConfig = {
                 method,
-                url: url.replace('{{ip}}', ip),
+                url: reqUrl,
                 headers,
                 timeout,
                 params,
@@ -118,7 +159,11 @@ class IpService {
                 if (axiosConfig[key] === undefined)
                     delete axiosConfig[key];
             }
-            const responseData = (await axios(axiosConfig)).data;
+
+            console.error('ccc', axiosConfig);
+            const response = await axios(axiosConfig);
+            console.error(111, response);
+            const responseData = response.data;
 
             const {
                 location: locationKey,
@@ -161,7 +206,7 @@ class IpService {
                 }
             }
 
-            !location && (location = `${country}${province}${city}${isp}`);
+            !location && (location = `${country || ''}${province || ''}${city || ''}${isp || ''}`);
 
             const addressInfo = {
                 location: location || '',
@@ -177,6 +222,7 @@ class IpService {
                 code: 200,
                 data: addressInfo,
                 ip: ip,
+                reqUrl: reqUrl,
                 diffTs: Date.now() - startTs,
                 others: responseData
             }
@@ -186,6 +232,7 @@ class IpService {
                 code: 500,
                 data: `Error occurred while searching ip api, errorMessage: ${typeof error === 'object' ? error.message : error}`,
                 ip: ip,
+                reqUrl: reqUrl,
                 diffTs: Date.now() - startTs
             };
         }
@@ -196,10 +243,24 @@ class IpService {
         try {
             // 查询 await 或 promise均可，例子：data: {region: '中国|0|江苏省|苏州市|电信', ioCount: 2, took: 0.402874}
             const data = await new Promise((resolve, reject) => {
-                this.#searchByIp2RegionCallback(ip, (error, data) => {
-                    if (error) throw reject(error);
-                    resolve(data);
-                });
+				let cacheIp2RegionRequest = this.#cacheIp2RegionRequests[ip];
+        		if (cacheIp2RegionRequest && (cacheIp2RegionRequest.cacheTs && (Date.now() - cacheIp2RegionRequest.cacheTs) <  10000))
+            		return cacheIp2RegionRequest.push(getPromiseCallback(resolve, reject));
+        
+        		cacheIp2RegionRequest = [];
+        		cacheIp2RegionRequest.cacheTs = Date.now();
+        		this.#cacheIp2RegionRequests[ip] = cacheIp2RegionRequest;
+        		cacheIp2RegionRequest.push(getPromiseCallback(resolve, reject));
+
+        		const searcher = this.#getIp2RegionSearcher();
+        		if (!searcher)
+            		return this.#runCacheRequest('ip2Region', ip, new Error('ip2region searcher not found'));
+        
+        		searcher.search(ip) .then(data => {
+                	this.#runCacheRequest('ip2Region', ip, undefined, data);
+            	}).catch(error => {
+                	this.#runCacheRequest('ip2Region', ip, error);
+            	});
             });
 
             const { region: regionStr, ...others } = data;
@@ -220,8 +281,7 @@ class IpService {
             addressInfo.province = regionSplit[2] !== '0' ? regionSplit[2] : ''
             addressInfo.city = regionSplit[3] !== '0' ? regionSplit[3] : ''
             addressInfo.isp = regionSplit[4] !== '0' ? regionSplit[4] : ''
-       
-            addressInfo.location = `${addressInfo.country}${addressInfo.province}${addressInfo.city}${addressInfo.isp}`
+            addressInfo.location = `${addressInfo.country ||''}${addressInfo.province || ''}${addressInfo.city || ''}${addressInfo.isp || ''}`
 
             return {
                 code: 200,
@@ -241,39 +301,28 @@ class IpService {
         }
     }
 
-    #searchByIp2RegionCallback (ip, onCallback) {
-        let cacheIp2RegionRequest = this.#cacheIp2RegionRequests[ip];
-        if (cacheIp2RegionRequest && (cacheIp2RegionRequest.cacheTs && (Date.now() - cacheIp2RegionRequest.cacheTs) <  10000))
-            return cacheIp2RegionRequest.push(onCallback);
-        
-        cacheIp2RegionRequest = [];
-        cacheIp2RegionRequest.cacheTs = Date.now();
-        this.#cacheIp2RegionRequests[ip] = cacheIp2RegionRequest;
-        cacheIp2RegionRequest.push(onCallback);
-
-        const searcher = this.#getIp2RegionSearcher();
-        if (!searcher)
-            return this.#runCacheIp2RegionRequest(ip, new Error('ip2region searcher not found'));
-        
-        searcher.search(ip)
-            .then(data => {
-                this.#runCacheIp2RegionRequest(ip, undefined, data);
-            })
-            .catch(error => {
-                this.#runCacheIp2RegionRequest(ip, error);
-            });
-    }
-
-    #runCacheIp2RegionRequest (ip, error, data) {
-        const cacheIp2RegionRequest = this.#cacheIp2RegionRequests[ip];
-        delete this.#cacheIp2RegionRequests[ip];
-        if (!cacheIp2RegionRequest || !cacheIp2RegionRequest.length) return;
-        for (const cacheCb of cacheIp2RegionRequest) {
-            try {
-                cacheCb && cacheCb(error, data);
-            } catch (catchError) {
-                this.#printlog('error', '#runCacheIp2RegionRequest cacheCb catchError', ip, catchError);
+    #runCacheRequest (type, ip, error, data) {
+        let cacheRequest;
+        switch (type) {
+            case 'ip2Region': {
+                cacheRequest = this.#cacheIp2RegionRequests[ip];
+        		delete this.#cacheIp2RegionRequests[ip];
+                break;
             }
+            case 'api': {
+                cacheRequest = this.#cacheApiRequests[ip];
+                delete this.#cacheApiRequests[ip];
+                break;
+            }
+        }
+
+        if (!cacheRequest || !cacheRequest.length) return;
+        for (const cacheCb of cacheRequest) {
+        	try {
+            	cacheCb && cacheCb(error, data);
+        	} catch (catchError) {
+        		this.#printlog('error', '#runCacheRequest cacheCb catchError', ip, catchError);
+    		}
         }
     }
 
@@ -331,6 +380,14 @@ class IpService {
 const ipServiceInstance = new IpService();
 module.exports = ipServiceInstance;
 
+/*
+ipServiceInstance.searchByIp2Region('180.136.0.7')
+    .then(res => {
+        console.log('searchByIp2Region res', res);
+    })
+    .catch(err => {
+        console.error('searchByIp2Region err', err);
+    })
 
 ipServiceInstance.searchByIp2Region('180.136.0.7')
     .then(res => {
@@ -340,6 +397,14 @@ ipServiceInstance.searchByIp2Region('180.136.0.7')
         console.error('searchByIp2Region err', err);
     })
 
+ipServiceInstance.searchByIp2Region('180.136.0.7')
+    .then(res => {
+        console.log('searchByIp2Region res', res);
+    })
+    .catch(err => {
+        console.error('searchByIp2Region err', err);
+    })
+*/
 ipServiceInstance.searchByIpApi('180.136.0.7')
     .then(res => {
         console.log('searchByIpApi res', res);
