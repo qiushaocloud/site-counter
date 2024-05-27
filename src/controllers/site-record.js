@@ -39,7 +39,7 @@ const {
       return;
     }
   
-    if (!verifySign(req, siteHost+API_SIGN_SECRET_KEY, undefined, undefined, true)) {
+    if (API_SIGN_SECRET_KEY && !verifySign(req, siteHost+API_SIGN_SECRET_KEY, undefined, undefined, true)) {
       log.error('pull_site_records Unauthorized, invalid sign, apiId:', apiId);
   
       res.status(401).send({
@@ -98,7 +98,7 @@ const {
       return;
     }
   
-    if (!verifySign(req, siteHost+API_SIGN_SECRET_KEY, undefined, undefined, true)) {
+    if ((API_SIGN_SECRET_KEY && !verifySign(req, siteHost+API_SIGN_SECRET_KEY, undefined, undefined, true)) {
       log.error('push_site_records Unauthorized, invalid sign, apiId:', apiId);
   
       res.status(401).send({
@@ -157,7 +157,7 @@ const {
       return;
     }
   
-    if (!verifySign(req, siteHost+API_SIGN_SECRET_KEY, undefined, undefined, true)) {
+    if ((API_SIGN_SECRET_KEY && !verifySign(req, siteHost+API_SIGN_SECRET_KEY, undefined, undefined, true)) {
       log.error('add_site_interval_push_record_task Unauthorized, invalid sign, apiId:', apiId);
   
       res.status(401).send({
@@ -216,7 +216,7 @@ const {
       return;
     }
   
-    if (!verifySign(req, siteHost+API_SIGN_SECRET_KEY, undefined, undefined, true)) {
+    if ((API_SIGN_SECRET_KEY && !verifySign(req, siteHost+API_SIGN_SECRET_KEY, undefined, undefined, true)) {
       log.error('del_site_interval_push_record_task Unauthorized, invalid sign, apiId:', apiId);
   
       res.status(401).send({

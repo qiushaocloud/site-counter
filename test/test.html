@@ -6,20 +6,250 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>qiushaocloud site counter test</title>
   <script>
-    window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:801');
+    window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
   </script>
-  <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
-  <script src="../dist/qiushaocloud_site_counter.min.js"></script>
+  <script src="../dist/qiushaocloud_site_counter.js"></script>
+  <!-- <script src="../dist/qiushaocloud_site_counter.min.js"></script> -->
 </head>
 <body>
-  <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
-  <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
-  <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
-  <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
+  <script>
+    window.qiushaocloudSiteCounterNotice = function(type, data) {
+      console.debug('recv qiushaocloudSiteCounterNotice, type:', type, ' ,data:', data);
+    }
 
-  <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
-  <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
-  <p>本页面今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
-  <p> 本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
+    setTimeout(function() {
+      window.requestQiushaocloudSiteCounterLogsApiByFilter();
+    }, 10000);
+  </script>
+
+  <div class="total-box">
+    <div class="counter-box">
+      <h4>网站统计</h4>
+      <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
+      <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
+      <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
+      <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
+    
+      <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
+      <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
+      <p>本页面今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
+      <p> 本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
+    </div>
+
+    <div class="ips-stats-box">
+      <div class="site-ips-stats-box">
+        <h4>网站IP统计</h4>
+        <div id="qiushaocloud_sitecounter_value_site_ips_stats" data-ips-stats-sort-name="desc" data-logs-sort-name="desc" data-date-range="7days"></div>
+      </div>
+      <div class="site-page-ips-stats-box">
+        <h4>本页面IP统计</h4>
+        <div id="qiushaocloud_sitecounter_value_site_page_ips_stats" data-ips-stats-sort-name="desc" data-logs-sort-name="desc" data-date-range="7days"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+    h4 {
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background: #00BCD4;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0097A7;
+    }
+
+    .total-box {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      margin: 20px;
+    }
+
+    .counter-box,
+    .ips-stats-box {
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .counter-box {
+      background: #00BCD4;
+      color: #fff;
+      flex: 1;
+    }
+
+    .counter-box p {
+      margin: 10px 0;
+    }
+
+    .ips-stats-box {
+      flex: 2;
+      background: #03A9F4;
+      color: #fff;
+      display: flex;
+      /* flex-direction: column; */
+    }
+
+    .site-ips-stats-box,
+    .site-page-ips-stats-box {
+      flex: 1;
+      background: #08a0e5;
+      margin: 0 5px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .site-log-day,
+    .site-page-log-day {
+      margin-left: 10px;
+    }
+
+    .site-log-day-ul,
+    .site-page-log-day-ul {
+      margin: 10px 10px 10px 40px;
+    }
+
+    .site-log-day-ip-detail-btn,
+    .site-page-log-day-ip-detail-btn {
+      padding: 2px 5px;
+      background: #3F51B5;
+      margin-left: 11px;
+      border: none;
+      border-radius: 3px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .site-counter-logs-box {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(228, 239, 244, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .site-counter-logs-title {
+      text-align: center;
+      padding: 10px 5px;
+      position: relative;
+      background: #fff;
+      border-radius: 8px 8px 0 0;
+      width: 100%;
+    }
+
+    .site-counter-logs-close-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #f44336;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      padding: 5px 10px;
+    }
+
+    .site-counter-logs-close-btn:hover {
+      background: #d32f2f;
+    }
+
+    .site-counter-logs-box table {
+      border-collapse: collapse;
+      width: 100%;
+      text-align: center;
+      background: #fff;
+    }
+
+    .site-counter-logs-box table th,
+    .site-counter-logs-box table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+
+    .site-counter-logs-box table th {
+      background-color: #4CAF50;
+      color: white;
+      min-width: 100px;
+      position: sticky;
+      top: 0;
+    }
+
+    .site-counter-logs-box table th:nth-child(1),
+    .site-counter-logs-box table td:nth-child(1) {
+      width: 70px;
+    }
+
+    .site-counter-logs-box table th:nth-child(2),
+    .site-counter-logs-box table td:nth-child(2) {
+      width: 220px;
+    }
+
+    .site-counter-logs-box table th:nth-child(3),
+    .site-counter-logs-box table td:nth-child(3) {
+      width: 150px;
+    }
+
+    .site-counter-logs-box table th:nth-child(4),
+    .site-counter-logs-box table td:nth-child(4) {
+      width: 330px;
+    }
+
+    .site-counter-logs-box table tbody {
+      display: block;
+      max-height: calc(100vh - 165px);
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    .site-counter-logs-box table tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    .site-counter-logs-box table tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    .site-counter-logs-box table tr:nth-child(odd) {
+      background-color: #fff;
+    }
+
+    .site-counter-logs-box table tr:hover {
+      background-color: #0b8ddd;
+    }
+  </style>
 </body>
 </html>

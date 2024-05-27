@@ -73,7 +73,7 @@ if (process.env.PART_API_CONFIG_MAP_BASE64_STR) { // 环境变量存在 partApiC
     }
 }
 
-class IpService {
+class IPService {
     #ip2RegionSearcher;
     #ip2RegionConfig = {
         emptyIpForceApiUrl: DEFAULT_USE_API_URL,
@@ -85,6 +85,16 @@ class IpService {
     #cacheApiRequests = {};
 	#useApiUrl = DEFAULT_USE_API_URL;
     #partApiConfigMap = JSON.parse(JSON.stringify(defaultPartApiConfigMap));
+    #cacheIpInfos = {}; // {[ip]:[cacheTs, result]}
+
+    get #currValidApiUrl () {
+        if (this.#useApiUrl !== 'USE_LOCAL_IP2REGION' && this.#partApiConfigMap[this.#useApiUrl])
+            return this.#useApiUrl;
+
+        const foundApiUrl = this.getPartApiConfigKeys().find(item => item !== this.#useApiUrl) || '';
+        this.#printlog('info', 'getCurrValidApiUrl Found valid apiUrl:', foundApiUrl, ' ,useApiUrl:', this.#useApiUrl, ' ,isForceFoundApiUrl:', isForceFoundApiUrl);
+        return foundApiUrl;
+    }
 
 	setUseApiUrl (url) {
         this.#useApiUrl = url;
@@ -115,26 +125,48 @@ class IpService {
         return this.#partApiConfigMap[apiUrl];
     }
 
-    async search (ip='') {
-        this.#printlog('debug','call search ip:', ip);
-        if (ip && this.#useApiUrl === 'USE_LOCAL_IP2REGION') { // 指定了使用本地ip2region查询
-            return this.searchByIp2Region(ip);
+    async search (ip='', {forceType, isCache}={}) {
+        let caheIpInfo = isCache && ip ? this.#cacheIpInfos[ip] : undefined;
+        this.#printlog('debug','call search ip:', ip, ' ,forceType:', forceType, ' ,isCache:', isCache, ' ,caheIpInfo:', caheIpInfo);
+
+        this.#clearCacheIpResults();
+        if (caheIpInfo && (Date.now() - caheIpInfo[0]) < 60000)
+            return caheIpInfo[1];
+
+        let result;
+        if (forceType === 'ip2Region') { // 强制使用ip2region查询
+            result = await this.searchByIp2Region(ip);
+        } else if(forceType === 'api') { // 强制使用指定api查询
+            result = await this.searchByIpApi(ip, true);
+        } else if (ip && this.#useApiUrl === 'USE_LOCAL_IP2REGION') { // 指定了使用本地ip2region查询
+            result = await this.searchByIp2Region(ip);
+        } else { // 未指定强制使用api, 未指定使用本地ip2region查询, 则使用默认api查询
+            result = await this.searchByIpApi(ip);
         }
 
-        return this.searchByIpApi(ip);
+        if (isCache && ip && result.code === 200) {
+            this.#cacheIpInfos[ip] = [Date.now(), result];
+        } else {
+            ip && delete this.#cacheIpInfos[ip];
+        }
+
+        return result;
     }
 
-    async searchByIpApi (ip='') {
-        this.#printlog('debug','call searchByIpApi ip:', ip);
+    async searchByIpApi (ip='', isForceUseApi) {
         const startTs = Date.now();
         let reqUrl;
         try {
-            if (ip && this.#useApiUrl === 'USE_LOCAL_IP2REGION') { // 指定了使用本地ip2region查询
+            this.#printlog('debug','call searchByIpApi ip:', ip, ' ,isForceUseApi:', isForceUseApi);
+            if (ip === '::1') // 处理 ::1 问题
+                throw 'searchByIpApi ip is ::1';
+
+            if (!isForceUseApi && ip && this.#useApiUrl === 'USE_LOCAL_IP2REGION') { // 指定了使用本地ip2region查询
                 this.#printlog('info', 'Use local ip2region search, ip:', ip);
                 return this.searchByIp2Region(ip);
             }
 
-            if (ip && !this.#partApiConfigMap[this.#useApiUrl]) { // 未设置指定api的配置, 使用本地ip2region查询
+            if (!isForceUseApi && ip && !this.#partApiConfigMap[this.#useApiUrl]) { // 未设置指定api的配置, 使用本地ip2region查询
                 this.#printlog('warn', 'No api config found for', this.#useApiUrl, ', use local ip2region search, ip:', ip);
                 return this.searchByIp2Region(ip);
             }
@@ -147,14 +179,14 @@ class IpService {
                 params,
                 data,
                 responseType,
-                responseKeyMap = {}
+                responseKeyMap = {},
+                successRes
             } = this.#getApiConfig(ip);
 
             if (!url)
-                throw new Error('No url found for ip api');
+                throw 'No url found for ip api';
 
             reqUrl = url.replace('{{ip}}', ip);
-
             const response = await new Promise((resolve, reject) => {
                 if (ip) {
                     let cacheApiRequest = this.#cacheApiRequests[ip];
@@ -190,12 +222,30 @@ class IpService {
                 	this.#runCacheRequest('api', ip, error);
             	});
             })
-
             if (response.status !== 200) {
-                this.#printlog('error', 'searchByIpApi status not is 200, status:', response.status, ip, response.data);
-                throw new Error(`searchByIpApi status not is 200, status: ${response.status}`);
+                this.#printlog('error', 'searchByIpApi status not is 200, status:', response.status, response.data, ip);
+                return {
+                    code: response.status,
+                    data: response.data || 'searchByIpApi status not is 200',
+                    ip: ip,
+                    reqUrl: reqUrl,
+                    diffTs: Date.now() - startTs
+                };
             }
             const responseData = response.data;
+            if (successRes && successRes.length >= 2) { // successRes = [successResKey,successResCode,failResMsg]
+                const successResValue = getJsonValueByKey(responseData, successRes[0]);
+                if (successResValue !== successRes[1]) {
+                    this.#printlog('warn', 'searchByIpApi successRes not match, successRes:', successRes, ' ,successResValue:', successResValue, ' ,ip:', ip, ' ,responseData:', responseData);
+                    return {
+                        code: typeof successResValue === 'number' && successResValue !== 200 ? successResValue : 500,
+                        data: successRes[2] && getJsonValueByKey(responseData, successRes[2]) ? getJsonValueByKey(responseData, successRes[2]) : (response.data || 'searchByIpApi successRes not match'),
+                        ip: ip,
+                        reqUrl: reqUrl,
+                        diffTs: Date.now() - startTs
+                    };
+                }
+            }
 
             const {
                 location: locationKey,
@@ -228,12 +278,13 @@ class IpService {
                     for (const regexStr of patterns) {
                         const regex = new RegExp(regexStr);
                         const match = checkStr.match(regex);
+                        console.error('match:', match, ' ,regexStr:', regexStr, ' ,checkStr:', checkStr)
                         if (match && match.length > 1) {
                             !country && (country = match[1] ? match[1].trim() : '');
-                            !province && (province = match[2] ? match[2] : '');
-                            !city && (city = match[3] ? match[3] : '');
-                            !district && (district = match[4] ? match[4] : '');
-                            !isp && (isp = match[5] ? match[5] : '');
+                            !province && (province = match[2] ? match[2].trim() : '');
+                            !city && (city = match[3] ? match[3].trim() : '');
+                            !district && (district = match[4] ? match[4].trim() : '');
+                            !isp && (isp = match[5] ? match[5].trim() : '');
                             break;
                         }
                     }
@@ -247,14 +298,14 @@ class IpService {
                 country: country || '',
                 area_code: area_code || '',
                 province: province || '',
-                city: city || location || '',
+                city: city || (!country && !province ? location : ''),
                 district: district || '',
                 isp: isp || ''
             };
 
             if (!checkEffectiveAddressInfo(addressInfo)) {
                 this.#printlog('warn', 'searchByIpApi effective addressInfo not found', ip, addressInfo);
-                throw new Error('searchByIpApi effective addressInfo not found');
+                throw 'searchByIpApi effective addressInfo not found';
             }
 
             return {
@@ -278,12 +329,15 @@ class IpService {
     }
 
     async searchByIp2Region (ip='') {
-        this.#printlog('debug','call searchByIp2Region ip:', ip);
         const startTs = Date.now();
         try {
+            this.#printlog('debug','call searchByIp2Region ip:', ip);
+            if (ip === '::1') // 处理 ::1 问题
+                throw 'searchByIp2Region ip is ::1';
+
             if (!ip) { // 没有ip参数, 则通过api方式查询
                 this.#printlog('info', 'No ip parameter, use api search, ip:', ip);
-                return this.searchByIpApi(ip);
+                return this.searchByIpApi(ip, true);
             }
             
             // 查询 await 或 promise均可，例子：data: {region: '中国|0|江苏省|苏州市|电信', ioCount: 2, took: 0.402874}
@@ -311,9 +365,7 @@ class IpService {
                 	this.#runCacheRequest('ip2Region', ip, error);
             	});
             });
-
             const { region: regionStr, ...others } = data;
-
             const addressInfo = {
                 location: '',
                 country: '',
@@ -334,7 +386,7 @@ class IpService {
 
             if (!checkEffectiveAddressInfo(addressInfo)) {
                 this.#printlog('warn', 'searchByIpApi effective addressInfo not found', ip, addressInfo);
-                throw new Error('searchByIpApi effective addressInfo not found');
+                throw 'searchByIpApi effective addressInfo not found';
             }
 
             return {
@@ -358,7 +410,7 @@ class IpService {
     }
 
     #getApiConfig (searchIp) {
-        let ipApiUrl = this.#getCurrValidApiUrl(!searchIp && !this.#partApiConfigMap[this.#useApiUrl]);
+        let ipApiUrl = this.#currValidApiUrl;
         let partApiConfig = this.#partApiConfigMap[ipApiUrl];
         if (!searchIp && partApiConfig && partApiConfig.emptyIpForceApiUrl) {
             this.#printlog('info', 'apiConfig for set ipApiUrl to emptyIpForceApiUrl, searchIp:', searchIp, ' ,emptyIpForceApiUrl:', partApiConfig.emptyIpForceApiUrl, ' ,ipApiUrl:', ipApiUrl);
@@ -398,16 +450,6 @@ class IpService {
         deepAssign(config, partApiConfig || {});
 
         return config;
-    }
-
-    #getCurrValidApiUrl (isForceFoundApiUrl) {
-        if (isForceFoundApiUrl || this.#useApiUrl === 'USE_LOCAL_IP2REGION') {
-            const foundApiUrl = this.getPartApiConfigKeys().find(item => item !== this.#useApiUrl) || '';
-            this.#printlog('info', 'getCurrValidApiUrl Found valid apiUrl:', foundApiUrl, ' ,useApiUrl:', this.#useApiUrl, ' ,isForceFoundApiUrl:', isForceFoundApiUrl);
-            return foundApiUrl;
-        }
-
-        return this.#useApiUrl;
     }
 
     #runCacheRequest (type, ip, error, data) {
@@ -476,15 +518,23 @@ class IpService {
         }
     }
 
+    #clearCacheIpResults () {
+        for (const ip in this.#cacheIpInfos) {
+            if (this.#cacheIpInfos[ip][0] && (Date.now() - this.#cacheIpInfos[ip][0]) > 60000) {
+                delete this.#cacheIpInfos[ip];
+            }
+        }
+    }
+
     #printlog (method, ...args) {
         if (!log[method]) {
-            log.error(new Error(`Invalid log method: ${method}`), ...args, ' ,IpService');
+            log.error(new Error(`Invalid log method: ${method}`), ...args, ' ,IPService');
             return;
         }
 
-        log[method](...args, ' ,IpService');
+        log[method](...args, ' ,IPService');
     }
 }
 
-const ipServiceInstance = new IpService();
+const ipServiceInstance = new IPService();
 module.exports = ipServiceInstance;

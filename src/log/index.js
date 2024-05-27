@@ -2,6 +2,7 @@ const path = require('path');
 const log4js = require('log4js');
 
 const LOG_DIR = path.resolve(__dirname, '../../logs')
+log4js.MY_LOG_DIR = LOG_DIR;
 
 log4js.configure({
   appenders: {
@@ -12,22 +13,24 @@ log4js.configure({
       type : 'file',
       filename: `${LOG_DIR}/site-counter-normal.log`,
       maxLogSize : 20971520,
-      backups : 10,
+      backups: 10,
       encoding : 'utf-8'
     },
     ips_data_file:{ // 输出到日期文件
       type: "dateFile",
       filename: `${LOG_DIR}/site-counter-ips.log`,
       alwaysIncludePattern: true,
-      daysToKeep:10,
-      encoding : 'utf-8'
+      daysToKeep: 31,
+      encoding: 'utf-8',
+      // maxLogSize: 104857600,  // 100MB
     },
     error_file:{ // 输出到error log
       type: "dateFile",
       filename: `${LOG_DIR}/site-counter-error.log`,
       alwaysIncludePattern: true,
-      daysToKeep:10,
-      encoding : 'utf-8'
+      daysToKeep: 31,
+      encoding: 'utf-8',
+      // maxLogSize: 104857600,  // 100MB
     }
   },
   categories: {

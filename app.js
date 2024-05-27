@@ -50,7 +50,16 @@ const {
   REDIS_DB
 } = process.env;
 
+const processDelayExit = (code=0) => {
+  log.info('call processDelayExit, code:', code);
+  setTimeout(() => {
+    log.info('processDelayExit process.exit, code:', code);
+    process.exit(code);
+  }, 2000);
+};
+
 if (!API_PORT) {
+  processDelayExit(1);
   throw new Error('.env is not exist or config err');
 }
 
@@ -95,9 +104,11 @@ const runExpressServer = async () => {
 
     expressServer.on('error', (err) => {
       log.error('recv server error evt, err:', err);
+      processDelayExit(1);
     });
   }catch (err) {
     log.error('runExpressServer err:', err);
+    processDelayExit(1);
   }
 };
 

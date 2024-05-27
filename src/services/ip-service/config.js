@@ -1,6 +1,7 @@
 const partApiConfigMap = {
     'http://yuanxiapi.cn/api/iplocation?ip={{ip}}': {
         emptyIpForceApiUrl: 'https://webapi-pc.meitu.com/common/ip_location?ip={{ip}}',
+        successRes: ['code',200,'msg'],
         responseKeyMap: {
             location: 'location',
             regexMatch: {
@@ -8,7 +9,7 @@ const partApiConfigMap = {
                 patterns: [
                     '^(中国)(.*?省|.*?自治区)?(.*?市)?(.*?区|.*?县)?(.+)$',
                     '^(.*) (.*?)(.*?)(.*?)(.*?)$',
-                    '^(.*国)(.*?)(.*?)(.*?)(.*?)$'
+                    '^(.*国)(.*?州|.*?郡|.*?)(.*?市|.*?)(.*?)(.*?)$'
                 ]
             }
         }   
@@ -25,6 +26,7 @@ const partApiConfigMap = {
         }
     },
     'http://ip-api.com/json/{{ip}}?lang=zh-CN': {
+        successRes: ['status','success','message'],
         responseKeyMap: {
             location: '',
             country: 'country',
@@ -47,19 +49,9 @@ const partApiConfigMap = {
             isp: 'as'
         }
     },
-    'http://demo.ip-api.com/json/{{ip}}?fields=66842623&lang=zh-CN': {
-        responseKeyMap: {
-            location: '',
-            country: 'country',
-            area_code: '',
-            province: 'regionName',
-            city: 'city',
-            district: '',
-            isp: 'isp'
-        }
-    },
     'https://api.qjqq.cn/api/district?ip={{ip}}': {
         emptyIpUrl: 'https://api.qjqq.cn/api/Local',
+        successRes: ['code',200,'msg'],
         responseKeyMap: {
             location: '',
             country: 'data.country',
