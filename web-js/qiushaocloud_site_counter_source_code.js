@@ -655,6 +655,7 @@
       if (opts.site_page_pathname && opts.is_only_page) { // 只请求 site_page 数据
         var reqParams = {site_host: siteHost};
         Object.assign(reqParams, opts, {date_range: site_page_date_range});
+        reqParams.sign = getCustomApiSign(reqParams, siteHost + API_SIGN_SECRET_KEY);
         sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
         return;
       }
@@ -680,6 +681,7 @@
       var reqSiteParams = {site_host: siteHost};
       opts.date_range && (reqSiteParams.date_range = opts.date_range);
       opts.filter_client_ip && (reqSiteParams.filter_client_ip = opts.filter_client_ip);
+      reqSiteParams.sign = getCustomApiSign(reqSiteParams, siteHost + API_SIGN_SECRET_KEY);
       sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqSiteParams, {method: 'GET'}, function (err, res) {
         if (err) {
           console.error('reqSiteCounterIpsStatsAPI reqSiteParams err:', err, reqSiteParams);
@@ -697,6 +699,7 @@
       site_page_date_range && (reqPageParams.date_range = site_page_date_range);
       opts.filter_client_ip && (reqPageParams.filter_client_ip = opts.filter_client_ip);
       reqPageParams.is_only_page = true;
+      reqPageParams.sign = getCustomApiSign(reqPageParams, siteHost + API_SIGN_SECRET_KEY);
       sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqPageParams, {method: 'GET'}, function (err, res) {
         if (err) {
           console.error('reqSiteCounterIpsStatsAPI reqPageParams err:', err, reqPageParams);
@@ -714,6 +717,7 @@
 
     var reqParams = {site_host: siteHost};
     Object.assign(reqParams, opts);
+    reqParams.sign = getCustomApiSign(reqParams, siteHost + API_SIGN_SECRET_KEY);
     sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
   }
 
@@ -726,6 +730,7 @@
     // opts = {site_page_pathname, date_range, is_only_page, filter_client_ip}
     var reqParams = {site_host: siteHost};
     Object.assign(reqParams, opts);
+    reqParams.sign = getCustomApiSign(reqParams, siteHost + API_SIGN_SECRET_KEY);
     sequentialAjaxRequest(getApiAddr() + "/site_counter_logs", reqParams, {method: 'GET'}, onCallback)
   }
 
