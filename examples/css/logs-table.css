@@ -23,6 +23,9 @@
     border-radius: 8px 8px 0 0;
     width: 100%;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .site-counter-logs-close-btn {
@@ -80,12 +83,12 @@
 
 .site-counter-logs-box table th:nth-child(4),
 .site-counter-logs-box table td:nth-child(4) {
-    width: 330px;
+    width: 230px;
 }
 
 .site-counter-logs-box table tbody {
     display: block;
-    max-height: calc(100vh - 165px);
+    max-height: calc(100vh - 120px);
     overflow-y: auto;
     width: 100%;
 }
@@ -96,14 +99,63 @@
     table-layout: fixed;
 }
 
+.site-counter-logs-box table tr:nth-child(odd) {
+    background-color: #f3f6f7;
+}
+
 .site-counter-logs-box table tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
-.site-counter-logs-box table tr:nth-child(odd) {
-    background-color: #fff;
-}
-
 .site-counter-logs-box table tr:hover {
     background-color: #0b8ddd;
+}
+
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .site-counter-logs-box {
+        padding: 0;
+    }
+
+    .site-counter-logs-table-thead {
+        display: none;
+    }
+
+    .site-counter-logs-box table tbody {
+        max-height: calc(100vh - 50px);
+    }
+
+    .site-counter-logs-box table tr {
+        border: 2px solid #ddd;
+        margin: 10px 0;
+    }
+   
+    .site-counter-logs-box table td {
+        width: 100% !important;
+        border: none;
+        border-bottom: 2px solid #ddd;
+        position: relative;
+        padding-left: 25%;
+        text-align: center;
+        display: flex;
+        justify-content: flex-end;
+        min-height: 40px;
+        align-items: center; /* 垂直居中 */
+    }
+
+    .site-counter-logs-box table td:last-child {
+        border-bottom: 0px;
+    }
+
+    .site-counter-logs-box table td:before {
+        position: absolute;
+        left: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        white-space: nowrap;
+        content: attr(data-label);
+        font-weight: bold;
+        text-align: left;
+    }
 }

@@ -4,13 +4,154 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>qiushaocloud site counter test</title>
+  <meta property="og:site_counter_author" content="邱少羽梦">
+  <meta property="og:site_counter_author_blog" content="https://www.qiushaocloud.top">
+  <title>qiushaocloud 网站IP统计测试</title>
   <script>
     window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
   </script>
   <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
   <script src="../dist/qiushaocloud_site_counter.min.js"></script>
   <link rel="stylesheet" href="./css/logs-table.css" />
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f4f8;
+      color: #333;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+
+    h4 {
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background: #00bcd4;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0097a7;
+    }
+
+    .ips-stats-box {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      padding: 10px;
+      background: rgba(240, 244, 248, 0.9);
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr;
+      gap: 10px;
+    }
+
+    .site-ips-stats-box,
+    .site-page-ips-stats-box {
+      background: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow: auto;
+    }
+
+    .site-ips-stats-box .site-page-ips-stats-title .other-page-title,
+    .site-page-ips-stats-box .site-page-ips-stats-title .other-page-title{
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100% - 110px);
+      display: inline-block;
+      position: relative;
+      top: 5px;
+    }
+
+    .site-log-day,
+    .site-page-log-day {
+      margin-top: 10px;
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .site-log-day-ul,
+    .site-page-log-day-ul {
+      margin-top: 10px;
+      list-style: none;
+      padding-left: 0;
+      /* max-height: 325px; */
+      overflow: auto;
+    }
+
+    .site-log-day-ul li,
+    .site-page-log-day-ul li {
+      margin: 5px 0;
+      background: #e0e0e0;
+      font-size: 14px;
+      padding: 10px;
+      border-radius: 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .site-log-day-ul li:nth-child(even),
+    .site-page-log-day-ul li:nth-child(even) {
+      background: #d0d0d0;
+    }
+
+    .site-log-day-ul li:hover,
+    .site-page-log-day-ul li:hover {
+      background: #00bcd4;
+      color: #fff;
+    }
+
+    .site-log-day-ip-detail-btn,
+    .site-page-log-day-ip-detail-btn {
+      padding: 5px 10px;
+      background: #9E9E9E;
+      margin-left: 10px;
+      border: none;
+      border-radius: 3px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .site-log-day-ul li:hover .site-log-day-ip-detail-btn,
+    .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn {
+      background: #07a8bc;
+    }
+
+    .site-log-day-ul li:hover .site-log-day-ip-detail-btn:hover,
+    .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn:hover {
+      background: #0097a7;
+    }
+
+    @media (max-width: 768px) {
+      .ips-stats-box {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+      }
+    
+      .site-log-day-ip-detail-btn {
+        margin-left: 0;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- 只是为了进行计算 -->
@@ -39,8 +180,8 @@
       ></div>
     </div>
     <div class="site-page-ips-stats-box">
-      <h4>本页面IP统计</h4>
-      <div id="qiushaocloud_sitecounter_value_site_page_ips_stats"
+      <h4 class="site-page-ips-stats-title" title="本页面IP统计">本页面IP统计</h4>
+      <div id="awaiting_qiushaocloud_sitecounter_value_site_page_ips_stats"
         data-ips-stats-sort-name="desc"
         data-logs-sort-name="desc"
         data-date-range="7days"
@@ -50,102 +191,20 @@
     </div>
   </div>
 
-  <style>
-    * {
-      padding: 0;
-      margin: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      color: #333;
-    }
-
-    h4 {
-      margin-bottom: 10px;
-    }
-
-    button {
-      padding: 10px 15px;
-      background: #00BCD4;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #0097A7;
-    }
-
-    .ips-stats-box {
-      background: #03A9F4;
-      color: #fff;
-      display: flex;
-      padding: 15px;
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
-
-    .site-ips-stats-box,
-    .site-page-ips-stats-box {
-      flex: 1;
-      background: #08a0e5;
-      margin: 0 5px;
-      padding: 10px;
-      border-radius: 10px;
-      overflow: auto;
-    }
-
-    .site-log-day,
-    .site-page-log-day {
-      margin-left: 10px;
-      background: #0990cd;
-      padding: 5px;
-      margin-top: 5px;
-      border-radius: 6px;
-    }
-
-    .site-log-day-ul,
-    .site-page-log-day-ul {
-      margin: 10px 10px 10px 40px;
-    }
-
-    .site-log-day-ul li,
-    .site-page-log-day-ul li {
-      margin: 5px 0;
-      background: #0285c1;
-      font-size: 14px;
-      padding: 5px;
-      border-radius: 3px;
-    }
-
-    .site-log-day-ul li:nth-child(even),
-    .site-page-log-day-ul li:nth-child(even) {
-      background: #057cb3;
-    }
-
-    .site-log-day-ul li:hover,
-    .site-page-log-day-ul li:hover {
-      background: #03A9F4;
-    }
-
-    .site-log-day-ip-detail-btn,
-    .site-page-log-day-ip-detail-btn {
-      padding: 2px 5px;
-      background: #3F51B5;
-      margin-left: 11px;
-      border: none;
-      border-radius: 3px;
-      color: #fff;
-      cursor: pointer;
-    }
-  </style>
+  <script>
+    (function(){
+      var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
+      var sitePagePathnameFromUrl = new URLSearchParams(window.location.search).get('page');
+      var awaitingSitePageIpsStatsEle = document.getElementById('awaiting_qiushaocloud_sitecounter_value_site_page_ips_stats');
+      if (!awaitingSitePageIpsStatsEle) return;
+      if (sitePagePathnameFromUrl && sitePagePathnameFromUrl !== sitePagePathname) {
+        console.log('awaitingSitePageIpsStatsEle set data-site-page-pathname to ', sitePagePathnameFromUrl);
+        awaitingSitePageIpsStatsEle.setAttribute('data-site-page-pathname', sitePagePathnameFromUrl);
+        document.querySelector('.site-page-ips-stats-box h4.site-page-ips-stats-title').innerHTML = '页面(<span class="other-page-title">'+sitePagePathnameFromUrl+'</span>)IP统计';
+        document.querySelector('.site-page-ips-stats-box h4.site-page-ips-stats-title').setAttribute('title', '页面('+sitePagePathnameFromUrl+')IP统计');
+      }
+      awaitingSitePageIpsStatsEle.id = awaitingSitePageIpsStatsEle.id.replace('awaiting_', '');
+    })();
+  </script>
 </body>
 </html>

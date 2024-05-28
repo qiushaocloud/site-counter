@@ -188,7 +188,7 @@
       var siteIpsStatsDateRange = (siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-date-range')) || undefined;
       var sitePageIpsStatsDateRange = (sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-date-range')) || undefined;
       
-      sitePageIpsStatsEle && !isReqedSitePageIpsStats && (apiIpsStatsOpts.site_page_pathname = getSitePagePathname());
+      sitePageIpsStatsEle && !isReqedSitePageIpsStats && (apiIpsStatsOpts.site_page_pathname = sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || getSitePagePathname());
       (!siteIpsStatsEle || isReqedSiteIpsStats) && (apiIpsStatsOpts.is_only_page = true);
 
       if (siteIpsStatsDateRange && !apiIpsStatsOpts.is_only_page)
@@ -225,6 +225,8 @@
 
         siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-render-mode') === 'none' && (delete totalIpsStatsDataMap['site']);
         sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-render-mode') === 'none' && (delete totalIpsStatsDataMap['site-page']);
+        var dataSitePagePathname = sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-site-page-pathname');
+        var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname() ? '页面(<span class="other-page-title">'+dataSitePagePathname+'</span>)' : '本页面')
 
         for (var ipsStatsKey in totalIpsStatsDataMap) {
           var ipsStats = totalIpsStatsDataMap[ipsStatsKey];
@@ -237,7 +239,7 @@
           if (ipsStatsRenderMode === 'console') { // 日志打印模式为console，只在控制台打印IP详情，页面不渲染IP详情
             for (var logDay in ipsStatsData) {
               var logDayData = ipsStatsData[logDay];
-              console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : '本页面')+' '+logDay+' 访问IP详情 ====================');
+              console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : sitePageTitle)+' '+logDay+' 访问IP详情 ====================');
               var ipsTableData = [];
               for (var ip in logDayData) {
                 var ipCount = logDayData[ip][0];
@@ -297,6 +299,9 @@
                       createLogsTableToUI(logs, document.body, {boxTitle: '网站 '+day+' 访问日志：'+ip})
                     }
                   } else {
+                    var dataSitePagePathname = ipsStatsEle && ipsStatsEle.getAttribute('data-site-page-pathname');
+                    var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname() ? '页面(<span class="other-page-title">'+dataSitePagePathname+'</span>)' : '本页面')
+            
                     var logs = apiResult.page_logs;
                     logs.sort((a, b) => logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime());
                     if (logsPrintMode === 'console') {
@@ -306,10 +311,10 @@
                         tableData.push({'时间':getCurrFormatTs(log[0]), 'IP':log[1], 'IP信息':log[2], 'UserAgent':log[3]});
                       }
                       
-                      console.log('==================== 本页面 '+day+' 访问日志：'+ip+' ====================');
+                      console.log('==================== '+sitePageTitle+' '+day+' 访问日志：'+ip+' ====================');
                       console.table(tableData);
                     } else {
-                      createLogsTableToUI(logs, document.body, {boxTitle: '本页面 '+day+' 访问日志：'+ip})
+                      createLogsTableToUI(logs, document.body, {boxTitle: sitePageTitle+' '+day+' 访问日志：'+ip})
                     }
                   }
                 });
@@ -380,8 +385,8 @@
     var apiLogsOpts = {date_range: filterDay}; // {site_page_pathname, date_range, is_only_page, filter_client_ip}
     filterIp && (apiLogsOpts.filter_client_ip = filterIp);
 
-    if (filterType === 'site-page') {
-      apiLogsOpts.site_page_pathname = getSitePagePathname();
+    if (sitePageIpsStatsEle && filterType === 'site-page') {
+      apiLogsOpts.site_page_pathname = sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || getSitePagePathname();
       apiLogsOpts.is_only_page = true;
     }
 
@@ -458,7 +463,7 @@
     for (var i=0, len=logsData.length; i<len; i++) {
       var logData = logsData[i];
       var trEle = document.createElement('tr');
-      trEle.innerHTML = '<td>'+(i+1)+'</td><td>'+getCurrFormatTs(logData[0])+'</td><td>'+logData[1]+'</td><td>'+logData[2]+'</td><td>'+logData[3]+'</td>';
+      trEle.innerHTML = '<td data-label="序号">'+(i+1)+'</td><td data-label="时间">'+getCurrFormatTs(logData[0])+'</td><td data-label="IP">'+logData[1]+'</td><td data-label="IP信息">'+logData[2]+'</td><td data-label="UserAgent">'+logData[3]+'</td>';
       tbody.appendChild(trEle);
     }
   }
