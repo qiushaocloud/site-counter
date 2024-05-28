@@ -1,0 +1,109 @@
+.site-counter-logs-box {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(228, 239, 244, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: auto;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.site-counter-logs-title {
+    text-align: center;
+    padding: 10px 5px;
+    position: relative;
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+    width: 100%;
+    margin: 0;
+}
+
+.site-counter-logs-close-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #f44336;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.site-counter-logs-close-btn:hover {
+    background: #d32f2f;
+}
+
+.site-counter-logs-box table {
+    border-collapse: collapse;
+    width: 100%;
+    text-align: center;
+    background: #fff;
+}
+
+.site-counter-logs-box table th,
+.site-counter-logs-box table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.site-counter-logs-box table th {
+    background-color: #4CAF50;
+    color: white;
+    min-width: 100px;
+    position: sticky;
+    top: 0;
+}
+
+.site-counter-logs-box table th:nth-child(1),
+.site-counter-logs-box table td:nth-child(1) {
+    width: 70px;
+}
+
+.site-counter-logs-box table th:nth-child(2),
+.site-counter-logs-box table td:nth-child(2) {
+    width: 220px;
+}
+
+.site-counter-logs-box table th:nth-child(3),
+.site-counter-logs-box table td:nth-child(3) {
+    width: 150px;
+}
+
+.site-counter-logs-box table th:nth-child(4),
+.site-counter-logs-box table td:nth-child(4) {
+    width: 330px;
+}
+
+.site-counter-logs-box table tbody {
+    display: block;
+    max-height: calc(100vh - 165px);
+    overflow-y: auto;
+    width: 100%;
+}
+
+.site-counter-logs-box table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.site-counter-logs-box table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.site-counter-logs-box table tr:nth-child(odd) {
+    background-color: #fff;
+}
+
+.site-counter-logs-box table tr:hover {
+    background-color: #0b8ddd;
+}

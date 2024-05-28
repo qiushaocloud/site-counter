@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>qiushaocloud site counter test</title>
+  <script>
+    window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
+  </script>
+  <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
+  <script src="../dist/qiushaocloud_site_counter.min.js"></script>
+</head>
+<body>
+  <div class="counter-box">
+    <h4>网站统计</h4>
+    <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
+    <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
+    <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
+    <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
+  
+    <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
+    <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
+    <p>本页面今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
+    <p> 本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
+  </div>
+
+
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+    h4 {
+      margin-bottom: 10px;
+    }
+
+    .counter-box {
+      padding: 15px;
+      background: #00BCD4;
+      color: #fff;
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .counter-box p {
+      margin: 15px 0 15px 30px;
+      font-size: 25px;
+    }
+
+    .counter-box h4 {
+      font-size: 40px;
+      font-weight: bold;
+    }
+  </style>
+</body>
+</html>

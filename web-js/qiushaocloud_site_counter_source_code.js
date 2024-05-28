@@ -185,11 +185,17 @@
     if ((siteIpsStatsEle && !isReqedSiteIpsStats) || (sitePageIpsStatsEle && !isReqedSitePageIpsStats)) {
       var apiIpsStatsOpts = {}; // {site_page_pathname, date_range, is_only_page, filter_client_ip}
 
-      var ipsStatsDateRange = (siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-date-range')) || (sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-date-range')) || undefined;
-
+      var siteIpsStatsDateRange = (siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-date-range')) || undefined;
+      var sitePageIpsStatsDateRange = (sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-date-range')) || undefined;
+      
       sitePageIpsStatsEle && !isReqedSitePageIpsStats && (apiIpsStatsOpts.site_page_pathname = getSitePagePathname());
       (!siteIpsStatsEle || isReqedSiteIpsStats) && (apiIpsStatsOpts.is_only_page = true);
-      ipsStatsDateRange && (apiIpsStatsOpts.date_range = ipsStatsDateRange);
+
+      if (siteIpsStatsDateRange && !apiIpsStatsOpts.is_only_page)
+        apiIpsStatsOpts.date_range = siteIpsStatsDateRange;
+
+      if (sitePageIpsStatsDateRange && apiIpsStatsOpts.site_page_pathname)
+        apiIpsStatsOpts.site_page_date_range = sitePageIpsStatsDateRange;
 
       siteIpsStatsEle && !isReqedSiteIpsStats && (isReqedSiteIpsStats = true);
       sitePageIpsStatsEle && !isReqedSitePageIpsStats && (isReqedSitePageIpsStats = true);
@@ -217,11 +223,36 @@
           }
         };
 
+        siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-render-mode') === 'none' && (delete totalIpsStatsDataMap['site']);
+        sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-render-mode') === 'none' && (delete totalIpsStatsDataMap['site-page']);
+
         for (var ipsStatsKey in totalIpsStatsDataMap) {
           var ipsStats = totalIpsStatsDataMap[ipsStatsKey];
           var ipsStatsData = ipsStats.data;
           var ipsStatsEle = ipsStats.ele;
           if (!ipsStatsEle || !ipsStatsData) continue;
+          var ipsStatsRenderMode = ipsStatsEle.getAttribute('data-render-mode');
+          if (ipsStatsRenderMode === 'none') continue; // 日志打印模式为none，不在控制台打印IP详情，页面不渲染IP详情
+
+          if (ipsStatsRenderMode === 'console') { // 日志打印模式为console，只在控制台打印IP详情，页面不渲染IP详情
+            for (var logDay in ipsStatsData) {
+              var logDayData = ipsStatsData[logDay];
+              console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : '本页面')+' '+logDay+' 访问IP详情 ====================');
+              var ipsTableData = [];
+              for (var ip in logDayData) {
+                var ipCount = logDayData[ip][0];
+                var ipLocation = logDayData[ip][1];
+                ipsTableData.push({
+                  'IP': ip,
+                  '访问次数': ipCount,
+                  'IP信息': ipLocation
+                });
+              }
+              console.table(ipsTableData);
+              console.groupEnd();
+            }
+            continue; 
+          }
  
           var ipsStatsSortName = ipsStatsEle.getAttribute('data-ips-stats-sort-name');
           var ipsStatsDataDays = Object.keys(ipsStatsData).sort((a, b) => ipsStatsSortName === 'desc' ? new Date(b).getTime() - new Date(a).getTime() : new Date(a).getTime() - new Date(b).getTime());
@@ -235,7 +266,7 @@
                 var ip = target.getAttribute('data-ip');
                 var day = target.getAttribute('data-day');
                 console.debug(ipsStatsKey+'-log-day-ip-detail-btn click, run requestQiushaocloudSiteCounterLogsApiByFilter => ip:', ip, 'day:', day);
-                window.requestQiushaocloudSiteCounterLogsApiByFilter({filter_client_ip: ip, date_range: day, only_type: ipsStatsKey}, function (err, res) {
+                window.requestQiushaocloudSiteCounterLogsApiByFilter(ipsStatsKey, day, ip, function (err, res) {
                   if (err) {
                     console.error(ipsStatsKey+'-log-day-ip-detail-btn click requestQiushaocloudSiteCounterLogsApiByFilter failure', ip, day);
                     return;
@@ -244,16 +275,42 @@
                   console.debug(ipsStatsKey+'-log-day-ip-detail-btn click requestQiushaocloudSiteCounterLogsApiByFilter success', ip, day);
                   var apiResult = JSON.parse(res);
                   var logsSortName = ipsStatsEle.getAttribute('data-logs-sort-name');
+                  var logsPrintMode = ipsStatsEle.getAttribute('data-logs-print-mode');
+                  if (logsPrintMode === 'none') return; // 日志打印模式为none，不打印日志详情
+
                   if (ipsStatsKey === 'site') {
                     var logs = apiResult.site_logs;
                     if (apiResult.page_logs && apiResult.page_logs.length > 0)
                       logs = logs.concat(apiResult.page_logs);
                     logs.sort((a, b) => logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime());
-                    createLogsTableToUI(logs, document.body, {boxTitle: '网站 '+day+' 访问日志：'+ip})
+                    
+                    if (logsPrintMode === 'console') {
+                      var tableData = [];
+                      for (var i=0, len=logs.length; i<len; i++) {
+                        var log = logs[i];
+                        tableData.push({'时间':getCurrFormatTs(log[0]), 'IP':log[1], 'IP信息':log[2], 'UserAgent':log[3]});
+                      }
+                      
+                      console.log('==================== 网站 '+day+' 访问日志：'+ip+' ====================');
+                      console.table(tableData);
+                    } else {
+                      createLogsTableToUI(logs, document.body, {boxTitle: '网站 '+day+' 访问日志：'+ip})
+                    }
                   } else {
                     var logs = apiResult.page_logs;
                     logs.sort((a, b) => logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime());
-                    createLogsTableToUI(logs, document.body, {boxTitle: '本页面 '+day+' 访问日志：'+ip})
+                    if (logsPrintMode === 'console') {
+                      var tableData = [];
+                      for (var i=0, len=logs.length; i<len; i++) {
+                        var log = logs[i];
+                        tableData.push({'时间':getCurrFormatTs(log[0]), 'IP':log[1], 'IP信息':log[2], 'UserAgent':log[3]});
+                      }
+                      
+                      console.log('==================== 本页面 '+day+' 访问日志：'+ip+' ====================');
+                      console.table(tableData);
+                    } else {
+                      createLogsTableToUI(logs, document.body, {boxTitle: '本页面 '+day+' 访问日志：'+ip})
+                    }
                   }
                 });
               }
@@ -289,51 +346,52 @@
   }, 100);
 
   /** 
-   * 请求网站日志API
-   * @param filterCondition {object} [可选]日志过滤条件
-   *  - filter_client_ip {string} [可选]过滤的客户端IP
-   *  - date_range {string} [可选]日志日期范围，格式：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
-   *  - only_type {string} [可选]日志类型，'site' |'site-page'
+   * 请求日志API
+   * @param filterType {site|site-page} 日志类型，'site' |'site-page'
+   * @param filterDay {string} 哪一天日志，格式：'2024-05-06'
+   * @param filterIp {string} [可选]过滤的客户端IP
    * @param onCallback {function} [可选]请求成功回调函数，参数：(err, res)
    */
-  window.requestQiushaocloudSiteCounterLogsApiByFilter = function(filterCondition, onCallback) {
-    !filterCondition && (filterCondition = {});
-    
-    console.debug('requestQiushaocloudSiteCounterLogsApiByFilter:', filterCondition, !!onCallback);
-    var apiLogsOpts = {}; // {site_page_pathname, date_range, is_only_page, filter_client_ip}
+  window.requestQiushaocloudSiteCounterLogsApiByFilter = function(
+    filterType,
+    filterDay,
+    filterIp,
+    onCallback
+  ) {
+    console.debug('requestQiushaocloudSiteCounterLogsApiByFilter:', filterType, filterIp, filterDay, !!onCallback);
+    if (!(filterType && filterDay && /^(site|site-page)$/.test(filterType) && /^\d{4}-\d{2}-\d{2}$/.test(filterDay))) {
+      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: invalid params', filterType, filterDay, filterIp);
+      return typeof onCallback === 'function' && onCallback('requestQiushaocloudSiteCounterLogsApiByFilter err: invalid params', {});
+    }
+
     var siteIpsStatsEle = document.getElementById('qiushaocloud_sitecounter_value_site_ips_stats');
     var sitePageIpsStatsEle = document.getElementById('qiushaocloud_sitecounter_value_site_page_ips_stats');
 
-    if (filterCondition.only_type === 'site' && !siteIpsStatsEle) {
-      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist', filterCondition);
+    if (filterType === 'site' && !siteIpsStatsEle) {
+      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist', filterType, filterDay, filterIp);
       return typeof onCallback === 'function' && onCallback('is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist', {});
     }
 
-    if (filterCondition.only_type === 'site-page' && !sitePageIpsStatsEle) {
-      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', filterCondition);
+    if (filterType === 'site-page' && !sitePageIpsStatsEle) {
+      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', filterType, filterDay, filterIp);
       return typeof onCallback === 'function' && onCallback('is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', {});
     }
 
-    if (!siteIpsStatsEle && !sitePageIpsStatsEle) {
-      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: qiushaocloud_sitecounter_value_site_ips_stats and qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', filterCondition);
-      return typeof onCallback === 'function' && onCallback('qiushaocloud_sitecounter_value_site_ips_stats and qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', {});
-    }
+    var apiLogsOpts = {date_range: filterDay}; // {site_page_pathname, date_range, is_only_page, filter_client_ip}
+    filterIp && (apiLogsOpts.filter_client_ip = filterIp);
 
-    var ipsStatsDateRange = filterCondition.date_range !== undefined ? filterCondition.date_range : ((siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-date-range')) || (sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-date-range')) || undefined);
-    
-    if (sitePageIpsStatsEle && filterCondition.only_type !== 'site') {
-      (!siteIpsStatsEle || filterCondition.only_type === 'site-page') && (apiLogsOpts.is_only_page = true);
+    if (filterType === 'site-page') {
       apiLogsOpts.site_page_pathname = getSitePagePathname();
+      apiLogsOpts.is_only_page = true;
     }
-    ipsStatsDateRange && (apiLogsOpts.date_range = ipsStatsDateRange);
-    filterCondition.filter_client_ip && (apiLogsOpts.filter_client_ip = filterCondition.filter_client_ip);
 
     reqSiteCounterLogsAPI(getSiteHost(), apiLogsOpts, function (err, res) {
       if (err) {
-        console.error('requestQiushaocloudSiteCounterLogsApiByFilter err:', err, filterCondition);
+        console.error('requestQiushaocloudSiteCounterLogsApiByFilter err:', err, filterType, filterDay, filterIp);
         sendNotice('api:get:site_counter_logs:ip', {
-          apiLogsOpts: apiLogsOpts,
-          filterCondition: filterCondition,
+          filterType,
+          filterDay,
+          filterIp,
           err: err,
           data: res
         });
@@ -341,11 +399,12 @@
         return;
       }
 
-      console.debug('requestQiushaocloudSiteCounterLogsApiByFilter res:', res, filterCondition);
+      // console.debug('requestQiushaocloudSiteCounterLogsApiByFilter res:', res, filterType, filterDay, filterIp);
       var apiResult = JSON.parse(res);
       sendNotice('api:get:site_counter_logs:ip', {
-        apiLogsOpts: apiLogsOpts,
-        filterCondition: filterCondition,
+        filterType,
+        filterDay,
+        filterIp,
         data: apiResult
       });
       typeof onCallback === 'function' && onCallback(undefined, res);
@@ -469,8 +528,8 @@
     return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds + '.' + milliseconds;
   }
 
-  let cacheAjaxRequests = [];
-  let isSendingAjaxRequests = false;
+  var cacheAjaxRequests = [];
+  var isSendingAjaxRequests = false;
   function sequentialAjaxRequest (url, data, opts, onCallback) {
     if (isSendingAjaxRequests)
       return cacheAjaxRequests.push([url, data, opts, onCallback]);
@@ -583,10 +642,74 @@
     onCallback
   ) {
     !opts && (opts = {});
-    // opts = {site_page_pathname, date_range, is_only_page, filter_client_ip}
+    // opts = {site_page_pathname, date_range, site_page_date_range, is_only_page, filter_client_ip}
+
+    var site_page_date_range = opts.site_page_date_range;
+    delete opts.site_page_date_range;
+    if (opts.site_page_pathname && site_page_date_range !== opts.date_range) {
+      if (opts.site_page_pathname && opts.is_only_page) { // 只请求 site_page 数据
+        var reqParams = {site_host: siteHost};
+        Object.assign(reqParams, opts, {date_range: site_page_date_range});
+        sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
+        return;
+      }
+   
+      // 请求时间范围不同，分开请求
+      var siteIpsStatsResult = undefined;
+      var pageIpsStatsResult = undefined;
+
+      var checkFinshedRequest = function () {
+        if (siteIpsStatsResult === undefined || pageIpsStatsResult === undefined) return;
+        console.debug('reqSiteCounterIpsStatsAPI site and page ips stats success:', siteIpsStatsResult, pageIpsStatsResult);
+
+        if (siteIpsStatsResult === null || pageIpsStatsResult === null) {
+          console.error('reqSiteCounterIpsStatsAPI site and page ips stats failed');
+          return onCallback('reqSiteCounterIpsStatsAPI site and page ips stats failed', null);
+        }
+
+        var mergedResult = Object.assign({}, siteIpsStatsResult || {}, pageIpsStatsResult || {});
+        onCallback(undefined, JSON.stringify(mergedResult));
+      }
+
+      // 请求 site 数据
+      var reqSiteParams = {site_host: siteHost};
+      opts.date_range && (reqSiteParams.date_range = opts.date_range);
+      opts.filter_client_ip && (reqSiteParams.filter_client_ip = opts.filter_client_ip);
+      sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqSiteParams, {method: 'GET'}, function (err, res) {
+        if (err) {
+          console.error('reqSiteCounterIpsStatsAPI reqSiteParams err:', err, reqSiteParams);
+          siteIpsStatsResult = null;
+          checkFinshedRequest();
+          return;
+        }
+
+        siteIpsStatsResult = JSON.parse(res);
+        checkFinshedRequest();
+      });
+
+      // 请求 site_page 数据
+      var reqPageParams = {site_host: siteHost, site_page_pathname: opts.site_page_pathname};
+      site_page_date_range && (reqPageParams.date_range = site_page_date_range);
+      opts.filter_client_ip && (reqPageParams.filter_client_ip = opts.filter_client_ip);
+      reqPageParams.is_only_page = true;
+      sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqPageParams, {method: 'GET'}, function (err, res) {
+        if (err) {
+          console.error('reqSiteCounterIpsStatsAPI reqPageParams err:', err, reqPageParams);
+          pageIpsStatsResult = null;
+          checkFinshedRequest();
+          return;
+        }
+
+        pageIpsStatsResult = JSON.parse(res);
+        checkFinshedRequest();
+      });
+      
+      return;
+    }
+
     var reqParams = {site_host: siteHost};
     Object.assign(reqParams, opts);
-    sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback)
+    sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
   }
 
   function reqSiteCounterLogsAPI (

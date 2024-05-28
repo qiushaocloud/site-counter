@@ -354,7 +354,7 @@ class SiteCounterHandler {
         }
     
         logFilePathRegexStr += (dateRangeRegexStr && !/\(.*\)/.test(dateRangeRegexStr) && dateRangeRegexStr.includes('|') ? `(${dateRangeRegexStr})` : dateRangeRegexStr);
-        let cmd = `ls ${MY_LOG_DIR}/site-counter-ips.log.* | grep -E "${logFilePathRegexStr}" | xargs grep -E "request( post)? /site_counter api" | grep -v grep | grep "siteHost:${siteHost} "`;
+        let cmd = `ls ${MY_LOG_DIR}/site-counter-ips.log.* | grep -E "${logFilePathRegexStr}" | xargs grep "request post /site_counter api" | grep -v grep | grep "siteHost:${siteHost} "`;
         if (otherGrepFilters) {
           for (const filterKey in otherGrepFilters) {
             const filterValue = otherGrepFilters[filterKey];

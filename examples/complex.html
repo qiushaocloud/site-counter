@@ -8,18 +8,15 @@
   <script>
     window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
   </script>
-  <script src="../dist/qiushaocloud_site_counter.js"></script>
-  <!-- <script src="../dist/qiushaocloud_site_counter.min.js"></script> -->
+  <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
+  <script src="../dist/qiushaocloud_site_counter.min.js"></script>
+  <link rel="stylesheet" href="./css/logs-table.css" />
 </head>
 <body>
   <script>
     window.qiushaocloudSiteCounterNotice = function(type, data) {
       console.debug('recv qiushaocloudSiteCounterNotice, type:', type, ' ,data:', data);
     }
-
-    setTimeout(function() {
-      window.requestQiushaocloudSiteCounterLogsApiByFilter();
-    }, 10000);
   </script>
 
   <div class="total-box">
@@ -39,11 +36,23 @@
     <div class="ips-stats-box">
       <div class="site-ips-stats-box">
         <h4>网站IP统计</h4>
-        <div id="qiushaocloud_sitecounter_value_site_ips_stats" data-ips-stats-sort-name="desc" data-logs-sort-name="desc" data-date-range="7days"></div>
+        <div id="qiushaocloud_sitecounter_value_site_ips_stats"
+          data-ips-stats-sort-name="desc"
+          data-logs-sort-name="desc"
+          data-date-range="7days"
+          data-render-mode="ui"
+          data-logs-print-mode="ui"
+        ></div>
       </div>
       <div class="site-page-ips-stats-box">
         <h4>本页面IP统计</h4>
-        <div id="qiushaocloud_sitecounter_value_site_page_ips_stats" data-ips-stats-sort-name="desc" data-logs-sort-name="desc" data-date-range="7days"></div>
+        <div id="qiushaocloud_sitecounter_value_site_page_ips_stats"
+          data-ips-stats-sort-name="desc"
+          data-logs-sort-name="desc"
+          data-date-range="7days"
+          data-render-mode="ui"
+          data-logs-print-mode="ui"
+        ></div>
       </div>
     </div>
   </div>
@@ -111,7 +120,6 @@
       background: #03A9F4;
       color: #fff;
       display: flex;
-      /* flex-direction: column; */
     }
 
     .site-ips-stats-box,
@@ -126,11 +134,34 @@
     .site-log-day,
     .site-page-log-day {
       margin-left: 10px;
+      background: #0990cd;
+      padding: 5px;
+      margin-top: 5px;
+      border-radius: 6px;
     }
 
     .site-log-day-ul,
     .site-page-log-day-ul {
       margin: 10px 10px 10px 40px;
+    }
+
+    .site-log-day-ul li,
+    .site-page-log-day-ul li {
+      margin: 5px 0;
+      background: #0285c1;
+      font-size: 14px;
+      padding: 5px;
+      border-radius: 3px;
+    }
+
+    .site-log-day-ul li:nth-child(even),
+    .site-page-log-day-ul li:nth-child(even) {
+      background: #057cb3;
+    }
+
+    .site-log-day-ul li:hover,
+    .site-page-log-day-ul li:hover {
+      background: #03A9F4;
     }
 
     .site-log-day-ip-detail-btn,
@@ -142,113 +173,6 @@
       border-radius: 3px;
       color: #fff;
       cursor: pointer;
-    }
-
-    .site-counter-logs-box {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(228, 239, 244, 0.9);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      overflow: auto;
-    }
-
-    .site-counter-logs-title {
-      text-align: center;
-      padding: 10px 5px;
-      position: relative;
-      background: #fff;
-      border-radius: 8px 8px 0 0;
-      width: 100%;
-    }
-
-    .site-counter-logs-close-btn {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: #f44336;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      padding: 5px 10px;
-    }
-
-    .site-counter-logs-close-btn:hover {
-      background: #d32f2f;
-    }
-
-    .site-counter-logs-box table {
-      border-collapse: collapse;
-      width: 100%;
-      text-align: center;
-      background: #fff;
-    }
-
-    .site-counter-logs-box table th,
-    .site-counter-logs-box table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
-
-    .site-counter-logs-box table th {
-      background-color: #4CAF50;
-      color: white;
-      min-width: 100px;
-      position: sticky;
-      top: 0;
-    }
-
-    .site-counter-logs-box table th:nth-child(1),
-    .site-counter-logs-box table td:nth-child(1) {
-      width: 70px;
-    }
-
-    .site-counter-logs-box table th:nth-child(2),
-    .site-counter-logs-box table td:nth-child(2) {
-      width: 220px;
-    }
-
-    .site-counter-logs-box table th:nth-child(3),
-    .site-counter-logs-box table td:nth-child(3) {
-      width: 150px;
-    }
-
-    .site-counter-logs-box table th:nth-child(4),
-    .site-counter-logs-box table td:nth-child(4) {
-      width: 330px;
-    }
-
-    .site-counter-logs-box table tbody {
-      display: block;
-      max-height: calc(100vh - 165px);
-      overflow-y: auto;
-      width: 100%;
-    }
-
-    .site-counter-logs-box table tr {
-      display: table;
-      width: 100%;
-      table-layout: fixed;
-    }
-
-    .site-counter-logs-box table tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-
-    .site-counter-logs-box table tr:nth-child(odd) {
-      background-color: #fff;
-    }
-
-    .site-counter-logs-box table tr:hover {
-      background-color: #0b8ddd;
     }
   </style>
 </body>
