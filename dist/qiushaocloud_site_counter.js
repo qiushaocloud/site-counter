@@ -434,7 +434,7 @@
 
     var logsTitle = document.createElement('h3');
     logsTitle.className = 'site-counter-logs-title';
-    logsTitle.innerHTML = opts.boxTitle || '访问日志';
+    logsTitle.innerHTML = '<span class="title-content">'+(opts.boxTitle || '访问日志')+'</span>';
     logsBox.appendChild(logsTitle);
 
     var closeBtn = document.createElement('button');

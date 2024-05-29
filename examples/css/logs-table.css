@@ -118,6 +118,26 @@
         padding: 0;
     }
 
+    .site-counter-logs-title {
+        white-space: initial;
+        overflow: hidden;
+        text-overflow: initial;
+        display: flex;
+        align-items: center;
+    }
+
+    .site-counter-logs-title .title-content {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .site-counter-logs-close-btn {
+        position: relative;
+        right: 0px;
+    }
+
     .site-counter-logs-table-thead {
         display: none;
     }
@@ -130,7 +150,20 @@
         border: 2px solid #ddd;
         margin: 10px 0;
     }
+
+    .site-counter-logs-table-tbody tr:first-child {
+        margin-top: 0;
+    }
    
+    .site-counter-logs-box table tr:hover {
+        background-color: #9dbcca;
+    }
+
+    .site-counter-logs-box table tr:hover,
+    .site-counter-logs-box table tr:hover td {
+        border-color: #9ab0ba;
+    }
+
     .site-counter-logs-box table td {
         width: 100% !important;
         border: none;
@@ -144,8 +177,12 @@
         align-items: center; /* 垂直居中 */
     }
 
-    .site-counter-logs-box table td:last-child {
+    .site-counter-logs-box table tr td:last-child {
         border-bottom: 0px;
+    }
+
+    .site-counter-logs-box table td:nth-child(5) {
+        text-align: end;
     }
 
     .site-counter-logs-box table td:before {

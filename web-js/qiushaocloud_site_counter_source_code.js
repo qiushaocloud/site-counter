@@ -339,7 +339,16 @@
               // console.debug('ipsStatsData => ip:', ip, 'count:', ipCount, 'location:', ipLocation);
               var ipLiEle = document.createElement('li');
               ipLiEle.className = ipsStatsKey+'-log-day-ip-li';
-              ipLiEle.innerHTML = '<span class="'+ipsStatsKey+'-log-day-ip">'+ip+''+(ipLocation?'('+ipLocation+')':'')+' 访问次数：</span><span class="'+ipsStatsKey+'-log-day-ip-count">'+ipCount+'</span><button class="'+ipsStatsKey+'-log-day-ip-detail-btn" data-ip="'+ip+'" data-day="'+logDay+'">详细日志</button>';
+              ipLiEle.innerHTML = 
+                '<span class="'+ipsStatsKey+'-log-day-ip">'
+                  +'<span class="ip-content">'+ip+'</span>'
+                  +(ipLocation?'(<span class="ip-location-content">'+ipLocation+'</span>)':'')
+                +'</span>'
+                +'<span class="'+ipsStatsKey+'-log-day-ip-count-warpper">'
+                  +'<span class="count-title">访问次数：</span>'
+                  +'<span class="count-content">'+ipCount+'</span>'
+                +'</span>'
+                +'<button class="'+ipsStatsKey+'-log-day-ip-detail-btn" data-ip="'+ip+'" data-day="'+logDay+'">详细日志</button>';
               logDayUlEle.appendChild(ipLiEle);
             }
           }
@@ -434,7 +443,7 @@
 
     var logsTitle = document.createElement('h3');
     logsTitle.className = 'site-counter-logs-title';
-    logsTitle.innerHTML = opts.boxTitle || '访问日志';
+    logsTitle.innerHTML = '<span class="title-content">'+(opts.boxTitle || '访问日志')+'</span>';
     logsBox.appendChild(logsTitle);
 
     var closeBtn = document.createElement('button');
