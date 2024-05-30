@@ -12,7 +12,9 @@ const getJsonValueByKey = (json, key, searchIp) => {
         let value = json;
 
         for (const k of keys) {
+            if (typeof value !== 'object') return undefined;
             if (!k) continue;
+            
             if (k === '[searchIp]') {
                 value = value[searchIp] || value[Object.keys(value)[0]];
                 continue;
