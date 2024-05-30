@@ -18,6 +18,7 @@ const getJsonValueByKey = (json, key, searchIp) => {
                 continue;
             }
 
+            /^\[\d+\]$/.test(k) && Array.isArray(value) && (k = k.replace(/^\[|\]$/g, ''));
             if (value && typeof value === 'object' && k in value) {
                 value = value[k];
                 continue;
