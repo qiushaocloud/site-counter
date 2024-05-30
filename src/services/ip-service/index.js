@@ -31,7 +31,7 @@ const getJsonValueByKey = (json, key, searchIp) => {
 
         return value;
     } catch (err) {
-        log.error('getJsonValueByKey catch error:', err, key, json);
+        log.error('getJsonValueByKey catch error:', err, key, json, searchIp);
         return undefined;
     }
 }
