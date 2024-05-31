@@ -1,8 +1,10 @@
 class Utils {
   getCurrFormatTs (date, isOnlyGetSec, isOnlyDay) {
-    if (!date || typeof date === 'number') {
-      if (typeof date === 'number')
+    if (!date || typeof date === 'number' || typeof date ==='string') {
+      if (typeof date === 'number' || (typeof date ==='string' && !/^\d+$/.test(date)))
         date = new Date(date);
+      else if (typeof date ==='string')
+        date = new Date(Number(date));
       else
         date = new Date();
     }
@@ -43,6 +45,20 @@ class Utils {
       milliseconds = '0' + milliseconds;
 
     return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds + '.' + milliseconds;
+  }
+
+  getDateRange(startDateStr, endDateStr, maxDays) {
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+    const dateRange = [];
+
+    // Iterate through each day between startDate and endDate
+    for (let date = startDate; date <= endDate; date.setDate(date.getDate() + 1)) {
+        dateRange.push(date.toISOString().slice(0, 10));
+        if (maxDays && dateRange.length >= maxDays) break;
+    }
+
+    return dateRange;
   }
 
   /* 是否是数字 */

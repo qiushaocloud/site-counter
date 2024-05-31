@@ -16,7 +16,7 @@ LOGS_DIR = './logs'
 
 # app 配置
 # NODE_ENV set to development or production
-NODE_ENV = 'development'
+NODE_ENV = 'production'
 # 不配置默认使用 https://gravatar.com，国内您可以配置成 https://sdn.geekzu.org
 GRAVATAR_ADDR = 'https://gravatar.com'
 # 默认头像地址, 配置了后，gravatar 没有图片时会使用这个地址作为头像，您可以配置成动态头像地址，如：https://api.7585.net.cn/sjtx/api.php?lx=c1 或 https://www.loliapi.com/acg/pp/

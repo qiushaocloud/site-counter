@@ -278,6 +278,7 @@ const verifySign = (
   nonceTsKeyName = API_SIGN_NONCE_TS_KEY_NAME,
   isCustomEncrypt
 ) => {
+  if (!secretKey) return true; // 没有设置 secretKey, 则不验证签名
   const allParams = getAllReqParams(expressReq);
   const signTmp = allParams[signKeyName];
   const nowTs = Date.now();
