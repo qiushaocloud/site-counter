@@ -11,8 +11,8 @@ const {
 const CHECK_CACHE_SIGN_INTERVAL = 30 * 60 * 1000;
 const MAX_SAVE_SIGN_DURATION = 4 * CHECK_CACHE_SIGN_INTERVAL;
 
-const cacheSigns = {};
 const runApiTs = Date.now();
+let cacheSigns = {};
 let apiCount = 0;
 let oldCheckCacheSignTs = 0;
 
@@ -265,6 +265,10 @@ const checkCacheSigns = (nowTs) => {
     if ((nowTs - saveTs) >= MAX_SAVE_SIGN_DURATION)
       delete cacheSigns[key];
   }
+
+  if (Object.keys(cacheSigns).length > 10000) {
+    cacheSigns = {};
+  }
 };
 
 const verifySign = (
@@ -298,8 +302,10 @@ const verifySign = (
   const sign = getApiSign(allParams, secretKey, signKeyName, nonceTsKeyName, isCustomEncrypt);
 
   const isOk = sign === signTmp;
-  if (!isOk)
+  if (!isOk) {
+    console.info('sign verify failed. sign:', sign, ' ,signTmp:', signTmp, ' ,allParams:', allParams);
     return false;
+  }
 
   if (nonceTs)
     cacheSigns[signTmp] = nowTs;

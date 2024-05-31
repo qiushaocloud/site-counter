@@ -13,7 +13,17 @@ let argIndex = 2;
 const YOUR_SERVER_HOST = argv[argIndex] || process.env.YOUR_SERVER_HOST || 'www.qiushaocloud.top';
 const API_SIGN_SECRET_KEY = argv[++argIndex] || process.env.API_SIGN_SECRET_KEY || 'QIU_SHAO_CLOUD_SECRET_KEY';
 
-const addChatCodeNum = 43893;
+const randomChars = [
+  'R', 'L', 'U', '_',
+  'V', 'J', 'A', 'S',
+  '_', 'E', 'M', 'S',
+  'U', 'G'
+];
+let addChatCodeNum = 0;
+for (const key in randomChars) {
+  const code = randomChars[key].charCodeAt();
+  addChatCodeNum += (39*code - code%5);
+}
 const secretKeyCharCodeArr = [];
 
 for (const key in API_SIGN_SECRET_KEY) {

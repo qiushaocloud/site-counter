@@ -258,7 +258,7 @@
   }
 
   function customEncrypt (str, secretKey, customEncryptTs) {
-    ranNum = customEncryptTs || 1234567890123;
+    let ranNum = customEncryptTs || 1234567890123;
   
     for (var i = 0; i < str.length; i++) {
       var character = str.charCodeAt(i);
