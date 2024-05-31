@@ -15,6 +15,12 @@
     box-sizing: border-box;
 }
 
+.site-counter-logs-box * {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
 .site-counter-logs-title {
     text-align: center;
     padding: 10px 5px;
@@ -27,6 +33,31 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.site-counter-logs-title .title-content {
+    display: flex;
+    max-width: calc(100% - 80px);
+}
+
+.site-counter-logs-title .title-content .logs-date {
+    padding: 0 3px;
+}
+
+.site-counter-logs-title .title-content .ip {
+    padding-left: 3px;
+}
+
+.site-counter-logs-title .title-content  .other-page-title {
+    display: flex;
+    overflow: hidden;
+}
+
+.site-counter-logs-title .title-content  .other-page-title .content {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 
 .site-counter-logs-close-btn {
     position: absolute;
@@ -118,24 +149,14 @@
         padding: 0;
     }
 
-    .site-counter-logs-title {
-        white-space: initial;
-        overflow: hidden;
-        text-overflow: initial;
-        display: flex;
-        align-items: center;
-    }
-
     .site-counter-logs-title .title-content {
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 17px;
     }
 
-    .site-counter-logs-close-btn {
-        position: relative;
-        right: 0px;
+    .site-counter-logs-title .title-content .other-page-title {
+        width: 0;
+        /* padding-left: 5px; */
+        opacity: 1;
     }
 
     .site-counter-logs-table-thead {

@@ -296,11 +296,11 @@
                       console.log('==================== 网站 '+day+' 访问日志：'+ip+' ====================');
                       console.table(tableData);
                     } else {
-                      createLogsTableToUI(logs, document.body, {boxTitle: '网站 '+day+' 访问日志：'+ip})
+                      createLogsTableToUI(logs, document.body, {boxClass: 'site-logs-box', boxTitle: '<span class="pg1">网站</span> <span class="logs-date">'+day+'</span> <span class="pg2">访问日志:</span><span class="ip">'+ip+'</span>'})
                     }
                   } else {
                     var dataSitePagePathname = ipsStatsEle && ipsStatsEle.getAttribute('data-site-page-pathname');
-                    var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname() ? '页面(<span class="other-page-title">'+dataSitePagePathname+'</span>)' : '本页面')
+                    var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname() ? '<span class="pg1">页面</span><span class="other-page-title">(<span class="content">'+dataSitePagePathname+'</span>)</span>' : '本页面')
             
                     var logs = apiResult.page_logs;
                     logs.sort((a, b) => logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime());
@@ -314,7 +314,7 @@
                       console.log('==================== '+sitePageTitle+' '+day+' 访问日志：'+ip+' ====================');
                       console.table(tableData);
                     } else {
-                      createLogsTableToUI(logs, document.body, {boxTitle: sitePageTitle+' '+day+' 访问日志：'+ip})
+                      createLogsTableToUI(logs, document.body, {boxClass: 'site-page-logs-box', boxTitle: sitePageTitle+' <span class="logs-date">'+day+'</span> <span class="pg2">访问日志:</span><span class="ip">'+ip+'</span>'})
                     }
                   }
                 });
@@ -339,14 +339,16 @@
               // console.debug('ipsStatsData => ip:', ip, 'count:', ipCount, 'location:', ipLocation);
               var ipLiEle = document.createElement('li');
               ipLiEle.className = ipsStatsKey+'-log-day-ip-li';
-              ipLiEle.innerHTML = 
-                '<span class="'+ipsStatsKey+'-log-day-ip">'
-                  +'<span class="ip-content">'+ip+'</span>'
-                  +(ipLocation?'(<span class="ip-location-content">'+ipLocation+'</span>)':'')
-                +'</span>'
-                +'<span class="'+ipsStatsKey+'-log-day-ip-count-warpper">'
-                  +'<span class="count-title">访问次数：</span>'
-                  +'<span class="count-content">'+ipCount+'</span>'
+              ipLiEle.innerHTML =
+                '<span class="'+ipsStatsKey+'-log-day-ip-info-warpper">'
+                  +'<span class="ip-info-warpper">'
+                    +'<span class="ip-content">'+ip+'</span>'
+                    +(ipLocation?'(<span class="ip-location-content">'+ipLocation+'</span>)':'')
+                  +'</span>'
+                  +'<span class="ip-count-warpper">'
+                    +'<span class="count-title">访问次数：</span>'
+                    +'<span class="count-content">'+ipCount+'</span>'
+                  +'</span>'
                 +'</span>'
                 +'<button class="'+ipsStatsKey+'-log-day-ip-detail-btn" data-ip="'+ip+'" data-day="'+logDay+'">详细日志</button>';
               logDayUlEle.appendChild(ipLiEle);
@@ -438,7 +440,7 @@
 
     var logsBox = document.createElement('div');
     logsBox.id = 'qiushaocloud_sitecounter_logs_box';
-    logsBox.className = 'site-counter-logs-box';
+    logsBox.className = 'site-counter-logs-box' + (opts.boxClass ? ' '+opts.boxClass : '');
     parentEle.appendChild(logsBox);
 
     var logsTitle = document.createElement('h3');
@@ -485,6 +487,9 @@
   }
 
   function getSitePagePathname () {
+    if (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME)
+      return window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME;
+
     var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
     return sitePagePathname;
   }
@@ -627,6 +632,12 @@
     return apiAddr;
   }
 
+  function addExtraRequestData (data) {
+    !data.nonce_ts && (data.nonce_ts = Date.now());
+    !data.nonce && (data.nonce = Math.random().toString(36).substr(2, 10));
+    data.sign = getCustomApiSign(data, (data.site_host || '') + API_SIGN_SECRET_KEY);
+  }
+
   function reqSiteCounterAPI (
     siteHost,
     sitePagePathname,
@@ -640,13 +651,14 @@
       site_page_pathname: sitePagePathname,
       is_incr_site: isIncrSite,
       is_histroy_session: isSiteHistroySession,
-      nonce_ts: Date.now()
+      nonce_ts: Date.now(),
+      nonce: Math.random().toString(36).substr(2, 10)
     };
     if (isSitePageHistroySession !== undefined) {
       reqJson.is_histroy_session_page = isSitePageHistroySession;
     }
 
-    reqJson.sign = getCustomApiSign(reqJson, siteHost + API_SIGN_SECRET_KEY);
+    addExtraRequestData(reqJson);
     sequentialAjaxRequest(getApiAddr() + "/site_counter", reqJson, {method: 'POST'}, onCallback);
   }
 
@@ -664,7 +676,7 @@
       if (opts.site_page_pathname && opts.is_only_page) { // 只请求 site_page 数据
         var reqParams = {site_host: siteHost};
         Object.assign(reqParams, opts, {date_range: site_page_date_range});
-        reqParams.sign = getCustomApiSign(reqParams, siteHost + API_SIGN_SECRET_KEY);
+        addExtraRequestData(reqParams);
         sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
         return;
       }
@@ -690,7 +702,7 @@
       var reqSiteParams = {site_host: siteHost};
       opts.date_range && (reqSiteParams.date_range = opts.date_range);
       opts.filter_client_ip && (reqSiteParams.filter_client_ip = opts.filter_client_ip);
-      reqSiteParams.sign = getCustomApiSign(reqSiteParams, siteHost + API_SIGN_SECRET_KEY);
+      addExtraRequestData(reqSiteParams);
       sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqSiteParams, {method: 'GET'}, function (err, res) {
         if (err) {
           console.error('reqSiteCounterIpsStatsAPI reqSiteParams err:', err, reqSiteParams);
@@ -708,7 +720,7 @@
       site_page_date_range && (reqPageParams.date_range = site_page_date_range);
       opts.filter_client_ip && (reqPageParams.filter_client_ip = opts.filter_client_ip);
       reqPageParams.is_only_page = true;
-      reqPageParams.sign = getCustomApiSign(reqPageParams, siteHost + API_SIGN_SECRET_KEY);
+      addExtraRequestData(reqPageParams);
       sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqPageParams, {method: 'GET'}, function (err, res) {
         if (err) {
           console.error('reqSiteCounterIpsStatsAPI reqPageParams err:', err, reqPageParams);
@@ -726,7 +738,7 @@
 
     var reqParams = {site_host: siteHost};
     Object.assign(reqParams, opts);
-    reqParams.sign = getCustomApiSign(reqParams, siteHost + API_SIGN_SECRET_KEY);
+    addExtraRequestData(reqParams);
     sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
   }
 
@@ -739,7 +751,7 @@
     // opts = {site_page_pathname, date_range, is_only_page, filter_client_ip}
     var reqParams = {site_host: siteHost};
     Object.assign(reqParams, opts);
-    reqParams.sign = getCustomApiSign(reqParams, siteHost + API_SIGN_SECRET_KEY);
+    addExtraRequestData(reqParams);
     sequentialAjaxRequest(getApiAddr() + "/site_counter_logs", reqParams, {method: 'GET'}, onCallback)
   }
 
