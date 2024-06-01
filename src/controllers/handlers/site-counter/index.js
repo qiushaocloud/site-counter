@@ -77,7 +77,7 @@ class SiteCounterHandler {
           if (
             sitePagePathname
             && sitePagePathname === logSitePagePathname
-            && (logIncrType === undefined || logIncrType === 'page' || logIncrType === 'siteandpage')
+            && (!logIncrType || logIncrType === 'page' || logIncrType === 'siteandpage')
           ) {
             clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
             let dayPageIps = resResult.page_ips[logDay];
@@ -87,7 +87,7 @@ class SiteCounterHandler {
           }
 
           if (isOnlyPage) continue;
-          if (!(logIncrType === undefined || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
+          if (!(!logIncrType || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
           clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
           let daySiteIps = resResult.site_ips[logDay];
           !daySiteIps && (daySiteIps = resResult.site_ips[logDay] = {});
@@ -174,14 +174,14 @@ class SiteCounterHandler {
           if (
             sitePagePathname
             && sitePagePathname === logSitePagePathname
-            && (logIncrType === undefined || logIncrType === 'page' || logIncrType === 'siteandpage')
+            && (!logIncrType || logIncrType === 'page' || logIncrType === 'siteandpage')
           ) {
             clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
             resResult.page_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
           }
 
           if (isOnlyPage) continue;
-          if (!(logIncrType === undefined || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
+          if (!(!logIncrType || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
           clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
           resResult.site_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
         }
