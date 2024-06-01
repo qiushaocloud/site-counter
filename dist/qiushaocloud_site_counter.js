@@ -403,7 +403,6 @@
               logDayUlEle.appendChild(ipLiEle);
             }
 
-            // logDayEle.querySelector('.'+ipsStatsKey+'-log-day-title').innerHTML += '<span class="total-count-content">（共'+totalCount+'次）</span>';
             logDayEle.querySelector('.'+ipsStatsKey+'-log-day-title').innerHTML += '<span class="total-pv-count-content">（'+totalIpCount+'个IP访问'+totalPvCount+'次）</span>';
           }
         }
@@ -824,7 +823,7 @@
   }
 
   function customEncrypt (str, secretKey, customEncryptTs) {
-    ranNum = customEncryptTs || 1234567890123;
+    let ranNum = customEncryptTs || 1234567890123;
   
     for (var i = 0; i < str.length; i++) {
       var character = str.charCodeAt(i);
