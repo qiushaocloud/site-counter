@@ -281,7 +281,6 @@ class IPService {
                     for (const regexStr of patterns) {
                         const regex = new RegExp(regexStr);
                         const match = checkStr.match(regex);
-                        console.error('match:', match, ' ,regexStr:', regexStr, ' ,checkStr:', checkStr)
                         if (match && match.length > 1) {
                             !country && (country = match[1] ? match[1].trim() : '');
                             !province && (province = match[2] ? match[2].trim() : '');
