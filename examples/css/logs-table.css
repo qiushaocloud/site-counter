@@ -72,8 +72,10 @@
     padding: 5px 10px;
 }
 
-.site-counter-logs-close-btn:hover {
-    background: #d32f2f;
+@media (any-hover: hover) {
+    .site-counter-logs-close-btn:hover {
+        background: #d32f2f;
+    }
 }
 
 .site-counter-logs-box table {
@@ -87,6 +89,7 @@
 .site-counter-logs-box table td {
     border: 1px solid #ddd;
     padding: 8px;
+    word-wrap: break-word;
 }
 
 .site-counter-logs-box table th {
@@ -138,8 +141,10 @@
     background-color: #f2f2f2;
 }
 
-.site-counter-logs-box table tr:hover {
-    background-color: #0b8ddd;
+@media (any-hover: hover) {
+    .site-counter-logs-box table tr:hover {
+        background-color: #0b8ddd;
+    }
 }
 
 
@@ -176,13 +181,15 @@
         margin-top: 0;
     }
    
-    .site-counter-logs-box table tr:hover {
-        background-color: #9dbcca;
-    }
-
-    .site-counter-logs-box table tr:hover,
-    .site-counter-logs-box table tr:hover td {
-        border-color: #9ab0ba;
+    @media (any-hover: hover) {
+        .site-counter-logs-box table tr:hover {
+            background-color: #9dbcca;
+        }
+    
+        .site-counter-logs-box table tr:hover,
+        .site-counter-logs-box table tr:hover td {
+            border-color: #9ab0ba;
+        }
     }
 
     .site-counter-logs-box table td {
@@ -203,6 +210,11 @@
     }
 
     .site-counter-logs-box table td:nth-child(5) {
+        text-align: end;
+    }
+
+    .site-counter-logs-box table td:nth-child(6) {
+        display: block;
         text-align: end;
     }
 

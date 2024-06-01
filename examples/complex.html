@@ -29,7 +29,6 @@
         window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME = sitePagePathnameFromUrl;
       }
     })();
-
   </script>
 
   <div class="total-box">
@@ -120,8 +119,10 @@
       font-size: 1rem; /* 按钮字体大小 */
     }
 
-    button:hover {
-      background: #0097a7;
+    @media (any-hover: hover) {
+      button:hover {
+        background: #0097a7;
+      }
     }
 
     .total-box {
@@ -195,6 +196,22 @@
       border-radius: 6px;
     }
 
+   .site-log-day-title,
+   .site-page-log-day-title {
+      position: relative;
+      padding-top: 5px;
+    }
+
+   .site-log-day-ul-fold-btn,
+   .site-page-log-day-ul-fold-btn  {
+      background: #6e9296;
+      padding: 5px 10px;
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
     .site-log-day-ul,
     .site-page-log-day-ul {
       margin-top: 10px;
@@ -221,10 +238,39 @@
       background: #d0d0d0;
     }
 
-    .site-log-day-ul li:hover,
-    .site-page-log-day-ul li:hover {
-      background: #00bcd4;
-      color: #fff;
+    @media (any-hover: hover) {
+      .site-log-day-ul li:hover,
+      .site-page-log-day-ul li:hover {
+        background: #00bcd4;
+        color: #fff;
+      }
+    }
+
+    .site-log-day-ip-info-warpper,
+    .site-page-log-day-ip-info-warpper {
+        /*white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;*/
+        flex: 1;
+    }
+
+    /*.ip-info-warpper {
+        display: flex;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ip-location-content {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+    }*/
+
+    .ip-count-warpper {
+        padding: 0 10px;
     }
 
     .site-log-day-ip-detail-btn,
@@ -238,14 +284,16 @@
       cursor: pointer;
     }
 
-    .site-log-day-ul li:hover .site-log-day-ip-detail-btn,
-    .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn {
-      background: #07a8bc;
-    }
+    @media (any-hover: hover) {
+      .site-log-day-ul li:hover .site-log-day-ip-detail-btn,
+      .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn {
+        background: #07a8bc;
+      }
 
-    .site-log-day-ul li:hover .site-log-day-ip-detail-btn:hover,
-    .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn:hover {
-      background: #0097a7;
+      .site-log-day-ul li:hover .site-log-day-ip-detail-btn:hover,
+      .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn:hover {
+        background: #0097a7;
+      }
     }
 
     @media (max-width: 768px) {

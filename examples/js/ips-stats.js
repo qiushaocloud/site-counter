@@ -67,8 +67,10 @@
                 transition: background 0.3s;
             }
         
-            .ips-stats-box-warpper button:hover {
-                background: #0097a7;
+            @media (any-hover: hover) {
+                .ips-stats-box-warpper button:hover {
+                    background: #0097a7;
+                }
             }
         
             .ips-stats-box-warpper .site-ips-stats-box,
@@ -79,7 +81,7 @@
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 overflow: auto;
             }
-        
+
             .ips-stats-box-warpper .site-page-ips-stats-box .other-page-title{
                 white-space: nowrap;
                 overflow: hidden;
@@ -96,6 +98,22 @@
                 background: #f4f4f4;
                 padding: 10px;
                 border-radius: 6px;
+            }
+
+            .ips-stats-box-warpper .site-log-day-title,
+            .ips-stats-box-warpper .site-page-log-day-title {
+                position: relative;
+                padding-top: 5px;
+            }
+
+            .ips-stats-box-warpper .site-log-day-ul-fold-btn,
+            .ips-stats-box-warpper .site-page-log-day-ul-fold-btn  {
+                background: #6e9296;
+                padding: 5px 10px;
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
             }
         
             .ips-stats-box-warpper .site-log-day-ul,
@@ -124,22 +142,39 @@
                 background: #d0d0d0;
             }
         
-            .ips-stats-box-warpper .site-log-day-ul li:hover,
-            .ips-stats-box-warpper .site-page-log-day-ul li:hover {
-                background: #00bcd4;
-                color: #fff;
+            @media (any-hover: hover) {
+                .ips-stats-box-warpper .site-log-day-ul li:hover,
+                .ips-stats-box-warpper .site-page-log-day-ul li:hover {
+                    background: #00bcd4;
+                    color: #fff;
+                }
             }
         
             .ips-stats-box-warpper .site-log-day-ip-info-warpper,
             .ips-stats-box-warpper .site-page-log-day-ip-info-warpper {
+                /*white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: flex;*/
+                flex: 1;
+            }
+
+            /*.ips-stats-box-warpper .ip-info-warpper {
+                display: flex;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .ips-stats-box-warpper .ip-location-content {
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 flex: 1;
-            }
+            }*/
 
             .ips-stats-box-warpper .ip-count-warpper {
-                padding-left: 10px;
+                padding: 0 10px;
             }
         
             .ips-stats-box-warpper .site-log-day-ip-detail-btn,
@@ -153,14 +188,16 @@
                 cursor: pointer;
             }
         
-            .ips-stats-box-warpper .site-log-day-ul li:hover .site-log-day-ip-detail-btn,
-            .ips-stats-box-warpper .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn {
-                background: #07a8bc;
-            }
-        
-            .ips-stats-box-warpper .site-log-day-ul li:hover .site-log-day-ip-detail-btn:hover,
-            .ips-stats-box-warpper .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn:hover {
-                background: #0097a7;
+            @media (any-hover: hover) {
+                .ips-stats-box-warpper .site-log-day-ul li:hover .site-log-day-ip-detail-btn,
+                .ips-stats-box-warpper .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn {
+                    background: #07a8bc;
+                }
+            
+                .ips-stats-box-warpper .site-log-day-ul li:hover .site-log-day-ip-detail-btn:hover,
+                .ips-stats-box-warpper .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn:hover {
+                    background: #0097a7;
+                }
             }
 
             .ips-stats-box-close {
@@ -173,8 +210,10 @@
                 cursor: pointer;
             }
 
-            .ips-stats-box-close:hover {
-                transform: scale(1.2);
+            @media (any-hover: hover) {
+                .ips-stats-box-close:hover {
+                    transform: scale(1.2);
+                }
             }
         
             @media (max-width: 768px) {
@@ -184,7 +223,7 @@
                 }
             
                 .ips-stats-box-warpper .site-log-day-ip-detail-btn {
-                    margin-left: 0;
+                    margin-left: 5px;
                 }
             }
         `;
@@ -199,7 +238,10 @@
         const dateRange = currSearchParams.get('qdateRange') || urlSearchParams.get('qdateRange') || '7days';
         const hideCloseBtn = /^(true|1)$/.test(currSearchParams.get('qhideCloseBtn') || urlSearchParams.get('qhideCloseBtn') || 'false');
         const showIpsStatsBox = /^(true|1)$/.test(currSearchParams.get('qshowIpsStatsBox') || urlSearchParams.get('qshowIpsStatsBox') || 'false');
-        console.log('createIpsStatsBoxEles sitePageFromUrl', sitePageFromUrl,'sortName', sortName, 'dateRange', dateRange );
+        console.log(
+            'createIpsStatsBoxEles sitePageFromUrl', sitePageFromUrl,' ,sortName', sortName, ' ,dateRange', dateRange,
+            ' ,hideCloseBtn:', hideCloseBtn, ' ,showIpsStatsBox:', showIpsStatsBox
+        );
 
         const ipsStatsBoxEle = document.createElement('div');
         ipsStatsBoxEle.id = 'qiushaocloud_sitecounter_total_ips_stats_box';

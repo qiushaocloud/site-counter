@@ -75,6 +75,7 @@
     if ((hasSiteEle && !isIncredSite) || (hasSitePageEle && !isIncredSitePage)) {
       var sitePagePathname = undefined;
       var isIncrSite = hasSiteEle && !isIncredSite;
+      var isIncrSitePage = hasSitePageEle && !isIncredSitePage;
       var nowTs = Date.now();
       var saveSiteTs = window.localStorage.getItem('qiushaocloud_sitecounter_session_save_ts');
       var isSiteHistroySession = false;
@@ -124,8 +125,8 @@
         }
       }
 
-      window.localStorage.setItem('qiushaocloud_sitecounter_session_save_ts', Date.now());
-      if (sitePagePathname) {
+      isIncrSite && window.localStorage.setItem('qiushaocloud_sitecounter_session_save_ts', Date.now());
+      if (sitePagePathname && isIncrSitePage) {
         window.localStorage.setItem('qiushaocloud_sitecounter_session_save_ts:page:' + sitePagePathname, Date.now());
       }
       
@@ -133,8 +134,10 @@
         getSiteHost(),
         sitePagePathname,
         isIncrSite,
+        isIncrSitePage,
         isSiteHistroySession,
         isSitePageHistroySession,
+        getLocationHref(),
         function (err, res) {
           if (err) {
             console.error('reqSiteCounterAPI err:', err);
@@ -290,7 +293,7 @@
                       var tableData = [];
                       for (var i=0, len=logs.length; i<len; i++) {
                         var log = logs[i];
-                        tableData.push({'时间':getCurrFormatTs(log[0]), 'IP':log[1], 'IP信息':log[2], 'UserAgent':log[3]});
+                        tableData.push({'时间':getCurrFormatTs(log[0]), 'IP':log[1], 'IP信息':log[2], 'UserAgent':log[3], 'Href':log[4]});
                       }
                       
                       console.log('==================== 网站 '+day+' 访问日志：'+ip+' ====================');
@@ -308,7 +311,7 @@
                       var tableData = [];
                       for (var i=0, len=logs.length; i<len; i++) {
                         var log = logs[i];
-                        tableData.push({'时间':getCurrFormatTs(log[0]), 'IP':log[1], 'IP信息':log[2], 'UserAgent':log[3]});
+                        tableData.push({'时间':getCurrFormatTs(log[0]), 'IP':log[1], 'IP信息':log[2], 'UserAgent':log[3], 'Href':log[4]});
                       }
                       
                       console.log('==================== '+sitePageTitle+' '+day+' 访问日志：'+ip+' ====================');
@@ -318,6 +321,48 @@
                     }
                   }
                 });
+                return;
+              }
+
+              if (target.nodeName === 'BUTTON' && target.classList.contains(ipsStatsKey+'-log-day-ul-fold-btn')) {
+                var logDayEle = target.parentNode.parentNode;
+                var logDayUlEle = logDayEle.querySelector('.'+ipsStatsKey+'-log-day-ul');
+                logDayUlEle.foldAnimationTimer && clearTimeout(logDayUlEle.foldAnimationTimer);
+                delete logDayUlEle.foldAnimationTimer;
+                if (target.innerHTML === '展开') {
+                  target.innerHTML = '折叠';
+                  var oldSscrollHeight = logDayUlEle.getAttribute('data-height');
+                  logDayUlEle.style.transition = 'height 1s ease-in-out, opacity 1s ease-in-out';
+                  logDayUlEle.style.display = null;
+                  logDayUlEle.offsetHeight;  // logDayUlEle 强制重绘
+                  logDayUlEle.style.opacity = null;
+                  if (oldSscrollHeight) {
+                    logDayUlEle.style.height = oldSscrollHeight+'px';
+                    logDayUlEle.foldAnimationTimer = setTimeout(function() {
+                      delete logDayUlEle.foldAnimationTimer;
+                      logDayUlEle.style.transition = null;
+                      logDayUlEle.style.height = null;
+                    }, 1000);
+                  } else {
+                    logDayUlEle.style.transition = null;
+                    logDayUlEle.style.height = null;
+                  }
+                } else {
+                  target.innerHTML = '展开';
+                  logDayUlEle.setAttribute('data-height', logDayUlEle.scrollHeight);
+                  logDayUlEle.style.transition = 'none';
+                  logDayUlEle.style.height = logDayUlEle.scrollHeight + 'px';
+                  logDayUlEle.style.transition = 'height 1s ease-in-out, opacity 1s ease-in-out';
+                  logDayUlEle.offsetHeight;  // logDayUlEle 强制重绘
+                  logDayUlEle.style.height = '0';
+                  logDayUlEle.style.opacity = '0';
+                  logDayUlEle.foldAnimationTimer = setTimeout(function() {
+                    delete logDayUlEle.foldAnimationTimer;
+                    logDayUlEle.style.display = 'none';
+                    logDayUlEle.style.transition = null;
+                  }, 1000);
+                }
+                return;
               }
             };
           })(ipsStatsKey, ipsStatsEle);
@@ -327,14 +372,18 @@
             var logDayData = ipsStatsData[logDay];
             var logDayEle = document.createElement('div');
             logDayEle.className = ipsStatsKey+'-log-day';
-            logDayEle.innerHTML = '<h5>'+logDay+'</h5>';
+            logDayEle.innerHTML = '<h5 class="'+ipsStatsKey+'-log-day-title" ><span class="day-content">'+logDay+'</span><button class="'+ipsStatsKey+'-log-day-ul-fold-btn">折叠</button></h5>';
             ipsStatsEle.appendChild(logDayEle);
             var logDayUlEle = document.createElement('ul');
             logDayUlEle.className = ipsStatsKey+'-log-day-ul';
             logDayEle.appendChild(logDayUlEle);
 
+            let totalPvCount = 0; // 总访问次数
+            let totalIpCount = 0; // 总IP数
             for (var ip in logDayData) {
               var ipCount = logDayData[ip][0];
+              totalPvCount += ipCount;
+              totalIpCount++;
               var ipLocation = logDayData[ip][1];
               // console.debug('ipsStatsData => ip:', ip, 'count:', ipCount, 'location:', ipLocation);
               var ipLiEle = document.createElement('li');
@@ -353,6 +402,9 @@
                 +'<button class="'+ipsStatsKey+'-log-day-ip-detail-btn" data-ip="'+ip+'" data-day="'+logDay+'">详细日志</button>';
               logDayUlEle.appendChild(ipLiEle);
             }
+
+            // logDayEle.querySelector('.'+ipsStatsKey+'-log-day-title').innerHTML += '<span class="total-count-content">（共'+totalCount+'次）</span>';
+            logDayEle.querySelector('.'+ipsStatsKey+'-log-day-title').innerHTML += '<span class="total-pv-count-content">（'+totalIpCount+'个IP访问'+totalPvCount+'次）</span>';
           }
         }
 
@@ -465,7 +517,7 @@
     logsTableBox.appendChild(logsTable);
     var theadTr = document.createElement('thead');
     theadTr.className = 'site-counter-logs-table-thead';
-    theadTr.innerHTML = '<th>序号</th><th>时间</th><th>IP</th><th>IP信息</th><th>UserAgent</th>';
+    theadTr.innerHTML = '<th>序号</th><th>时间</th><th>IP</th><th>IP信息</th><th>UserAgent</th><th>Href</th>';
     logsTable.appendChild(theadTr);
     var tbody = document.createElement('tbody');
     tbody.className = 'site-counter-logs-table-tbody';
@@ -474,7 +526,7 @@
     for (var i=0, len=logsData.length; i<len; i++) {
       var logData = logsData[i];
       var trEle = document.createElement('tr');
-      trEle.innerHTML = '<td data-label="序号">'+(i+1)+'</td><td data-label="时间">'+getCurrFormatTs(logData[0])+'</td><td data-label="IP">'+logData[1]+'</td><td data-label="IP信息">'+logData[2]+'</td><td data-label="UserAgent">'+logData[3]+'</td>';
+      trEle.innerHTML = '<td data-label="序号">'+(i+1)+'</td><td data-label="时间">'+getCurrFormatTs(logData[0])+'</td><td data-label="IP">'+logData[1]+'</td><td data-label="IP信息">'+logData[2]+'</td><td data-label="UserAgent">'+logData[3]+'</td><td data-label="Href">'+(logData[4] || '-')+'</td>';
       tbody.appendChild(trEle);
     }
   }
@@ -492,6 +544,13 @@
 
     var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
     return sitePagePathname;
+  }
+
+  function getLocationHref () {
+    if (window.QIUSHAOCLOUD_SITE_COUNTER_LOCATION_HREF)
+      return window.QIUSHAOCLOUD_SITE_COUNTER_LOCATION_HREF;
+
+    return window.location.href;
   }
 
   function sendNotice(type, data) {
@@ -642,22 +701,31 @@
     siteHost,
     sitePagePathname,
     isIncrSite,
+    isIncrSitePage,
     isSiteHistroySession,
     isSitePageHistroySession,
+    locationHref,
     onCallback
   ) {
     var reqJson = {
       site_host: siteHost,
-      site_page_pathname: sitePagePathname,
-      is_incr_site: isIncrSite,
-      is_histroy_session: isSiteHistroySession,
+      is_incr_site: isIncrSite || false,
       nonce_ts: Date.now(),
-      nonce: Math.random().toString(36).substr(2, 10)
+      nonce: Math.random().toString(36).substr(2, 10),
     };
-    if (isSitePageHistroySession !== undefined) {
-      reqJson.is_histroy_session_page = isSitePageHistroySession;
+
+    isIncrSite && isSiteHistroySession !== undefined && (reqJson.is_histroy_session = isSiteHistroySession);
+
+    if (isIncrSite || (sitePagePathname && isIncrSitePage)) {
+      reqJson.href = locationHref;
     }
 
+    if (sitePagePathname) {
+      reqJson.site_page_pathname = sitePagePathname;
+      reqJson.is_incr_page = isIncrSitePage || false;
+      isSitePageHistroySession !== undefined && (reqJson.is_histroy_session_page = isSitePageHistroySession);
+    }
+    
     addExtraRequestData(reqJson);
     sequentialAjaxRequest(getApiAddr() + "/site_counter", reqJson, {method: 'POST'}, onCallback);
   }

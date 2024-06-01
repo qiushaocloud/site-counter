@@ -17,6 +17,7 @@ class SiteCounterHandler {
     siteHost,
     sitePagePathname,
     isIncrSite,
+    inIncrPage,
     isHistroySession,
     isHistroySessionPage,
     onCallback
@@ -26,6 +27,7 @@ class SiteCounterHandler {
         siteHost,
         sitePagePathname,
         isIncrSite,
+        inIncrPage,
         isHistroySession,
         isHistroySessionPage
       ).then((resResult) => {
@@ -61,12 +63,23 @@ class SiteCounterHandler {
         const clinetIpInfos = {};
 
         for (const ipLog of ipLogs) {
-          const { ts: logTs, clientIp: logClientIp, siteHost: logSiteHost, sitePagePathname: logSitePagePathname } = ipLog;
+          const {
+            ts: logTs,
+            clientIp: logClientIp,
+            siteHost: logSiteHost,
+            sitePagePathname: logSitePagePathname,
+            incrType: logIncrType,
+          } = ipLog;
+
           const logDay = utils.getCurrFormatTs(logTs, undefined, true);
           if (siteHost !== logSiteHost) continue;
-          clinetIpInfos[logClientIp] = '';
 
-          if (sitePagePathname && sitePagePathname === logSitePagePathname) {
+          if (
+            sitePagePathname
+            && sitePagePathname === logSitePagePathname
+            && (logIncrType === undefined || logIncrType === 'page' || logIncrType === 'siteandpage')
+          ) {
+            clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
             let dayPageIps = resResult.page_ips[logDay];
             !dayPageIps && (dayPageIps = resResult.page_ips[logDay] = {});
             !dayPageIps[logClientIp] && (dayPageIps[logClientIp] = [0, '']);
@@ -74,6 +87,8 @@ class SiteCounterHandler {
           }
 
           if (isOnlyPage) continue;
+          if (!(logIncrType === undefined || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
+          clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
           let daySiteIps = resResult.site_ips[logDay];
           !daySiteIps && (daySiteIps = resResult.site_ips[logDay] = {});
           !daySiteIps[logClientIp] && (daySiteIps[logClientIp] = [0, '']);
@@ -146,17 +161,29 @@ class SiteCounterHandler {
         ipLogs.sort((a, b) => a.ts - b.ts); // 通过时间戳进行升序排序
         for (const ipLog of ipLogs) {
           const { 
-            ts: logTs, clientIp: logClientIp, siteHost: logSiteHost, 
-            sitePagePathname: logSitePagePathname, userAgent: logUserAgent
+            ts: logTs,
+            clientIp: logClientIp,
+            siteHost: logSiteHost, 
+            sitePagePathname: logSitePagePathname,
+            userAgent: logUserAgent,
+            incrType: logIncrType,
+            href: logHref
           } = ipLog;
           if (siteHost !== logSiteHost) continue;
-          clinetIpInfos[logClientIp] = '';
 
-          if (sitePagePathname && sitePagePathname === logSitePagePathname)
-            resResult.page_logs.push([logTs, logClientIp, '', logUserAgent]);
+          if (
+            sitePagePathname
+            && sitePagePathname === logSitePagePathname
+            && (logIncrType === undefined || logIncrType === 'page' || logIncrType === 'siteandpage')
+          ) {
+            clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
+            resResult.page_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
+          }
 
           if (isOnlyPage) continue;
-          resResult.site_logs.push([logTs, logClientIp, '', logUserAgent]);
+          if (!(logIncrType === undefined || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
+          clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
+          resResult.site_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
         }
 
         isOnlyPage && delete resResult.site_logs;
@@ -196,6 +223,7 @@ class SiteCounterHandler {
     siteHost,
     sitePagePathname,
     isIncrSite,
+    inIncrPage,
     isHistroySession,
     isHistroySessionPage
   ) {
@@ -252,17 +280,26 @@ class SiteCounterHandler {
     }
 
     if (sitePagePathname) {
-      const sitePagePvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':pv');
-      resResult['page_pv'] = utils.toParseNumber(sitePagePvRes) || 0;
-
-      if (!isHistroySession || !isHistroySessionPage) {
-        const sitePageUvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':uv');
-        resResult['page_uv'] =  utils.toParseNumber(sitePageUvRes) || 0;
-      }else {
-        const sitePageUvRes = await global.cacheStaticRedis.hgetAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':uv');
-        resResult['page_uv'] =  utils.toParseNumber(sitePageUvRes) || 0;
+      if (inIncrPage) {
+        const sitePagePvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':pv');
+        resResult['page_pv'] = utils.toParseNumber(sitePagePvRes) || 0;
+  
+        if (!isHistroySession || !isHistroySessionPage) {
+          const sitePageUvRes = await global.cacheStaticRedis.hincrAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':uv');
+          resResult['page_uv'] =  utils.toParseNumber(sitePageUvRes) || 0;
+        }else {
+          const sitePageUvRes = await global.cacheStaticRedis.hgetAsync(SITE_COUNTER_PREFIX+siteHost, sitePagePathname+':uv');
+          resResult['page_uv'] =  utils.toParseNumber(sitePageUvRes) || 0;
+        }
+      } else {
+        const sitePagePUvRes = await global.cacheStaticRedis.hmgetAsync(SITE_COUNTER_PREFIX+siteHost, [
+          sitePagePathname+':pv',
+          sitePagePathname+':uv'
+        ]);
+        resResult['page_pv'] =  utils.toParseNumber(sitePagePUvRes && sitePagePUvRes[0]) || 0;
+        resResult['page_uv'] =  utils.toParseNumber(sitePagePUvRes && sitePagePUvRes[1]) || 0;
       }
-
+      
       const yesterdaySitePagePUvRes = await global.cacheStaticRedis.hmgetAsync(
         SITE_COUNTER_PREFIX+siteHost,
         [
@@ -373,10 +410,10 @@ class SiteCounterHandler {
           const resArr = (err || stderr) ? [] : stdout.trim().split('\n');
 
           for (const line of resArr) {
-            // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:34:30.208] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost  ,sitePagePathname:/common-static/qiushaocloud-site-counter-test-demo.html  ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_2
-            // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:36:19.614] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost   ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_4
+            // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:34:30.208] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost  ,sitePagePathname:/common-static/qiushaocloud-site-counter-test-demo.html  ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_2  ,incrType:siteandpage  ,href:https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html
+            // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:36:19.614] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost   ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_4  ,incrType:siteandpage  ,href:https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html
             try {
-              const lineMatchArr = line.trim().replace(/^.*\/site-counter-ips.log.\d{4}-\d{2}-\d{2}:/, '').match(/^\[(.*?)\] \[(.*?)\] RequestIps - request post \/site_counter api success(  ,siteHost:.*?)?(  ,sitePagePathname:.*?)?(  ,clientIp:.*?)?(  ,user-agent:.*?)?(  ,apiId:.*)?$/);
+              const lineMatchArr = line.trim().replace(/^.*\/site-counter-ips.log.\d{4}-\d{2}-\d{2}:/, '').match(/^\[(.*?)\] \[(.*?)\] RequestIps - request post \/site_counter api success(  ,siteHost:.*?)?(  ,sitePagePathname:.*?)?(  ,clientIp:.*?)?(  ,user-agent:.*?)?(  ,apiId:.*?)?(  ,incrType:.*?)?(  ,href:.*?)?$/);
               if (!lineMatchArr) continue;
       
               const ts = new Date(lineMatchArr[1].trim()).getTime();
@@ -385,10 +422,13 @@ class SiteCounterHandler {
               const clientIp = lineMatchArr[5] ? lineMatchArr[5].replace(',clientIp:', '').trim() : '';
               const userAgent = lineMatchArr[6] ? lineMatchArr[6].replace(',user-agent:', '').trim() : '';
               const apiId = lineMatchArr[7] ? lineMatchArr[7].replace(',apiId:', '').trim() : '';
+              const incrType = lineMatchArr[8] ? lineMatchArr[8].replace(',incrType:', '').trim() : '';
+              const href = lineMatchArr[9] ? lineMatchArr[9].replace(',href:', '').trim() : '';
 
               const ipLog = {
                 ts, siteHost, sitePagePathname,
-                clientIp, userAgent, apiId
+                clientIp, userAgent, apiId,
+                incrType, href
               }
 
               ipLogs.push(ipLog);
