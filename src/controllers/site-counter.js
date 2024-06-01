@@ -28,8 +28,10 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
     site_host: siteHost,
     site_page_pathname: sitePagePathname,
     is_incr_site: isIncrSite,
+    is_incr_page: isIncrPage,
     is_histroy_session: isHistroySession,
-    is_histroy_session_page: isHistroySessionPage
+    is_histroy_session_page: isHistroySessionPage,
+    href: href
   } = allParams;
 
   if (!siteHost) {
@@ -55,10 +57,14 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
     siteHostTmp = 'www.'+siteHost;
   }
 
+  const isIncrSiteBool = utils.toParseBoolean(isIncrSite);
+  const isIncrPageBool = sitePagePathname && (isIncrPage === undefined || utils.toParseBoolean(isIncrPage));
+
   siteCounterHandler.incrSiteCount(
     siteHostTmp,
     sitePagePathname,
-    utils.toParseBoolean(isIncrSite),
+    isIncrSiteBool,
+    isIncrPageBool,
     utils.toParseBoolean(isHistroySession),
     isHistroySessionPage === undefined ? undefined : utils.toParseBoolean(isHistroySessionPage),
     (err, result) => {
@@ -71,14 +77,22 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
         return;
       }
 
-      ipsLog.info(
-        'request post /site_counter api success',
-        ' ,siteHost:'+siteHost,
-        sitePagePathname ? ' ,sitePagePathname:'+sitePagePathname : '',
-        ' ,clientIp:'+clientIp,
-        ' ,user-agent:'+req.headers['user-agent'],
-        ' ,apiId:'+apiId
-      );
+      if (isIncrSiteBool || isIncrPageBool) {
+        let incrType = isIncrSiteBool ? 'site' : '';
+        if (isIncrPageBool)
+          incrType += ((incrType ? 'and' : '') +'page');
+
+        ipsLog.info(
+          'request post /site_counter api success',
+          ' ,siteHost:'+siteHost,
+          sitePagePathname ? ' ,sitePagePathname:'+sitePagePathname : '',
+          ' ,clientIp:'+clientIp,
+          ' ,user-agent:'+req.headers['user-agent'],
+          ' ,apiId:'+apiId,
+          ' ,incrType:'+incrType, // 'site' | 'page' | 'siteandpage'
+          ' ,href:'+href
+        );
+      }
 
       res.json(result);
     }

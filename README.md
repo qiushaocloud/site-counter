@@ -127,6 +127,11 @@
 * [邱少羽梦博客演示站点: https://www.qiushaocloud.top/2022/01/10/site-counter](https://www.qiushaocloud.top/2022/01/10/site-counter)
 * [测试 demo 代码地址: https://github.com/qiushaocloud/cdn-static/blob/master/blog/qiushaocloud-site-counter-test-demo.html](https://github.com/qiushaocloud/cdn-static/blob/master/blog/qiushaocloud-site-counter-test-demo.html)
 * [测试 demo 效果地址: https://www.qiushaocloud.top/common-static/qiushaocloud-site-counter-test-demo.html](https://www.qiushaocloud.top/common-static/qiushaocloud-site-counter-test-demo.html)
+* 代码中 `examples` 目录下有更多的使用示例
+  * [示例 complex.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/complex.html)
+  * [示例 simple.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/simple.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/simple.html)
+  * [示例 ips-stats-search.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-search.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-search.html)
+  * [示例 flexible.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/flexible.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/flexible.html)
 
 
 #### 参与贡献

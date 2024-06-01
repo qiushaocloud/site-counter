@@ -7,11 +7,26 @@
   <meta property="og:site_counter_author" content="邱少羽梦">
   <meta property="og:site_counter_author_blog" content="https://www.qiushaocloud.top">
   <title>qiushaocloud 网站统计测试</title>
-  <script>
+  <!-- <script>
     window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
-  </script>
+  </script> -->
   <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
   <script src="../dist/qiushaocloud_site_counter.min.js"></script>
+</head>
+<body>
+  <div class="counter-box">
+    <h4>网站统计</h4>
+    <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
+    <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
+    <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
+    <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
+  
+    <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
+    <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
+    <p>本页面今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
+    <p>本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
+  </div>
+  
   <style>
     * {
       padding: 0;
@@ -64,19 +79,5 @@
       padding: 0.5rem;
     }
   </style>
-</head>
-<body>
-  <div class="counter-box">
-    <h4>网站统计</h4>
-    <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">400</span></p>
-    <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">4</span></p>
-    <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">11</span></p>
-    <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">1</span></p>
-  
-    <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">8</span></p>
-    <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">2</span></p>
-    <p>本页面今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">1</span></p>
-    <p>本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">1</span></p>
-  </div>
 </body>
 </html>

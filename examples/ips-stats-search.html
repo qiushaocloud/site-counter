@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta property="og:site_counter_author" content="邱少羽梦">
+  <meta property="og:site_counter_author_blog" content="https://www.qiushaocloud.top">
+  <title>qiushaocloud 网站IP统计测试</title>
+  <!-- <script>
+    window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
+  </script> -->
+  <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
+  <script src="../dist/qiushaocloud_site_counter.min.js"></script>
+</head>
+<body>
+  <div class="search-box">
+    <div class="search-input-warp">
+      <input type="text" id="searchInput" placeholder="请输入本网站的页面地址，如果为空，则只显示本网站的IP统计">
+      <button class="clear-text-btn">x</button>
+      <ul class="dropdown-content" id="searchList"></ul>
+    </div>
+    <button class="search-btn" id="searchBtn">搜索</button>
+  </div>
+  <div class="counter-box" style="display: none;" >
+    <h4>网站统计</h4>
+    <div class="counter-box-content">
+      <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
+      <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
+      <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
+      <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
+    
+      
+      <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
+      <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
+      <p>本页面今日访访量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
+      <p>本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
+    </div>
+  </div>
+  <div class="iframe-container" id="iframeContainer"></div>
+
+  <script>
+    (() => {
+      const createIframe = (sitePagePathname) => {
+        console.log('createIframe sitePagePathname:', sitePagePathname)
+        document.getElementById('iframeContainer').innerHTML = '';
+        const iframeEle = document.createElement('iframe');
+        iframeEle.src = './ips-stats-iframe.html' + (sitePagePathname ? `?qpage=${sitePagePathname === 'self' ? window.location.pathname : sitePagePathname}` : '');
+        iframeEle.onload = () => {
+          console.log('iframe element loaded, iframeEle.src:', iframeEle.src);
+        };
+        iframeEle.onerror = () => {
+          console.error('iframe element load error, iframeEle.src:', iframeEle.src);
+        };
+        iframeEle.style.width = '100%';
+        iframeEle.style.height = '100%';
+        iframeEle.style.border = 'none';
+        iframeEle.style.margin = '0';
+        iframeEle.style.padding = '0';
+        iframeEle.style.overflow = 'hidden';
+        document.getElementById('iframeContainer').appendChild(iframeEle);
+      }
+
+      const searchInputEle = document.getElementById('searchInput');
+      const searchDropdownEle = document.getElementById('searchList');
+      const searchBtnEle = document.getElementById('searchBtn');
+
+      if (!localStorage.getItem('qiushaocloudIpsStatsSearchList')) { // 没有缓存的搜索记录，则添加默认的
+        localStorage.setItem('qiushaocloudIpsStatsSearchList', JSON.stringify([
+          window.location.pathname.replace('/ips-stats-search.html', '/simple.html'),
+          window.location.pathname.replace('/ips-stats-search.html', '/complex.html'),
+          window.location.pathname.replace('/ips-stats-search.html', '/flexible.html'),
+          '/common-static/qiushaocloud-site-counter-test-demo.html'
+        ]));
+      }
+
+      let sitePagePathname;
+      searchBtnEle.addEventListener('click', () => {
+        const sitePagePathnameTmp = searchInputEle.value.trim() === '本页面' ? 'self' : searchInputEle.value.trim();
+        localStorage.setItem('qiushaocloudIpsStatsSearchInput', searchInputEle.value);
+        if (sitePagePathnameTmp === sitePagePathname) return;
+        sitePagePathname = sitePagePathnameTmp;
+
+        if (sitePagePathname && sitePagePathname !== 'self') {
+          const cacheSearchList = localStorage.getItem('qiushaocloudIpsStatsSearchList') ? JSON.parse(localStorage.getItem('qiushaocloudIpsStatsSearchList')) : [];
+          cacheSearchList.indexOf(sitePagePathname) === -1 && cacheSearchList.push(sitePagePathname);
+          cacheSearchList.length > 10 && cacheSearchList.shift();
+          !cacheSearchList.length ? localStorage.removeItem('qiushaocloudIpsStatsSearchList') : localStorage.setItem('qiushaocloudIpsStatsSearchList', JSON.stringify(cacheSearchList));
+        }
+
+        createIframe(sitePagePathname);
+      });
+
+      const setSearchValue = (value, ingoreEvt) => {
+        !value && (value = (value === undefined || value === null) ? '本页面' : '');
+        value = value.trim();
+        if (value !== searchInputEle.value)
+          searchInputEle.value = value;
+        localStorage.setItem('qiushaocloudIpsStatsSearchInput', value);
+        !ingoreEvt && searchBtnEle.dispatchEvent(new Event('click'));
+      }
+      setSearchValue(new URLSearchParams(window.location.search).get('page') || localStorage.getItem('qiushaocloudIpsStatsSearchInput'));
+
+      // 清除搜索框内容
+      const clearTextBtnEle = document.querySelector('.clear-text-btn');
+      clearTextBtnEle.addEventListener('click', () => {
+        setSearchValue('');
+        showPopulatedDropdown();
+        searchInputEle.focus();
+      });
+
+      searchDropdownEle.addEventListener('click', (event) => {
+        if ((event.target.tagName === 'LI' && event.target.classList.contains('dropdown-content-item'))
+          || (event.target.tagName === 'SPAN' && event.target.classList.contains('dropdown-content-item-text'))
+        ) {
+          if (event.target.tagName === 'LI' && event.target.classList.contains('dropdown-content-item'))
+            setSearchValue(event.target.querySelector('.dropdown-content-item-text').textContent);
+          else if (event.target.tagName === 'SPAN' && event.target.classList.contains('dropdown-content-item-text'))
+            setSearchValue(event.target.textContent);
+
+          hidePopulatedDropdown();
+          return;
+        }
+
+        if (event.target.tagName === 'BUTTON' && event.target.classList.contains('dropdown-content-item-delete-btn')) {
+          if (event.target.classList.contains('delete-all-btn')) {
+            localStorage.removeItem('qiushaocloudIpsStatsSearchList');
+            showPopulatedDropdown(); // 刷新下拉列表
+            searchBtnEle.focus();
+            return;
+          }
+
+          const option = event.target.parentNode.querySelector('.dropdown-content-item-text').textContent;
+          const cacheSearchList = localStorage.getItem('qiushaocloudIpsStatsSearchList') ? JSON.parse(localStorage.getItem('qiushaocloudIpsStatsSearchList')) : undefined;
+          const index = !cacheSearchList ? -1 : cacheSearchList.indexOf(option);
+          if (index !== -1) {
+            cacheSearchList.splice(index, 1);
+            !cacheSearchList.length ? localStorage.removeItem('qiushaocloudIpsStatsSearchList') : localStorage.setItem('qiushaocloudIpsStatsSearchList', JSON.stringify(cacheSearchList));
+          }
+          showPopulatedDropdown(); // 刷新下拉列表
+          searchBtnEle.focus();
+          return;
+        }
+      });
+
+      let timer;
+      const showPopulatedDropdown = () => {
+        timer && clearTimeout(timer);
+        timer = undefined;
+        populateDropdown();
+        searchDropdownEle.style.display = 'block';
+        searchDropdownEle.parentNode.classList.add('open-dropdown');
+      };
+
+      const hidePopulatedDropdown = () => {
+        timer && clearTimeout(timer);
+        timer = setTimeout(() => {
+          timer = undefined;
+          searchDropdownEle.style.display = 'none';
+          searchDropdownEle.parentNode.classList.remove('open-dropdown');
+          searchDropdownEle.innerHTML = '';
+        }, 200)
+      };
+
+      // 填充下拉列表的函数
+      const populateDropdown = () => {
+        searchDropdownEle.innerHTML = '';
+        const options = ['本页面'];
+        const cacheSearchList = localStorage.getItem('qiushaocloudIpsStatsSearchList') ? JSON.parse(localStorage.getItem('qiushaocloudIpsStatsSearchList')) : undefined;
+        if (cacheSearchList && cacheSearchList.length) {
+          for (let i = 0; i < cacheSearchList.length; i++) {
+            if (cacheSearchList[i] === '本页面') continue;
+            options.push(cacheSearchList[i]);
+          }
+        }
+
+        const currInputValue = searchInputEle.value.trim();
+        options.forEach(option => {
+          const optionElem = document.createElement('li');
+          optionElem.className = 'dropdown-content-item' + (option === currInputValue ? ' active' : '');
+          optionElem.innerHTML = '<span class="dropdown-content-item-text">' + option + '</span>';
+          const deleteButton = document.createElement('button');
+          deleteButton.className = 'dropdown-content-item-delete-btn' + (option === '本页面' ? ' delete-all-btn' : '');
+          deleteButton.innerHTML = option === '本页面' ? '清除全部' : 'x';
+          optionElem.appendChild(deleteButton); // 添加删除按钮
+          searchDropdownEle.appendChild(optionElem);
+        });
+      };
+
+      // 输入框获得焦点时显示下拉列表
+      searchInputEle.addEventListener('focus', () => {
+        showPopulatedDropdown();
+      });
+
+      searchInputEle.addEventListener('blur', () => {
+        hidePopulatedDropdown();
+      });
+
+      // 回车键触发搜索
+      searchInputEle.addEventListener('keydown', (event) => {
+        if (event.keyCode === 13) {
+          setSearchValue(searchInputEle.value);
+          showPopulatedDropdown();
+          searchInputEle.focus();
+        }
+      });
+    })();
+  </script>
+
+  <style>
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      flex-direction: column;
+    }
+    .search-box {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 20px;
+      box-sizing: border-box;
+    }
+    .search-input-warp {
+      position: relative;
+      flex: 1;
+      max-width: 800px;
+    }
+    .search-input-warp input {
+      width: 100%;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      font-size: 18px;
+      outline: none;
+      transition: box-shadow 0.3s ease, background-color 0.3s ease;
+      color: #918d8d;
+      box-sizing: border-box;
+      background-color: #fff;
+    }
+    .search-input-warp input::placeholder {
+      color: #ccc;
+    }
+    .search-input-warp input:focus {
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
+    }
+    .search-input-warp .clear-text-btn,
+    .dropdown-content-item-delete-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      font-size: 22px;
+      line-height: 22px;
+      background: none;
+      color: #918d8d;
+      cursor: pointer;
+    }
+    .dropdown-content-item-delete-btn.delete-all-btn {
+      font-size: 15px;
+    }
+
+    @media (any-hover: hover) {
+      .search-input-warp .clear-text-btn:hover,
+      .dropdown-content-item-delete-btn:hover {
+        transform: translateY(-50%) scale(1.2);
+      }
+      .dropdown-content-item-delete-btn.delete-all-btn:hover {
+        transform: translateY(-50%) scale(1.05);
+      }
+    }
+   
+    .search-input-warp.open-dropdown::before {
+      content: "\25B4";
+      font-family: Arial, sans-serif;
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      bottom: calc(0% - 50px);
+      color: #ddd;
+      font-size: 35px;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      z-index: 1;
+      width: 100%;
+      top: calc(100% + 15px);
+      max-height: 250px;
+      overflow-y: auto;
+      padding: 0;
+      margin: 0;
+      list-style-type: none;
+    }
+    .dropdown-content li {
+      position: relative;
+      display: block;
+      padding: 15px 20px;
+      color: #918d8d;
+      text-decoration: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .dropdown-content li.active {
+      background-color: #f0f0f0;
+      color: #4a90e2;
+    }
+
+    @media (any-hover: hover) {
+      .dropdown-content li:hover {
+        background-color: #ddd;
+      }
+    }
+    .search-btn {
+      margin-left: 15px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 30px;
+      background-color: #4a90e2;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    @media (any-hover: hover) {
+      .search-btn:hover {
+        background-color: #357abd;
+      }
+    }
+    .iframe-container {
+      flex: 1;
+      width: 100%;
+      background: #fcfbfb;
+    }
+
+    @media (max-width: 768px) {
+      .search-box {
+        padding: 10px 8px;
+      }
+
+      .search-input-warp input {
+        padding: 10px 25px 10px 5px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .search-input-warp input::placeholder {
+        font-size: 11px;
+      }
+
+      .search-btn {
+        margin-left: 5px;
+        padding: 6px 6px;
+        border-radius: 8px;
+        font-size: 13px;
+      }
+
+      .dropdown-content {
+        top: calc(100% + 9px);
+      }
+
+      .search-input-warp.open-dropdown::before {
+        bottom: calc(0% - 47px);
+      }
+      
+      .dropdown-content li {
+        font-size: 12px;
+        padding: 13px 23px 13px 8px;
+      }
+
+      .dropdown-content li:first-child {
+        padding-right: 60px;
+      }
+
+      .search-input-warp .clear-text-btn,
+      .dropdown-content-item-delete-btn {
+        right: 5px;
+        font-size: 17px;
+        line-height: 17px;
+      }
+
+      .dropdown-content-item-delete-btn.delete-all-btn {
+        font-size: 11px;
+      }
+    }
+  </style>
+</body>
+</html>

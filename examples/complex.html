@@ -7,12 +7,84 @@
   <meta property="og:site_counter_author" content="邱少羽梦">
   <meta property="og:site_counter_author_blog" content="https://www.qiushaocloud.top">
   <title>qiushaocloud 网站统计和IP统计测试</title>
-  <script>
+  <!-- <script>
     window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
-  </script>
+  </script> -->
   <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
   <script src="../dist/qiushaocloud_site_counter.min.js"></script>
   <link rel="stylesheet" href="./css/logs-table.css" />
+</head>
+<body>
+  <script>
+    (function() {
+      window.qiushaocloudSiteCounterNotice = function(type, data) {
+        console.debug('recv qiushaocloudSiteCounterNotice, type:', type, ' ,data:', data);
+      }
+
+      var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
+      var sitePagePathnameFromUrl = new URLSearchParams(window.location.search).get('page');
+      sitePagePathnameFromUrl === 'self' && (sitePagePathnameFromUrl = '');
+      if (sitePagePathnameFromUrl && sitePagePathnameFromUrl !== sitePagePathname) {
+        console.log('set QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME to ', sitePagePathnameFromUrl);
+        window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME = sitePagePathnameFromUrl;
+      }
+    })();
+  </script>
+
+  <div class="total-box">
+    <div class="counter-box">
+      <h4>网站统计</h4>
+      <div class="counter-box-content">
+        <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
+        <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
+        <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
+        <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
+      
+        <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
+        <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
+        <p>本页面今日访访量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
+        <p>本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
+      </div>
+    </div>
+  
+    <div class="ips-stats-box">
+      <div class="site-ips-stats-box">
+        <h4>网站IP统计</h4>
+        <div id="qiushaocloud_sitecounter_value_site_ips_stats"
+          data-ips-stats-sort-name="desc"
+          data-logs-sort-name="desc"
+          data-date-range="7days"
+          data-render-mode="ui"
+          data-logs-print-mode="ui"
+        ></div>
+      </div>
+      <div class="site-page-ips-stats-box">
+        <h4 class="site-page-ips-stats-title" title="本页面IP统计" >本页面IP统计</h4>
+        <div id="qiushaocloud_sitecounter_value_site_page_ips_stats"
+          data-ips-stats-sort-name="desc"
+          data-logs-sort-name="desc"
+          data-date-range="7days"
+          data-render-mode="ui"
+          data-logs-print-mode="ui"
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
+      var sitePagePathnameFromUrl = new URLSearchParams(window.location.search).get('page');
+      sitePagePathnameFromUrl === 'self' && (sitePagePathnameFromUrl = '');
+      if (sitePagePathnameFromUrl && sitePagePathnameFromUrl !== sitePagePathname) {
+        document.querySelector('.site-page-ips-stats-box h4.site-page-ips-stats-title').innerHTML = '页面IP统计';
+        document.querySelector('.site-page-ips-stats-box h4.site-page-ips-stats-title').setAttribute('title', '页面IP统计');
+        document.querySelector('.counter-box h4').innerHTML = '网站统计，页面: <span class="other-page-title" title="'+sitePagePathnameFromUrl+'" >'+sitePagePathnameFromUrl+'</span>';
+        document.querySelector('.counter-box .counter-box-content').innerHTML = document.querySelector('.counter-box .counter-box-content').innerHTML.replace(/本页面/g, '页面');
+      }
+    })();
+  </script>
+
   <style>
     * {
       padding: 0;
@@ -47,15 +119,17 @@
       font-size: 1rem; /* 按钮字体大小 */
     }
 
-    button:hover {
-      background: #0097a7;
+    @media (any-hover: hover) {
+      button:hover {
+        background: #0097a7;
+      }
     }
 
     .total-box {
       width: 100%;
       padding: 10px;
     }
-   
+  
     .counter-box {
       margin-bottom: 20px;
       padding: 20px;
@@ -74,6 +148,9 @@
       margin-bottom: 20px;
       font-size: 1.6rem;
       text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .counter-box-content p {
@@ -111,23 +188,28 @@
       overflow: auto;
     }
 
-    .site-ips-stats-box .site-page-ips-stats-title .other-page-title,
-    .site-page-ips-stats-box .site-page-ips-stats-title .other-page-title{
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: calc(100% - 200px);
-      display: inline-block;
-      position: relative;
-      top: 7px;
-    }
-
     .site-log-day,
     .site-page-log-day {
       margin-top: 10px;
       background: #f4f4f4;
       padding: 10px;
       border-radius: 6px;
+    }
+
+   .site-log-day-title,
+   .site-page-log-day-title {
+      position: relative;
+      padding-top: 5px;
+    }
+
+   .site-log-day-ul-fold-btn,
+   .site-page-log-day-ul-fold-btn  {
+      background: #6e9296;
+      padding: 5px 10px;
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
     }
 
     .site-log-day-ul,
@@ -156,10 +238,39 @@
       background: #d0d0d0;
     }
 
-    .site-log-day-ul li:hover,
-    .site-page-log-day-ul li:hover {
-      background: #00bcd4;
-      color: #fff;
+    @media (any-hover: hover) {
+      .site-log-day-ul li:hover,
+      .site-page-log-day-ul li:hover {
+        background: #00bcd4;
+        color: #fff;
+      }
+    }
+
+    .site-log-day-ip-info-warpper,
+    .site-page-log-day-ip-info-warpper {
+        /*white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;*/
+        flex: 1;
+    }
+
+    /*.ip-info-warpper {
+        display: flex;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ip-location-content {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+    }*/
+
+    .ip-count-warpper {
+        padding: 0 10px;
     }
 
     .site-log-day-ip-detail-btn,
@@ -173,14 +284,16 @@
       cursor: pointer;
     }
 
-    .site-log-day-ul li:hover .site-log-day-ip-detail-btn,
-    .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn {
-      background: #07a8bc;
-    }
+    @media (any-hover: hover) {
+      .site-log-day-ul li:hover .site-log-day-ip-detail-btn,
+      .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn {
+        background: #07a8bc;
+      }
 
-    .site-log-day-ul li:hover .site-log-day-ip-detail-btn:hover,
-    .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn:hover {
-      background: #0097a7;
+      .site-log-day-ul li:hover .site-log-day-ip-detail-btn:hover,
+      .site-page-log-day-ul li:hover .site-page-log-day-ip-detail-btn:hover {
+        background: #0097a7;
+      }
     }
 
     @media (max-width: 768px) {
@@ -203,69 +316,6 @@
       }
     }
   </style>
-</head>
-<body>
-  <script>
-    window.qiushaocloudSiteCounterNotice = function(type, data) {
-      console.debug('recv qiushaocloudSiteCounterNotice, type:', type, ' ,data:', data);
-    }
-  </script>
-
-  <div class="total-box">
-    <div class="counter-box">
-      <h4>网站统计</h4>
-      <div class="counter-box-content">
-        <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
-        <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
-        <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
-        <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
-      
-        <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
-        <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
-        <p>本页面今日访访量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
-        <p>本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
-      </div>
-    </div>
-  
-      <div class="ips-stats-box">
-        <div class="site-ips-stats-box">
-          <h4>网站IP统计</h4>
-          <div id="qiushaocloud_sitecounter_value_site_ips_stats"
-            data-ips-stats-sort-name="desc"
-            data-logs-sort-name="desc"
-            data-date-range="7days"
-            data-render-mode="ui"
-            data-logs-print-mode="ui"
-          ></div>
-        </div>
-        <div class="site-page-ips-stats-box">
-          <h4 class="site-page-ips-stats-title" title="本页面IP统计" >本页面IP统计</h4>
-          <div id="awaiting_qiushaocloud_sitecounter_value_site_page_ips_stats"
-            data-ips-stats-sort-name="desc"
-            data-logs-sort-name="desc"
-            data-date-range="7days"
-            data-render-mode="ui"
-            data-logs-print-mode="ui"
-          ></div>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      (function(){
-        var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
-        var sitePagePathnameFromUrl = new URLSearchParams(window.location.search).get('page');
-        var awaitingSitePageIpsStatsEle = document.getElementById('awaiting_qiushaocloud_sitecounter_value_site_page_ips_stats');
-        if (!awaitingSitePageIpsStatsEle) return;
-        if (sitePagePathnameFromUrl && sitePagePathnameFromUrl !== sitePagePathname) {
-          console.log('awaitingSitePageIpsStatsEle set data-site-page-pathname to ', sitePagePathnameFromUrl);
-          awaitingSitePageIpsStatsEle.setAttribute('data-site-page-pathname', sitePagePathnameFromUrl);
-          document.querySelector('.site-page-ips-stats-box h4.site-page-ips-stats-title').innerHTML = '页面(<span class="other-page-title">'+sitePagePathnameFromUrl+'</span>)IP统计';
-          document.querySelector('.site-page-ips-stats-box h4.site-page-ips-stats-title').setAttribute('title', '页面('+sitePagePathnameFromUrl+')IP统计');
-        }
-        awaitingSitePageIpsStatsEle.id = awaitingSitePageIpsStatsEle.id.replace('awaiting_', '');
-      })();
-    </script>
-  </body>
-  </html>
+</body>
+</html>
   
