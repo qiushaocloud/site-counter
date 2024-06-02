@@ -17,10 +17,6 @@
 <body>
   <script>
     (function() {
-      window.qiushaocloudSiteCounterNotice = function(type, data) {
-        console.debug('recv qiushaocloudSiteCounterNotice, type:', type, ' ,data:', data);
-      }
-
       var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
       var sitePagePathnameFromUrl = new URLSearchParams(window.location.search).get('page');
       sitePagePathnameFromUrl === 'self' && (sitePagePathnameFromUrl = '');

@@ -2,10 +2,269 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <meta property="og:site_counter_author" content="邱少羽梦">
+  <meta property="og:site_counter_author_blog" content="https://www.qiushaocloud.top">
+  <title>qiushaocloud 网站统计和IP统计自定义测试</title>
+  <!-- <script>
+    window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
+  </script> -->
+  <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
+  <script src="../dist/qiushaocloud_site_counter.min.js"></script>
 </head>
 <body>
-  <h1>功能开发中。。。</h1>
+  <script>
+    (function() {
+      window.qiushaocloudSiteCounterNotice = function(type, data) {
+        console.log('recv qiushaocloudSiteCounterNotice, type:', type, ' ,data:', data);
+        switch (type) {
+          case 'api:post:site_counter': {
+            if (data.err) {
+              console.error('api:post:site_counter error:', data.err, data.data);
+              document.getElementById('pvUvMessageBox').innerHTML += '<p class="error">api:post:site_counter error, errData:'+ JSON.stringify(data)+'</p>';
+              return;
+            }
+
+            document.getElementById('pvUvMessageBox').innerHTML += '<p class="success">api:post:site_counter success, data::'+ JSON.stringify(data.data)+'</p>';
+            break;
+          }
+          case 'api:get:site_counter_ips_stats': {
+            if (data.err) {
+              console.error('api:get:site_counter_ips_stats error:', data.err, data.data);
+              document.getElementById('ipsStatsMessageBox').innerHTML += '<p class="error">api:get:site_counter_ips_stats error, errData:'+ JSON.stringify(data)+'</p>';
+              return;
+            }
+
+            document.getElementById('ipsStatsMessageBox').innerHTML += '<p class="success" style="max-height: 45%; overflow-y: auto;">api:get:site_counter_ips_stats success, data::'+ JSON.stringify(data.data)+'</p>';
+            if (data.data.site_ips && Object.keys(data.data.site_ips).length > 0) {
+              document.getElementById('ipsStatsMessageBox').innerHTML += '<hr /><h3>网站IP统计</h3>'
+              for (var logDay in data.data.site_ips) {
+                var eleContent = '<div><h4>'+logDay+'<h4><ol>';
+                for (var ip in data.data.site_ips[logDay]) {
+                  eleContent += '<li>'+ip+'('+(data.data.site_ips[logDay][ip][1] || '-')+')'+' : '+data.data.site_ips[logDay][ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
+                }
+                eleContent += '</ol></div>';
+                document.getElementById('ipsStatsMessageBox').innerHTML += eleContent;
+              }
+              document.getElementById('ipsStatsMessageBox').innerHTML += '<hr />';
+            }
+
+
+            if (data.data.page_ips && Object.keys(data.data.page_ips).length > 0) {
+              document.getElementById('ipsStatsMessageBox').innerHTML += '<hr /><h3>页面IP统计</h3>'
+              for (var logDay in data.data.page_ips) {
+                var eleContent = '<div><h4>'+logDay+'<h4><ol>';
+                for (var ip in data.data.page_ips[logDay]) {
+                  eleContent += '<li>'+ip+'('+(data.data.page_ips[logDay][ip][1] || '-')+')'+' : '+data.data.page_ips[logDay][ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site-page 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site-page\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
+                }
+                eleContent += '</ol></div>';
+                document.getElementById('ipsStatsMessageBox').innerHTML += eleContent;
+              }
+              document.getElementById('ipsStatsMessageBox').innerHTML += '<hr />';
+            }
+            
+            break;
+          }
+          case 'api:get:site_counter_logs:ip': {
+            if (data.err) {
+              console.error('api:get:site_counter_logs:ip error:', data.err, data.data, data.filterType, data.filterDay, data.filterIp);
+              document.getElementById('ipLogsMessageBox').innerHTML += '<p class="error">api:get:site_counter_logs:ip error, errData:'+ JSON.stringify(data)+'</p>';
+              return;
+            }
+
+            document.getElementById('ipLogsMessageBox').innerHTML += '<p class="success">api:get:site_counter_logs:ip success, data::'+ JSON.stringify(data.data)+', filterType:'+ data.filterType+', filterDay:'+ data.filterDay+', filterIp:'+ data.filterIp+'</p>';
+            break;
+          }
+        }
+      }
+    })();
+  </script>
+
+  <div class="counter-box-content" style="display: flex; justify-content: space-evenly; align-items: center;">
+    <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
+    <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
+    <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
+    <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
+
+    <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
+    <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
+    <p>本页面今日访访量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
+    <p>本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
+  </div>
+
+  <div class="qiushaocloud_sitecounter_value_total_box" style="display: none;">
+    <div id="qiushaocloud_sitecounter_value_site_ips_stats"
+      data-date-range="7days"
+      data-render-mode="none"
+      data-logs-print-mode="none"
+    ></div>
+    <div
+      id="qiushaocloud_sitecounter_value_site_page_ips_stats"
+      data-date-range="7days"
+      data-render-mode="none"
+      data-logs-print-mode="none"
+    ></div>
+  </div>
+
+  <div id="pvUvMessageBox"></div>
+
+  <div class="ips-stats-container" style="display: flex;">
+    <div id="ipsStatsMessageBox" style="flex: 1;"></div>
+    <div id="ipLogsMessageBox" style="flex: 2;"></div>
+  </div>
+
+  <style>
+    /* Reset default styles */
+    body, div, p, h1, h2, h3, h4, h5, h6 {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(120deg, #03A9F4 0%, #5e8d74 100%);
+      color: #333;
+      margin: 0;
+      padding: 4px;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* General layout */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .counter-box-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-evenly;
+      align-items: center;
+    }
+
+    .counter-box-content p {
+      flex: 1 0 22%;
+      text-align: center;
+      margin: 3px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .counter-box-content p:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    #pvUvMessageBox, #ipsStatsMessageBox, #ipLogsMessageBox {
+      padding: 10px;
+      margin: 10px 0 10px 0;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      max-height: 79vh;
+      overflow-y: auto;
+      word-wrap: break-word;
+      animation: fadeInUp 1s ease-in-out;
+    }
+
+    #pvUvMessageBox {
+      margin-bottom: 0;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .ips-stats-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    .ips-stats-container div {
+      flex: 1;
+      min-width: 300px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      animation: fadeInUp 1s ease-in-out;
+      margin-bottom: 10px;
+    }
+
+    .ips-stats-container h4 {
+      margin: 10px 0;
+    }
+
+    .ips-stats-container ol {
+      padding-left: 20px;
+    }
+
+    .ips-stats-container button {
+      margin-left: 10px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .ips-stats-container button:hover {
+      background-color: #0056b3;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+
+    @media (max-width: 768px) {
+      .counter-box-content p {
+        flex: 1 0 45%;
+        font-size: 12px;
+        padding: 10px;
+      }
+
+      .ips-stats-container {
+        flex-direction: column;
+        gap: 0px;
+      }
+
+      #pvUvMessageBox, #ipsStatsMessageBox, #ipLogsMessageBox {
+        padding: 15px;
+        margin: 5px;
+      }
+    }
+  </style>
 </body>
 </html>
+  

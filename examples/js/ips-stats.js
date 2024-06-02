@@ -253,24 +253,26 @@
                 <div class="ips-stats-box-warpper" ${sitePageFromUrl? 'data-page-path="' + sitePageFromUrl + '"' : ''}>
                     <div class="site-ips-stats-box">
                         <h4>网站IP统计</h4>
-                        <div id="qiushaocloud_sitecounter_value_site_ips_stats"
-                        data-ips-stats-sort-name="${sortName}"
-                        data-logs-sort-name="${sortName}"
-                        data-date-range="${dateRange}"
-                        data-render-mode="ui"
-                        data-logs-print-mode="ui"
-                        ></div>
-                    </div>
-                    ${!sitePageFromUrl ? '' : `
-                        <div class="site-page-ips-stats-box">
-                            <h4 class="site-page-ips-stats-title" title="${sitePageFromUrl !== 'self' ? `页面(${sitePageFromUrl})` : '本页面'}IP统计">${sitePageFromUrl !== 'self' ? `页面(<span class="other-page-title">${sitePageFromUrl}</span>)` : '本页面'}IP统计</h4>
-                            <div id="qiushaocloud_sitecounter_value_site_page_ips_stats"
+                        <div
+                            id="qiushaocloud_sitecounter_value_site_ips_stats"
                             data-ips-stats-sort-name="${sortName}"
                             data-logs-sort-name="${sortName}"
                             data-date-range="${dateRange}"
                             data-render-mode="ui"
                             data-logs-print-mode="ui"
-                            ${sitePageFromUrl !== 'self' ? `data-site-page-pathname="${sitePageFromUrl}"` : ''}
+                        ></div>
+                    </div>
+                    ${!sitePageFromUrl ? '' : `
+                        <div class="site-page-ips-stats-box">
+                            <h4 class="site-page-ips-stats-title" title="${sitePageFromUrl !== 'self' ? `页面(${sitePageFromUrl})` : '本页面'}IP统计">${sitePageFromUrl !== 'self' ? `页面(<span class="other-page-title">${sitePageFromUrl}</span>)` : '本页面'}IP统计</h4>
+                            <div
+                                id="qiushaocloud_sitecounter_value_site_page_ips_stats"
+                                data-ips-stats-sort-name="${sortName}"
+                                data-logs-sort-name="${sortName}"
+                                data-date-range="${dateRange}"
+                                data-render-mode="ui"
+                                data-logs-print-mode="ui"
+                                ${sitePageFromUrl !== 'self' ? `data-site-page-pathname="${sitePageFromUrl}"` : ''}
                             ></div>
                         </div>
                     `}
