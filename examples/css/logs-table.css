@@ -36,6 +36,7 @@
 
 .site-counter-logs-title .title-content {
     display: flex;
+    align-items: center;
     max-width: calc(100% - 80px);
 }
 
