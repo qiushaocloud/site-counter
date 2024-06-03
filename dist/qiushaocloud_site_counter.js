@@ -239,8 +239,13 @@
           var ipsStatsRenderMode = ipsStatsEle.getAttribute('data-render-mode');
           if (ipsStatsRenderMode === 'none') continue; // 日志打印模式为none，不在控制台打印IP详情，页面不渲染IP详情
 
+          var ipsStatsSortName = ipsStatsEle.getAttribute('data-ips-stats-sort-name');
+          var ipsStatsDataDays = Object.keys(ipsStatsData).sort((a, b) => ipsStatsSortName === 'desc' ? new Date(b).getTime() - new Date(a).getTime() : new Date(a).getTime() - new Date(b).getTime());
+          // console.debug(ipsStatsKey + ' ipsStatsDataDays:', ipsStatsDataDays);
+
           if (ipsStatsRenderMode === 'console') { // 日志打印模式为console，只在控制台打印IP详情，页面不渲染IP详情
-            for (var logDay in ipsStatsData) {
+            for (var i=0,len=ipsStatsDataDays.length; i<len; i++) {
+              var logDay = ipsStatsDataDays[i];
               var logDayData = ipsStatsData[logDay];
               console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : sitePageTitle)+' '+logDay+' 访问IP详情 ====================');
               var ipsTableData = [];
@@ -259,10 +264,6 @@
             continue; 
           }
  
-          var ipsStatsSortName = ipsStatsEle.getAttribute('data-ips-stats-sort-name');
-          var ipsStatsDataDays = Object.keys(ipsStatsData).sort((a, b) => ipsStatsSortName === 'desc' ? new Date(b).getTime() - new Date(a).getTime() : new Date(a).getTime() - new Date(b).getTime());
-          // console.debug(ipsStatsKey + ' ipsStatsDataDays:', ipsStatsDataDays);
-
           ipsStatsEle.innerHTML = '';
           ipsStatsEle.onclick = (function(ipsStatsKey, ipsStatsEle) {
             return function (e) {
@@ -280,11 +281,11 @@
                   console.debug(ipsStatsKey+'-log-day-ip-detail-btn click requestQiushaocloudSiteCounterLogsApiByFilter success', ip, day);
                   var apiResult = JSON.parse(res);
                   var logsSortName = ipsStatsEle.getAttribute('data-logs-sort-name');
-                  var logsPrintMode = ipsStatsEle.getAttribute('data-logs-print-mode');
+                  var logsPrintMode = ipsStatsEle.getAttribute('data-logs-print-mode') || 'ui';
                   if (logsPrintMode === 'none') return; // 日志打印模式为none，不打印日志详情
 
                   if (ipsStatsKey === 'site') {
-                    var logs = apiResult.site_logs;
+                    var logs = apiResult.site_logs.slice(0);
                     if (apiResult.page_logs && apiResult.page_logs.length > 0)
                       logs = logs.concat(apiResult.page_logs);
                     logs.sort((a, b) => logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime());
@@ -305,8 +306,9 @@
                     var dataSitePagePathname = ipsStatsEle && ipsStatsEle.getAttribute('data-site-page-pathname');
                     var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname() ? '<span class="pg1">页面</span><span class="other-page-title">(<span class="content">'+dataSitePagePathname+'</span>)</span>' : '本页面')
             
-                    var logs = apiResult.page_logs;
+                    var logs = apiResult.page_logs.slice(0);
                     logs.sort((a, b) => logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime());
+                    
                     if (logsPrintMode === 'console') {
                       var tableData = [];
                       for (var i=0, len=logs.length; i<len; i++) {
