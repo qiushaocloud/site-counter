@@ -26,15 +26,15 @@
 1. 引入 qiushaocloud_site_counter.min.js, 比如: `<script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>`
 2. 界面中您根据您的需求，引入相应的节点元素 ID
 ```html
-  <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
-  <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
-  <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
-  <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
-   
-  <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
-  <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
-  <p>本页面今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
-  <p> 本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
+<p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
+<p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
+<p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
+<p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
+
+<p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
+<p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
+<p>本页面今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
+<p> 本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
 ```
 
 #### IP 统计数据
@@ -83,43 +83,43 @@
 
 1. 设置访客 session 最大时长，默认 24h【例如您设置 1h, 那么 1h 内访客再次访问不算新访客，1h 后再访问则视为新访客，需要注意，无论设置多长时间，一旦跨天了，那么再次访问都是新访客】
 ``` javascript
-    <script>
-        window.localStorage.setItem('qiushaocloud_sitecounter_max_session_duration', 24 * 60 * 60 * 1000);
-    </script>
+<script>
+    window.localStorage.setItem('qiushaocloud_sitecounter_max_session_duration', 24 * 60 * 60 * 1000);
+</script>
 
-    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+<script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
 2. 设置接口请求的服务器地址，设置后会以您设置的地址请求，不设置默认以 [www.qiushaocloud.top](https://www.qiushaocloud.top) 请求接口【注意：www.qiushaocloud.top 为个人搭建服务，不能确保接口请求没问题，建议您自己搭建服务器哦】
 ``` javascript
-    <script>
-        // 设置格式为：www.qiushaocloud.top 或者 https://www.qiushaocloud.top:443
-        window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaocloud.top');
-        //window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'https://www.qiushaocloud.top:443');
-    </script>
+<script>
+    // 设置格式为：www.qiushaocloud.top 或者 https://www.qiushaocloud.top:443
+    window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'www.qiushaocloud.top');
+    //window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'https://www.qiushaocloud.top:443');
+</script>
 
-    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+<script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
 3. 设置接口请求的签名secretKey, 当 qiushaocloud_site_counter.min.js 加载完成后会删除 window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY
 ``` javascript
-    <script>
-        window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY = '您需要设置的签名key';
-    </script>
-    
-    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+<script>
+    window.QIUSHAOCLOUD_SITE_COUNTER_API_SIGN_SECRET_KEY = '您需要设置的签名key';
+</script>
+
+<script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
 4. 设置页面ID，当需要统计页面 PV/UV, 但是您页面是通过地址栏参数来区分不同页面的(比如: https://yourAddr/yourPathname?page_id=xxx)，您这时候就能用上此用法了
 ``` javascript
-    <script>
-        /**
-         * 统计此界面时以 window.location.pathname + window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID 进行统计
-         * 例如您的地址: https://yourAddr/yourPathname?page_id=abc 和 https://yourAddr/yourPathname?page_id=def 表示两篇不同的文章
-         * 您将 page_id 设置给 window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID, 如: window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = `${page_id}`
-         * 在统计时将以 ${yourPathname}+'adb' 以及 ${yourPathname}+'def' 分别对您这两篇文章进行统计
-        **/
-        window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = '您需要设置的页面ID';
-    </script>
-    
-    <script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
+<script>
+    /**
+        * 统计此界面时以 window.location.pathname + window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID 进行统计
+        * 例如您的地址: https://yourAddr/yourPathname?page_id=abc 和 https://yourAddr/yourPathname?page_id=def 表示两篇不同的文章
+        * 您将 page_id 设置给 window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID, 如: window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = `${page_id}`
+        * 在统计时将以 ${yourPathname}+'adb' 以及 ${yourPathname}+'def' 分别对您这两篇文章进行统计
+    **/
+    window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID = '您需要设置的页面ID';
+</script>
+
+<script async src="//githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.min.js"></script>
 ```
 
 
