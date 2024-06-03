@@ -37,7 +37,46 @@
      <p> 本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
 ```
 
+#### IP 统计数据
+1. 界面中您根据您的需求，引入相应的IP统计节点元素 ID 及配置参数
+   ```html
+   <!--
+        网站 IP 统计节点元素
+        元素ID: qiushaocloud_sitecounter_value_site_ips_stats
+        配置参数:
+            data-ips-stats-sort-name: 排序方式，可选值 desc/asc，只有 data-render-mode 为 ui 时生效
+            data-logs-sort-name: 日志排序方式，可选值 desc/asc，只有 data-logs-print-mode 为 ui 时生效
+            data-date-range: 日志日期范围，最多保留31天日志，格式：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
+            data-render-mode: 渲染模式，可选值 ui/console/none
+            data-logs-print-mode: 日志打印模式，可选值 ui/console/none
+    -->
+   <div id="qiushaocloud_sitecounter_value_site_ips_stats"
+        data-ips-stats-sort-name="desc"
+        data-logs-sort-name="desc"
+        data-date-range="7days"
+        data-render-mode="ui"
+        data-logs-print-mode="ui"
+    ></div>
 
+    <!--
+        页面 IP 统计节点元素
+        元素ID: qiushaocloud_sitecounter_value_site_page_ips_stats
+        配置参数:
+            data-ips-stats-sort-name: 排序方式，可选值 desc/asc，只有 data-render-mode 为 ui 时生效
+            data-logs-sort-name: 日志排序方式，可选值 desc/asc，只有 data-logs-print-mode 为 ui 时生效
+            data-date-range: 日志日期范围，最多保留31天日志，格式：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
+            data-render-mode: 渲染模式，可选值 ui/console/none
+            data-logs-print-mode: 日志打印模式，可选值 ui/console/none
+            data-site-page-pathname: 页面路径，默认当前页面路径，例如：/about.html
+    -->
+    <div id="qiushaocloud_sitecounter_value_site_page_ips_stats"
+        data-ips-stats-sort-name="desc"
+        data-logs-sort-name="desc"
+        data-date-range="7days"
+        data-render-mode="ui"
+        data-logs-print-mode="ui"
+    ></div>
+   ```
 
 #### 前端高级功能
 
