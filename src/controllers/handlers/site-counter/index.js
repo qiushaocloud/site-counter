@@ -57,7 +57,7 @@ class SiteCounterHandler {
           site_host: siteHost,
           site_ips: {},
           page_ips: {}
-        }; // {site_ips: {{[logDay]:{[ip]:[count,ipLocation]}}}, page_ips: {[logDay]:{[ip]:[count,ipLocation]}}}
+        }; // {site_ips: {{[logDay]:{[ip]:[count,ipLocation,lastTs]}}}, page_ips: {[logDay]:{[ip]:[count,ipLocation,lastTs]}}}
         sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
 
         const clinetIpInfos = {};
@@ -82,8 +82,9 @@ class SiteCounterHandler {
             clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
             let dayPageIps = resResult.page_ips[logDay];
             !dayPageIps && (dayPageIps = resResult.page_ips[logDay] = {});
-            !dayPageIps[logClientIp] && (dayPageIps[logClientIp] = [0, '']);
+            !dayPageIps[logClientIp] && (dayPageIps[logClientIp] = [0, '', logTs]);
             dayPageIps[logClientIp][0] = dayPageIps[logClientIp][0] + 1;
+            (logTs > dayPageIps[logClientIp][2]) && (dayPageIps[logClientIp][2] = logTs);
           }
 
           if (isOnlyPage) continue;
@@ -91,8 +92,9 @@ class SiteCounterHandler {
           clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
           let daySiteIps = resResult.site_ips[logDay];
           !daySiteIps && (daySiteIps = resResult.site_ips[logDay] = {});
-          !daySiteIps[logClientIp] && (daySiteIps[logClientIp] = [0, '']);
+          !daySiteIps[logClientIp] && (daySiteIps[logClientIp] = [0, '', logTs]);
           daySiteIps[logClientIp][0] = daySiteIps[logClientIp][0] + 1;
+          (logTs > daySiteIps[logClientIp][2]) && (daySiteIps[logClientIp][2] = logTs);
         }
 
         isOnlyPage && delete resResult.site_ips;

@@ -44,8 +44,11 @@
               for (var i=0,len=siteIpsKeys.length; i<len; i++) {
                 var logDay = siteIpsKeys[i];
                 var eleContent = '<div><h4>'+logDay+'<h4><ol>';
-                for (var ip in data.res.site_ips[logDay]) {
-                  eleContent += '<li>'+ip+'('+(data.res.site_ips[logDay][ip][1] || '-')+')'+' : '+data.res.site_ips[logDay][ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
+                var logDayIpsJson = data.res.site_ips[logDay];
+                var logDayIpsKeys = Object.keys(logDayIpsJson).sort(function(a, b){return logDayIpsJson[b][2] - logDayIpsJson[a][2]});
+                for (var j=0,jlen=logDayIpsKeys.length; j<jlen; j++) {
+                  var ip = logDayIpsKeys[j];
+                  eleContent += '<li>'+ip+'('+(logDayIpsJson[ip][1] || '-')+')'+' : '+logDayIpsJson[ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
                 }
                 eleContent += '</ol></div>';
                 document.getElementById('ipsStatsMessageBox').innerHTML += eleContent;
@@ -61,8 +64,11 @@
               for (var i=0,len=pageIpsKeys.length; i<len; i++) {
                 var logDay = pageIpsKeys[i];
                 var eleContent = '<div><h4>'+logDay+'<h4><ol>';
-                for (var ip in data.res.page_ips[logDay]) {
-                  eleContent += '<li>'+ip+'('+(data.res.page_ips[logDay][ip][1] || '-')+')'+' : '+data.res.page_ips[logDay][ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site-page 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site-page\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
+                var logDayIpsJson = data.res.page_ips[logDay];
+                var logDayIpsKeys = Object.keys(logDayIpsJson).sort(function(a, b){return logDayIpsJson[b][2] - logDayIpsJson[a][2]});
+                for (var j = 0, jlen = logDayIpsKeys.length; j < jlen; j++) {
+                  var ip = logDayIpsKeys[j];
+                  eleContent += '<li>'+ip+'('+(logDayIpsJson[ip][1] || '-')+')'+' : '+logDayIpsJson[ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site-page 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site-page\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
                 }
                 eleContent += '</ol></div>';
                 document.getElementById('ipsStatsMessageBox').innerHTML += eleContent;
