@@ -1,7 +1,7 @@
 class ConcurrencyTaskController {  
   #maxConcurrency = 20;
   #runningTaskCount = 0;
-  #queue = [];
+  #taskQueue = [];
   #taskTimeout = 10000;
 
   constructor(maxConcurrency, taskTimeout) {  
@@ -12,8 +12,8 @@ class ConcurrencyTaskController {
   addTask(task) {
     const taskTmp = this.#wrapTask(task);
     taskTmp.taskid = Math.random();
-    console.log('Task added:', taskTmp.taskid, ' ,taskArgsLength:', task.length, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#queue.length);  
-    this.#queue.push(taskTmp);
+    this.#taskQueue.push(taskTmp);
+    console.log('Task added:', taskTmp.taskid, ' ,taskArgsLength:', task.length, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length);  
     this.#processQueue();  
   }  
   
@@ -64,8 +64,8 @@ class ConcurrencyTaskController {
   }  
   
   #processQueue() {  
-    while (this.#runningTaskCount < this.#maxConcurrency && this.#queue.length > 0) {  
-      const task = this.#queue.shift();  
+    while (this.#runningTaskCount < this.#maxConcurrency && this.#taskQueue.length > 0) {  
+      const task = this.#taskQueue.shift();  
       this.#runTask(task);  
     }  
   }  
@@ -73,17 +73,17 @@ class ConcurrencyTaskController {
   #runTask(task) {  
     this.#runningTaskCount++;
     const taskid = task.taskid;  
-    console.log('Task started:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#queue.length);  
+    console.log('Task started:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length);  
     task()
       .then((result) => {  
         this.#runningTaskCount--;  
-        console.log('Task completed:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#queue.length);  
+        console.log('Task completed:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length);  
         this.#processQueue();  
         return result;  
       })  
       .catch((err) => {  
         this.#runningTaskCount--;  
-        console.error('Task failed:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#queue.length, ' ,err:', err);  
+        console.error('Task failed:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length, ' ,err:', err);  
         this.#processQueue();
       });  
   }  
