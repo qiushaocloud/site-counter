@@ -44,7 +44,7 @@
               var siteIpsKeys = Object.keys(data.res.site_ips).sort(function(a, b) {return new Date(b).getTime() - new Date(a).getTime()});
               for (var i=0,len=siteIpsKeys.length; i<len; i++) {
                 var logDay = siteIpsKeys[i];
-                var eleContent = '<div><h4>'+logDay+'<h4><ol>';
+                var eleContent = '<div><h4>'+logDay+'</h4><ol>';
                 var logDayData = data.res.site_ips[logDay];
                 var logDayKeys = Object.keys(logDayData).sort(function(a, b){return logDayData[b][2] - logDayData[a][2]});
                 for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
@@ -63,7 +63,7 @@
               var pageIpsKeys = Object.keys(data.res.page_ips).sort(function(a, b) {return new Date(b).getTime() - new Date(a).getTime()});
               for (var i=0,len=pageIpsKeys.length; i<len; i++) {
                 var logDay = pageIpsKeys[i];
-                var eleContent = '<div><h4>'+logDay+'<h4><ol>';
+                var eleContent = '<div><h4>'+logDay+'</h4><ol>';
                 var logDayData = data.res.page_ips[logDay];
                 var logDayKeys = Object.keys(logDayData).sort(function(a, b){return logDayData[b][2] - logDayData[a][2]});
                 for (var j = 0, jlen = logDayKeys.length; j < jlen; j++) {
