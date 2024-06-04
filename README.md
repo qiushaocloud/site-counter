@@ -37,8 +37,131 @@
 <p> 本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
 ```
 
+#### 添加 Listener 和 Method
+* `window.qiushaocloudSiteCounterNotice` Listener，接收计数器通知消息，用于自定义开发，自行处理数据
+  ```javascript
+    window.qiushaocloudSiteCounterNotice = function(type, data) {
+        switch (type) {
+          case 'api:post:site_counter': {
+            if (data.err) {
+              console.error('api:post:site_counter error:', data.err, data.res);
+              return;
+            }
+
+            /**
+             * data.res 格式如下：
+                {
+                    "yesterday": { // 昨日统计数据
+                        "page_pv": 2, // 昨日页面访问量
+                        "page_uv": 1, // 昨日页面访客量
+                        "site_pv": 694, // 昨日站点访问量
+                        "site_uv": 6 // 昨日站点访客量
+                    },
+                    "page_pv": 3, // 当前页面访问量
+                    "page_uv": 2, // 当前页面访客量
+                    "site_pv": 695, // 当前站点访问量
+                    "site_uv": 7 // 当前站点访客量
+                }
+             */
+            console.log('api:post:site_counter success, res:', data.res);
+            break;
+          }
+          case 'api:get:site_counter_ips_stats': {
+            if (data.err) {
+              console.error('api:get:site_counter_ips_stats error:', data.err, data.res);
+              return;
+            }
+
+            /**
+             * data.res 格式如下：
+                {
+                    "site_host": "www.qiushaocloud.top",
+                    "site_ips": {
+                        "IPV4": [
+                            访问次数,
+                            IP地址信息
+                        ],
+                        "180.101.244.13": [
+                            3,
+                            "中国江苏省南京市电信"
+                        ]
+                    },
+                    "page_ips": {
+                        "2024-05-29": {
+                            "117.129.2.95": [
+                                4,
+                                "中国北京市昌平区移动"
+                            ]
+                        }
+                    },
+                    "site_page_pathname": "/common-static/qiushaocloud-site-counter-test-demo.html"
+                }
+            */
+            console.log('api:get:site_counter_ips_stats success, res:', data.res);
+            break;
+          }
+          case 'api:get:site_counter_logs:ip': {
+            if (data.err) {
+              console.error('api:get:site_counter_logs:ip error:', data.err, data.res, data.filterType, data.filterDay, data.filterIp);
+              return;
+            }
+
+            /**
+             * data.res 格式如下：
+                {
+                    "site_host": "www.qiushaocloud.top",
+                    "site_logs": [
+                        [
+                            访问时间戳,
+                            IPV4,
+                            IP地址信息,
+                            浏览器信息,
+                            访问页面
+                        ],
+                        [
+                            1717439942576,
+                            "220.196.160.75",
+                            "中国上海市联通",
+                            "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+                            "https://www.qiushaocloud.top/"
+                        ]
+                    ],
+                    "page_logs": [
+                        [
+                            1717427570853,
+                            "117.129.2.39",
+                            "中国北京市昌平区移动",
+                            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+                            "https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html?page=/common-static/qiushaocloud-site-counter-test-demo.html"
+                        ]
+                    ],
+                    "site_page_pathname": "/common-static/qiushaocloud-site-counter-test-demo.html"
+                }
+             */
+
+            console.log('api:get:site_counter_logs:ip success, res:', data.res, ', filterType:'+ data.filterType+', filterDay:'+ data.filterDay+', filterIp:'+ data.filterIp);
+            break;
+          }
+        }
+    }
+  ```
+* `window.requestQiushaocloudSiteCounterLogsApiByFilter` Method，请求日志数据，用于自定义开发，自行处理数据
+  ```javascript
+    /** 
+     * 请求日志API
+     * @param filterType {site|site-page} 日志类型，'site' |'site-page'
+     * @param filterDay {string} 哪一天日志，格式：'2024-05-06'
+     * @param filterIp {string} [可选]过滤的客户端IP
+     * @param onCallback {function} [可选]请求成功回调函数，参数：(err, res)，res 数据格式参考 api:get:site_counter_logs:ip 的 data.res
+     */
+    window.requestQiushaocloudSiteCounterLogsApiByFilter(filterType, filterDay, filterIp, onCallback);
+  ```
+
+
+
 #### IP 统计数据
 1. 界面中您根据您的需求，引入相应的IP统计节点元素 ID 及配置参数
+   > 参考 [示例 complex.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/complex.html)
    ```html
    <!--
       网站 IP 统计节点元素
@@ -47,8 +170,8 @@
         data-ips-stats-sort-name: 排序方式，可选值 desc/asc，默认 asc【只有 data-render-mode 为 ui/console 时生效】
         data-logs-sort-name: 日志排序方式，可选值 desc/asc，默认 asc【只有 data-logs-print-mode 为 ui/console 时生效】
         data-date-range: 日志日期范围，最多保留31天日志，不指定则获取当天的，格式：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
-        data-render-mode: 渲染模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过window.qiushaocloudSiteCounterNotice监听结果后自行处理数据，用于自定义开发】
-        data-logs-print-mode: 日志打印模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过window.qiushaocloudSiteCounterNotice监听结果后自行处理数据，用于自定义开发】
+        data-render-mode: 渲染模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过 window.qiushaocloudSiteCounterNotice 监听结果后自行处理数据，用于自定义开发】
+        data-logs-print-mode: 日志打印模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过 window.qiushaocloudSiteCounterNotice 监听结果后自行处理数据，用于自定义开发】
     -->
    <div id="qiushaocloud_sitecounter_value_site_ips_stats"
         data-ips-stats-sort-name="desc"
@@ -65,8 +188,8 @@
         data-ips-stats-sort-name: 排序方式，可选值 desc/asc，默认 asc【只有 data-render-mode 为 ui/console 时生效】
         data-logs-sort-name: 日志排序方式，可选值 desc/asc，默认 asc【只有 data-logs-print-mode 为 ui/console 时生效】
         data-date-range: 日志日期范围，最多保留31天日志，不指定则获取当天的，格式：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
-        data-render-mode: 渲染模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过window.qiushaocloudSiteCounterNotice监听结果后自行处理数据，用于自定义开发】
-        data-logs-print-mode: 日志打印模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过window.qiushaocloudSiteCounterNotice监听结果后自行处理数据，用于自定义开发】
+        data-render-mode: 渲染模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过 window.qiushaocloudSiteCounterNotice 监听结果后自行处理数据，用于自定义开发】
+        data-logs-print-mode: 日志打印模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过 window.qiushaocloudSiteCounterNotice 监听结果后自行处理数据，用于自定义开发】
         data-site-page-pathname: 页面路径，默认当前页面路径，例如：/about.html
     -->
     <div id="qiushaocloud_sitecounter_value_site_page_ips_stats"
@@ -78,6 +201,60 @@
         data-site-page-pathname="/about.html"
     ></div>
    ```
+2. render-mode 为 ui 时渲染的元素节点结构
+    > ⚠️注意: 只是渲染了元素结构，并没有提供默认样式，您根据自己的需求根据提供的结构进行样式设计
+    > 参考 [示例 only-elements.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/only-elements.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/only-elements.html)
+   ```html
+   <!-- qiushaocloud_sitecounter_value_site_ips_stats 里面的元素结构如下 -->
+   <div class="site-log-day">
+        <h5 class="site-log-day-title">
+            <span class="day-content">2024-06-03</span>
+            <button class="site-log-day-ul-fold-btn">折叠</button>
+            <span class="total-pv-count-content">（46个IP访问115次）</span>
+        </h5>
+        <ul class="site-log-day-ul">
+            <li class="site-log-day-ip-li">
+                <span class="site-log-day-ip-info-warpper">
+                    <span class="ip-info-warpper">
+                        <span class="ip-content">66.249.72.197</span>
+                        (<span class="ip-location-content">美国加利福尼亚州google.com</span>)
+                    </span>
+                    <span class="ip-count-warpper">
+                        <span class="count-title">访问次数：</span>
+                        <span class="count-content">7</span>
+                    </span>
+                </span>
+                <button class="site-log-day-ip-detail-btn" data-ip="66.249.72.197" data-day="2024-06-03">详细日志</button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- qiushaocloud_sitecounter_value_site_page_ips_stats 里面的元素结构如下 -->
+    <div class="site-page-log-day">
+        <h5 class="site-page-log-day-title">
+            <span class="day-content">2024-06-03</span>
+            <button class="site-page-log-day-ul-fold-btn">折叠</button>
+            <span class="total-pv-count-content">（2个IP访问3次）</span>
+        </h5>
+        <ul class="site-page-log-day-ul">
+            <li class="site-page-log-day-ip-li">
+                <span class="site-page-log-day-ip-info-warpper">
+                    <span class="ip-info-warpper">
+                        <span class="ip-content">117.129.2.120</span>
+                        (<span class="ip-location-content">中国北京市昌平区移动</span>)
+                    </span>
+                    <span class="ip-count-warpper">
+                        <span class="count-title">访问次数：</span>
+                        <span class="count-content">1</span>
+                    </span>
+                </span>
+                <button class="site-page-log-day-ip-detail-btn" data-ip="117.129.2.120" data-day="2024-06-03">详细日志</button>
+            </li>
+        </ul>
+    </div>
+   ```
+3. 作者提供了关于 logs 页面的样式文件 [logs-table.css](https://github.com/qiushaocloud/site-counter/blob/master/examples/css/logs-table.css)，您可以直接引入到您的页面中，再根据需要调整样式，引入代码 `<link rel="stylesheet" href="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/css/logs-table.css">`，参考 [示例 ips-stats-search.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-search.html)：[代码 ips-stats-search.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-search.html) 和 [代码 ips-stats-iframe.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-iframe.html)
+4. 作者提供了关于 IP 统计界面样式和逻辑的封装 [ips-stats.js](https://github.com/qiushaocloud/site-counter/blob/master/examples/js/ips-stats.js)，依赖 [logs-table.css](https://github.com/qiushaocloud/site-counter/blob/master/examples/css/logs-table.css)，引入代码 `<link rel="stylesheet" href="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/css/logs-table.css">` 和 `<script src="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/js/ips-stats.js"></script>`
 
 #### 前端高级功能
 
@@ -170,8 +347,9 @@
 * 代码中 `examples` 目录下有更多的使用示例
   * [示例 complex.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/complex.html)
   * [示例 simple.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/simple.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/simple.html)
-  * [示例 ips-stats-search.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-search.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-search.html)
+  * [示例 ips-stats-search.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-search.html)：[代码 ips-stats-search.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-search.html) 和 [代码 ips-stats-iframe.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-iframe.html)
   * [示例 flexible.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/flexible.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/flexible.html)
+  * [示例 only-elements.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/only-elements.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/only-elements.html)
 
 
 #### 参与贡献

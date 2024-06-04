@@ -141,7 +141,7 @@
         function (err, res) {
           if (err) {
             console.error('reqSiteCounterAPI err:', err);
-            sendNotice('api:post:site_counter', {err: err, data: res})
+            sendNotice('api:post:site_counter', {err: err, res: res})
             return;
           }
           
@@ -180,7 +180,7 @@
           todaySitePagePvEle && todaySitePagePv !== undefined && (todaySitePagePvEle.innerHTML = todaySitePagePv);
           todaySitePageUvEle && todaySitePageUv !== undefined && (todaySitePageUvEle.innerHTML = todaySitePageUv);
 
-          sendNotice('api:post:site_counter', {data: apiResult})
+          sendNotice('api:post:site_counter', {res: apiResult})
         }
       );
     }
@@ -206,7 +206,7 @@
       reqSiteCounterIpsStatsAPI(getSiteHost(), apiIpsStatsOpts, function (err, res) {
         if (err) {
           console.error('reqSiteCounterIpsStatsAPI err:', err);
-          sendNotice('api:get:site_counter_ips_stats', {err: err, data: res})
+          sendNotice('api:get:site_counter_ips_stats', {err: err, res: res})
           return;
         }
 
@@ -228,8 +228,8 @@
 
         siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-render-mode') === 'none' && (delete totalIpsStatsDataMap['site']);
         sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-render-mode') === 'none' && (delete totalIpsStatsDataMap['site-page']);
-        var dataSitePagePathname = sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-site-page-pathname');
-        var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname() ? '页面(<span class="other-page-title">'+dataSitePagePathname+'</span>)' : '本页面')
+        var dataSitePagePathname = sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME;
+        var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname(true) ? '页面(<span class="other-page-title">'+dataSitePagePathname+'</span>)' : '本页面')
 
         for (var ipsStatsKey in totalIpsStatsDataMap) {
           var ipsStats = totalIpsStatsDataMap[ipsStatsKey];
@@ -303,8 +303,8 @@
                       createLogsTableToUI(logs, document.body, {boxClass: 'site-logs-box', boxTitle: '<span class="pg1">网站</span> <span class="logs-date">'+day+'</span> <span class="pg2">访问日志:</span><span class="ip">'+ip+'</span>'})
                     }
                   } else {
-                    var dataSitePagePathname = ipsStatsEle && ipsStatsEle.getAttribute('data-site-page-pathname');
-                    var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname() ? '<span class="pg1">页面</span><span class="other-page-title">(<span class="content">'+dataSitePagePathname+'</span>)</span>' : '本页面')
+                    var dataSitePagePathname = ipsStatsEle && ipsStatsEle.getAttribute('data-site-page-pathname') || window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME;
+                    var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname(true) ? '<span class="pg1">页面</span><span class="other-page-title">(<span class="content">'+dataSitePagePathname+'</span>)</span>' : '本页面')
             
                     var logs = apiResult.page_logs.slice(0);
                     logs.sort((a, b) => logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime());
@@ -409,7 +409,7 @@
           }
         }
 
-        sendNotice('api:get:site_counter_ips_stats', {data: apiResult})
+        sendNotice('api:get:site_counter_ips_stats', {res: apiResult})
       });
     }
   }, 100);
@@ -462,7 +462,7 @@
           filterDay,
           filterIp,
           err: err,
-          data: res
+          res: res
         });
         typeof onCallback === 'function' && onCallback(err, res);
         return;
@@ -474,7 +474,7 @@
         filterType,
         filterDay,
         filterIp,
-        data: apiResult
+        res: apiResult
       });
       typeof onCallback === 'function' && onCallback(undefined, res);
     });
@@ -539,8 +539,8 @@
     return siteHost;
   }
 
-  function getSitePagePathname () {
-    if (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME)
+  function getSitePagePathname (isSelf) {
+    if (!isSelf && window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME)
       return window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME;
 
     var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');

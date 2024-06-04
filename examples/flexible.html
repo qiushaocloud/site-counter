@@ -21,31 +21,31 @@
         switch (type) {
           case 'api:post:site_counter': {
             if (data.err) {
-              console.error('api:post:site_counter error:', data.err, data.data);
+              console.error('api:post:site_counter error:', data.err, data.res);
               document.getElementById('pvUvMessageBox').innerHTML += '<p class="error">api:post:site_counter error, errData:'+ JSON.stringify(data)+'</p>';
               return;
             }
 
-            document.getElementById('pvUvMessageBox').innerHTML += '<p class="success">api:post:site_counter success, data::'+ JSON.stringify(data.data)+'</p>';
+            document.getElementById('pvUvMessageBox').innerHTML += '<p class="success">api:post:site_counter success, res:'+ JSON.stringify(data.res)+'</p>';
             break;
           }
           case 'api:get:site_counter_ips_stats': {
             if (data.err) {
-              console.error('api:get:site_counter_ips_stats error:', data.err, data.data);
+              console.error('api:get:site_counter_ips_stats error:', data.err, data.res);
               document.getElementById('ipsStatsMessageBox').innerHTML += '<p class="error">api:get:site_counter_ips_stats error, errData:'+ JSON.stringify(data)+'</p>';
               return;
             }
 
-            document.getElementById('ipsStatsMessageBox').innerHTML += '<p class="success" style="max-height: 45%; overflow-y: auto;">api:get:site_counter_ips_stats success, data::'+ JSON.stringify(data.data)+'</p>';
-            if (data.data.site_ips && Object.keys(data.data.site_ips).length > 0) {
+            document.getElementById('ipsStatsMessageBox').innerHTML += '<p class="success" style="max-height: 45%; overflow-y: auto;">api:get:site_counter_ips_stats success, res:'+ JSON.stringify(data.res)+'</p>';
+            if (data.res.site_ips && Object.keys(data.res.site_ips).length > 0) {
               document.getElementById('ipsStatsMessageBox').innerHTML += '<hr /><h3>网站IP统计</h3>';
               // 时间倒序排列
-              var siteIpsKeys = Object.keys(data.data.site_ips).sort(function(a, b) {return new Date(b).getTime() - new Date(a).getTime()});
+              var siteIpsKeys = Object.keys(data.res.site_ips).sort(function(a, b) {return new Date(b).getTime() - new Date(a).getTime()});
               for (var i=0,len=siteIpsKeys.length; i<len; i++) {
                 var logDay = siteIpsKeys[i];
                 var eleContent = '<div><h4>'+logDay+'<h4><ol>';
-                for (var ip in data.data.site_ips[logDay]) {
-                  eleContent += '<li>'+ip+'('+(data.data.site_ips[logDay][ip][1] || '-')+')'+' : '+data.data.site_ips[logDay][ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
+                for (var ip in data.res.site_ips[logDay]) {
+                  eleContent += '<li>'+ip+'('+(data.res.site_ips[logDay][ip][1] || '-')+')'+' : '+data.res.site_ips[logDay][ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
                 }
                 eleContent += '</ol></div>';
                 document.getElementById('ipsStatsMessageBox').innerHTML += eleContent;
@@ -54,15 +54,15 @@
             }
 
 
-            if (data.data.page_ips && Object.keys(data.data.page_ips).length > 0) {
+            if (data.res.page_ips && Object.keys(data.res.page_ips).length > 0) {
               document.getElementById('ipsStatsMessageBox').innerHTML += '<hr /><h3>页面IP统计</h3>';
               // 时间倒序排列
-              var pageIpsKeys = Object.keys(data.data.page_ips).sort(function(a, b) {return new Date(b).getTime() - new Date(a).getTime()});
+              var pageIpsKeys = Object.keys(data.res.page_ips).sort(function(a, b) {return new Date(b).getTime() - new Date(a).getTime()});
               for (var i=0,len=pageIpsKeys.length; i<len; i++) {
                 var logDay = pageIpsKeys[i];
                 var eleContent = '<div><h4>'+logDay+'<h4><ol>';
-                for (var ip in data.data.page_ips[logDay]) {
-                  eleContent += '<li>'+ip+'('+(data.data.page_ips[logDay][ip][1] || '-')+')'+' : '+data.data.page_ips[logDay][ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site-page 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site-page\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
+                for (var ip in data.res.page_ips[logDay]) {
+                  eleContent += '<li>'+ip+'('+(data.res.page_ips[logDay][ip][1] || '-')+')'+' : '+data.res.page_ips[logDay][ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site-page 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site-page\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
                 }
                 eleContent += '</ol></div>';
                 document.getElementById('ipsStatsMessageBox').innerHTML += eleContent;
@@ -74,15 +74,15 @@
           }
           case 'api:get:site_counter_logs:ip': {
             if (data.err) {
-              console.error('api:get:site_counter_logs:ip error:', data.err, data.data, data.filterType, data.filterDay, data.filterIp);
+              console.error('api:get:site_counter_logs:ip error:', data.err, data.res, data.filterType, data.filterDay, data.filterIp);
               document.getElementById('ipLogsMessageBox').innerHTML += '<p class="error">api:get:site_counter_logs:ip error, errData:'+ JSON.stringify(data)+'</p>';
               return;
             }
 
             // 时间倒序排列
-            data.data.site_logs && data.data.site_logs.sort(function(a, b) {return b[0] - a[0]});
-            data.data.page_logs && data.data.page_logs.sort(function(a, b) {return b[0] - a[0]});
-            document.getElementById('ipLogsMessageBox').innerHTML += '<p class="success">api:get:site_counter_logs:ip success, data::'+ JSON.stringify(data.data)+', filterType:'+ data.filterType+', filterDay:'+ data.filterDay+', filterIp:'+ data.filterIp+'</p>';
+            data.res.site_logs && data.res.site_logs.sort(function(a, b) {return b[0] - a[0]});
+            data.res.page_logs && data.res.page_logs.sort(function(a, b) {return b[0] - a[0]});
+            document.getElementById('ipLogsMessageBox').innerHTML += '<p class="success">api:get:site_counter_logs:ip success, res:'+ JSON.stringify(data.res)+', filterType:'+ data.filterType+', filterDay:'+ data.filterDay+', filterIp:'+ data.filterIp+'</p>';
             break;
           }
         }
