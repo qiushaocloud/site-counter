@@ -384,11 +384,14 @@
 
             var totalPvCount = 0; // 总访问次数
             var totalIpCount = 0; // 总IP数
-            for (var ip in logDayData) {
+
+            var logDayKeys = Object.keys(logDayData).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayData[b][2] - logDayData[a][2] : logDayData[a][2] - logDayData[b][2]});
+            for (var j=0,jlen=logDayKeys.length; i<jlen; j++) {
+              var ip = logDayKeys[j];
               var ipCount = logDayData[ip][0];
+              var ipLocation = logDayData[ip][1];
               totalPvCount += ipCount;
               totalIpCount++;
-              var ipLocation = logDayData[ip][1];
               // console.debug('ipsStatsData => ip:', ip, 'count:', ipCount, 'location:', ipLocation);
               var ipLiEle = document.createElement('li');
               ipLiEle.className = ipsStatsKey+'-log-day-ip-li';
