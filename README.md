@@ -380,7 +380,7 @@
 * 代码中 `examples` 目录下有更多的使用示例
   * [示例 complex.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/complex.html)
   * [示例 simple.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/simple.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/simple.html)
-  * [示例 ips-stats-search.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-search.html)：[代码 ips-stats-search.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-search.html) 和 [代码 ips-stats-iframe.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-iframe.html)
+  * [示例 ips-stats-search.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-search.html)：[代码 ips-stats-search.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-search.html) 和 [示例 ips-stats-iframe.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-iframe.html)：[代码 ips-stats-iframe.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-iframe.html)
   * [示例 custom-development.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/custom-development.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/custom-development.html)
   * [示例 only-elements.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/only-elements.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/only-elements.html)
 
