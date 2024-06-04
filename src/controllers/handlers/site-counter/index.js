@@ -2,6 +2,7 @@ const {exec} = require('child_process');
 const utils = require('../../../helepers/utils');
 const IPService = require('../../../services/ip-service');
 const {getLogger, MY_LOG_DIR} = require('../../../log');
+const ConcurrencyTaskController = require('../../../helepers/concurrency-task');
 const log = getLogger('ApiHandler');
 
 const SITE_COUNTER_PREFIX = 'sitecounter:';
@@ -11,6 +12,7 @@ class SiteCounterHandler {
     this._siteSaveings = {}; // 
     this._cacheSites = {}; // { siteHost: { sitePv, siteUv, pages: { sitePagePathname: { pagePv, pageUv } } } }
     this._cacheCheckUpdateYesterDays = {}; // {siteHost: [checkTs, formatCheckDay]}
+    this._concurrencyTaskController = new ConcurrencyTaskController(3); // 并发任务控制
   }
 
   incrSiteCount (
@@ -51,89 +53,91 @@ class SiteCounterHandler {
       otherGrepFilters.clientIp = filterClientIp;
     }
 
-    this._getSiteCounterIpsLogs(siteHost, dateRangeStr, otherGrepFilters)
-      .then((ipLogs) => {
-        const resResult = {
-          site_host: siteHost,
-          site_ips: {},
-          page_ips: {}
-        }; // {site_ips: {{[logDay]:{[ip]:[count,ipLocation,lastTs]}}}, page_ips: {[logDay]:{[ip]:[count,ipLocation,lastTs]}}}
-        sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
+    this._concurrencyTaskController.addTask(() => {
+      return this._getSiteCounterIpsLogs(siteHost, dateRangeStr, otherGrepFilters)
+        .then((ipLogs) => {
+          const resResult = {
+            site_host: siteHost,
+            site_ips: {},
+            page_ips: {}
+          }; // {site_ips: {{[logDay]:{[ip]:[count,ipLocation,lastTs]}}}, page_ips: {[logDay]:{[ip]:[count,ipLocation,lastTs]}}}
+          sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
 
-        const clinetIpInfos = {};
+          const clinetIpInfos = {};
 
-        for (const ipLog of ipLogs) {
-          const {
-            ts: logTs,
-            clientIp: logClientIp,
-            siteHost: logSiteHost,
-            sitePagePathname: logSitePagePathname,
-            incrType: logIncrType,
-          } = ipLog;
+          for (const ipLog of ipLogs) {
+            const {
+              ts: logTs,
+              clientIp: logClientIp,
+              siteHost: logSiteHost,
+              sitePagePathname: logSitePagePathname,
+              incrType: logIncrType,
+            } = ipLog;
 
-          const logDay = utils.getCurrFormatTs(logTs, undefined, true);
-          if (siteHost !== logSiteHost) continue;
+            const logDay = utils.getCurrFormatTs(logTs, undefined, true);
+            if (siteHost !== logSiteHost) continue;
 
-          if (
-            sitePagePathname
-            && sitePagePathname === logSitePagePathname
-            && (!logIncrType || logIncrType === 'page' || logIncrType === 'siteandpage')
-          ) {
+            if (
+              sitePagePathname
+              && sitePagePathname === logSitePagePathname
+              && (!logIncrType || logIncrType === 'page' || logIncrType === 'siteandpage')
+            ) {
+              clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
+              let dayPageIps = resResult.page_ips[logDay];
+              !dayPageIps && (dayPageIps = resResult.page_ips[logDay] = {});
+              !dayPageIps[logClientIp] && (dayPageIps[logClientIp] = [0, '', logTs]);
+              dayPageIps[logClientIp][0] = dayPageIps[logClientIp][0] + 1;
+              (logTs > dayPageIps[logClientIp][2]) && (dayPageIps[logClientIp][2] = logTs);
+            }
+
+            if (isOnlyPage) continue;
+            if (!(!logIncrType || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
             clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
-            let dayPageIps = resResult.page_ips[logDay];
-            !dayPageIps && (dayPageIps = resResult.page_ips[logDay] = {});
-            !dayPageIps[logClientIp] && (dayPageIps[logClientIp] = [0, '', logTs]);
-            dayPageIps[logClientIp][0] = dayPageIps[logClientIp][0] + 1;
-            (logTs > dayPageIps[logClientIp][2]) && (dayPageIps[logClientIp][2] = logTs);
+            let daySiteIps = resResult.site_ips[logDay];
+            !daySiteIps && (daySiteIps = resResult.site_ips[logDay] = {});
+            !daySiteIps[logClientIp] && (daySiteIps[logClientIp] = [0, '', logTs]);
+            daySiteIps[logClientIp][0] = daySiteIps[logClientIp][0] + 1;
+            (logTs > daySiteIps[logClientIp][2]) && (daySiteIps[logClientIp][2] = logTs);
           }
 
-          if (isOnlyPage) continue;
-          if (!(!logIncrType || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
-          clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
-          let daySiteIps = resResult.site_ips[logDay];
-          !daySiteIps && (daySiteIps = resResult.site_ips[logDay] = {});
-          !daySiteIps[logClientIp] && (daySiteIps[logClientIp] = [0, '', logTs]);
-          daySiteIps[logClientIp][0] = daySiteIps[logClientIp][0] + 1;
-          (logTs > daySiteIps[logClientIp][2]) && (daySiteIps[logClientIp][2] = logTs);
-        }
+          isOnlyPage && delete resResult.site_ips;
+          !sitePagePathname && delete resResult.page_ips;
 
-        isOnlyPage && delete resResult.site_ips;
-        !sitePagePathname && delete resResult.page_ips;
+          const proArr = [];
+          for (const logClientIp in clinetIpInfos) {
+            const pro = IPService.search(logClientIp, {isCache: true})
+              .then((resopnse) => {
+                clinetIpInfos[logClientIp] = resopnse.code === 200 ? resopnse.data.location : '';
+              })
+            proArr.push(pro);
+          }
 
-        const proArr = [];
-        for (const logClientIp in clinetIpInfos) {
-          const pro = IPService.search(logClientIp, {isCache: true})
-            .then((resopnse) => {
-              clinetIpInfos[logClientIp] = resopnse.code === 200 ? resopnse.data.location : '';
-            })
-          proArr.push(pro);
-        }
-
-        Promise.all(proArr).then(() => {
-          if (resResult.site_ips) {
-            for (const logDayTmp in resResult.site_ips) {
-              const daySiteIpsTmp = resResult.site_ips[logDayTmp];
-              for (const logClientIpTmp in daySiteIpsTmp) {
-                daySiteIpsTmp[logClientIpTmp][1] = clinetIpInfos[logClientIpTmp] || '';
+          Promise.all(proArr).then(() => {
+            if (resResult.site_ips) {
+              for (const logDayTmp in resResult.site_ips) {
+                const daySiteIpsTmp = resResult.site_ips[logDayTmp];
+                for (const logClientIpTmp in daySiteIpsTmp) {
+                  daySiteIpsTmp[logClientIpTmp][1] = clinetIpInfos[logClientIpTmp] || '';
+                }
               }
             }
-          }
 
-          if (resResult.page_ips) {
-            for (const logDayTmp in resResult.page_ips) {
-              const dayPageIpsTmp = resResult.page_ips[logDayTmp];
-              for (const logClientIpTmp in dayPageIpsTmp) {
-                dayPageIpsTmp[logClientIpTmp][1] = clinetIpInfos[logClientIpTmp] || '';
+            if (resResult.page_ips) {
+              for (const logDayTmp in resResult.page_ips) {
+                const dayPageIpsTmp = resResult.page_ips[logDayTmp];
+                for (const logClientIpTmp in dayPageIpsTmp) {
+                  dayPageIpsTmp[logClientIpTmp][1] = clinetIpInfos[logClientIpTmp] || '';
+                }
               }
             }
-          }
 
-          onCallback && onCallback(undefined, resResult);
-        });
-      })
-      .catch((err) => {
-        onCallback && onCallback(err);
-      })
+            onCallback && onCallback(undefined, resResult);
+          });
+        })
+        .catch((err) => {
+          onCallback && onCallback(err);
+        })
+    });
   }
 
   siteCounterLogs (siteHost, {sitePagePathname, dateRangeStr, isOnlyPage, filterClientIp} = {}, onCallback) {
@@ -149,76 +153,78 @@ class SiteCounterHandler {
       otherGrepFilters.clientIp = filterClientIp;
     }
 
-    this._getSiteCounterIpsLogs(siteHost, dateRangeStr, otherGrepFilters)
-      .then((ipLogs) => {
-        const resResult = {
-          site_host: siteHost,
-          site_logs: [],
-          page_logs: []
-        }; // {site_logs: [[ts, siteHost, clientIp, ipLocation, userAgent]], page_logs: [[ts, siteHost, sitePagePathname, clientIp, ipLocation, userAgent]]}
-        sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
+    this._concurrencyTaskController.addTask(() => {
+      return this._getSiteCounterIpsLogs(siteHost, dateRangeStr, otherGrepFilters)
+        .then((ipLogs) => {
+          const resResult = {
+            site_host: siteHost,
+            site_logs: [],
+            page_logs: []
+          }; // {site_logs: [[ts, siteHost, clientIp, ipLocation, userAgent]], page_logs: [[ts, siteHost, sitePagePathname, clientIp, ipLocation, userAgent]]}
+          sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
 
-        const clinetIpInfos = {};
+          const clinetIpInfos = {};
 
-        ipLogs.sort((a, b) => a.ts - b.ts); // 通过时间戳进行升序排序
-        for (const ipLog of ipLogs) {
-          const { 
-            ts: logTs,
-            clientIp: logClientIp,
-            siteHost: logSiteHost, 
-            sitePagePathname: logSitePagePathname,
-            userAgent: logUserAgent,
-            incrType: logIncrType,
-            href: logHref
-          } = ipLog;
-          if (siteHost !== logSiteHost) continue;
+          ipLogs.sort((a, b) => a.ts - b.ts); // 通过时间戳进行升序排序
+          for (const ipLog of ipLogs) {
+            const { 
+              ts: logTs,
+              clientIp: logClientIp,
+              siteHost: logSiteHost, 
+              sitePagePathname: logSitePagePathname,
+              userAgent: logUserAgent,
+              incrType: logIncrType,
+              href: logHref
+            } = ipLog;
+            if (siteHost !== logSiteHost) continue;
 
-          if (
-            sitePagePathname
-            && sitePagePathname === logSitePagePathname
-            && (!logIncrType || logIncrType === 'page' || logIncrType === 'siteandpage')
-          ) {
+            if (
+              sitePagePathname
+              && sitePagePathname === logSitePagePathname
+              && (!logIncrType || logIncrType === 'page' || logIncrType === 'siteandpage')
+            ) {
+              clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
+              resResult.page_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
+            }
+
+            if (isOnlyPage) continue;
+            if (!(!logIncrType || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
             clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
-            resResult.page_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
+            resResult.site_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
           }
 
-          if (isOnlyPage) continue;
-          if (!(!logIncrType || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
-          clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
-          resResult.site_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
-        }
+          isOnlyPage && delete resResult.site_logs;
+          !sitePagePathname && delete resResult.page_logs;
 
-        isOnlyPage && delete resResult.site_logs;
-        !sitePagePathname && delete resResult.page_logs;
+          const proArr = [];
+          for (const logClientIp in clinetIpInfos) {
+            const pro = IPService.search(logClientIp, {isCache: true})
+              .then((resopnse) => {
+                clinetIpInfos[logClientIp] = resopnse.code === 200 ? resopnse.data.location : '';
+              })
+            proArr.push(pro);
+          }
 
-        const proArr = [];
-        for (const logClientIp in clinetIpInfos) {
-          const pro = IPService.search(logClientIp, {isCache: true})
-            .then((resopnse) => {
-              clinetIpInfos[logClientIp] = resopnse.code === 200 ? resopnse.data.location : '';
-            })
-          proArr.push(pro);
-        }
-
-        Promise.all(proArr).then(() => {
-          if (resResult.site_logs && resResult.site_logs.length) {
-            for (const logTmp of resResult.site_logs) {
-              logTmp[2] = clinetIpInfos[logTmp[1]] || '';
+          Promise.all(proArr).then(() => {
+            if (resResult.site_logs && resResult.site_logs.length) {
+              for (const logTmp of resResult.site_logs) {
+                logTmp[2] = clinetIpInfos[logTmp[1]] || '';
+              }
             }
-          }
 
-          if (resResult.page_logs && resResult.page_logs.length) {
-            for (const logTmp of resResult.page_logs) {
-              logTmp[2] = clinetIpInfos[logTmp[1]] || '';
+            if (resResult.page_logs && resResult.page_logs.length) {
+              for (const logTmp of resResult.page_logs) {
+                logTmp[2] = clinetIpInfos[logTmp[1]] || '';
+              }
             }
-          }
 
-          onCallback && onCallback(undefined, resResult);
+            onCallback && onCallback(undefined, resResult);
+          });
+        })
+        .catch((err) => {
+          onCallback && onCallback(err);
         });
-      })
-      .catch((err) => {
-        onCallback && onCallback(err);
-      })
+    });
   }
 
   async _incrSiteCountByRedis (
