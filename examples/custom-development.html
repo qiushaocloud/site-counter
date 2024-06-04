@@ -10,6 +10,7 @@
   <!-- <script>
     window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
   </script> -->
+  <!-- <script async src="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.js?v=3"></script> -->
   <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
   <script src="../dist/qiushaocloud_site_counter.min.js"></script>
 </head>
@@ -44,11 +45,11 @@
               for (var i=0,len=siteIpsKeys.length; i<len; i++) {
                 var logDay = siteIpsKeys[i];
                 var eleContent = '<div><h4>'+logDay+'<h4><ol>';
-                var logDayIpsJson = data.res.site_ips[logDay];
-                var logDayIpsKeys = Object.keys(logDayIpsJson).sort(function(a, b){return logDayIpsJson[b][2] - logDayIpsJson[a][2]});
-                for (var j=0,jlen=logDayIpsKeys.length; j<jlen; j++) {
-                  var ip = logDayIpsKeys[j];
-                  eleContent += '<li>'+ip+'('+(logDayIpsJson[ip][1] || '-')+')'+' : '+logDayIpsJson[ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
+                var logDayData = data.res.site_ips[logDay];
+                var logDayKeys = Object.keys(logDayData).sort(function(a, b){return logDayData[b][2] - logDayData[a][2]});
+                for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
+                  var ip = logDayKeys[j];
+                  eleContent += '<li>'+ip+'('+(logDayData[ip][1] || '-')+')'+' : '+logDayData[ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
                 }
                 eleContent += '</ol></div>';
                 document.getElementById('ipsStatsMessageBox').innerHTML += eleContent;
@@ -64,11 +65,11 @@
               for (var i=0,len=pageIpsKeys.length; i<len; i++) {
                 var logDay = pageIpsKeys[i];
                 var eleContent = '<div><h4>'+logDay+'<h4><ol>';
-                var logDayIpsJson = data.res.page_ips[logDay];
-                var logDayIpsKeys = Object.keys(logDayIpsJson).sort(function(a, b){return logDayIpsJson[b][2] - logDayIpsJson[a][2]});
-                for (var j = 0, jlen = logDayIpsKeys.length; j < jlen; j++) {
-                  var ip = logDayIpsKeys[j];
-                  eleContent += '<li>'+ip+'('+(logDayIpsJson[ip][1] || '-')+')'+' : '+logDayIpsJson[ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site-page 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site-page\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
+                var logDayData = data.res.page_ips[logDay];
+                var logDayKeys = Object.keys(logDayData).sort(function(a, b){return logDayData[b][2] - logDayData[a][2]});
+                for (var j = 0, jlen = logDayKeys.length; j < jlen; j++) {
+                  var ip = logDayKeys[j];
+                  eleContent += '<li>'+ip+'('+(logDayData[ip][1] || '-')+')'+' : '+logDayData[ip][0]+'<button onclick="document.getElementById(\'ipLogsMessageBox\').innerHTML = \'<p>加载 site-page 日志, 日期：'+logDay+'，IP：'+ip+'...</p>\'; window.requestQiushaocloudSiteCounterLogsApiByFilter(\'site-page\', \''+logDay+'\', \''+ip+'\')" >详情</button></li>';
                 }
                 eleContent += '</ol></div>';
                 document.getElementById('ipsStatsMessageBox').innerHTML += eleContent;

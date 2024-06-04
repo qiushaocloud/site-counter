@@ -240,7 +240,7 @@
           if (ipsStatsRenderMode === 'none') continue; // 日志打印模式为none，不在控制台打印IP详情，页面不渲染IP详情
 
           var ipsStatsSortName = ipsStatsEle.getAttribute('data-ips-stats-sort-name');
-          var ipsStatsDataDays = Object.keys(ipsStatsData).sort((a, b) => ipsStatsSortName === 'desc' ? new Date(b).getTime() - new Date(a).getTime() : new Date(a).getTime() - new Date(b).getTime());
+          var ipsStatsDataDays = Object.keys(ipsStatsData).sort(function(a, b) {return ipsStatsSortName === 'desc' ? new Date(b).getTime() - new Date(a).getTime() : new Date(a).getTime() - new Date(b).getTime()});
           // console.debug(ipsStatsKey + ' ipsStatsDataDays:', ipsStatsDataDays);
 
           if (ipsStatsRenderMode === 'console') { // 日志打印模式为console，只在控制台打印IP详情，页面不渲染IP详情
@@ -249,7 +249,9 @@
               var logDayData = ipsStatsData[logDay];
               console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : sitePageTitle)+' '+logDay+' 访问IP详情 ====================');
               var ipsTableData = [];
-              for (var ip in logDayData) {
+              var logDayKeys = Object.keys(logDayData).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayData[b][2] - logDayData[a][2] : logDayData[a][2] - logDayData[b][2]});
+              for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
+                var ip = logDayKeys[j];
                 var ipCount = logDayData[ip][0];
                 var ipLocation = logDayData[ip][1];
                 ipsTableData.push({
@@ -288,7 +290,7 @@
                     var logs = apiResult.site_logs.slice(0);
                     if (apiResult.page_logs && apiResult.page_logs.length > 0)
                       logs = logs.concat(apiResult.page_logs);
-                    logs.sort((a, b) => logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime());
+                    logs.sort(function(a, b) {return logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime()});
                     
                     if (logsPrintMode === 'console') {
                       var tableData = [];
@@ -307,7 +309,7 @@
                     var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname(true) ? '<span class="pg1">页面</span><span class="other-page-title">(<span class="content">'+dataSitePagePathname+'</span>)</span>' : '本页面')
             
                     var logs = apiResult.page_logs.slice(0);
-                    logs.sort((a, b) => logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime());
+                    logs.sort(function(a, b) {return logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime()});
                     
                     if (logsPrintMode === 'console') {
                       var tableData = [];
@@ -380,8 +382,8 @@
             logDayUlEle.className = ipsStatsKey+'-log-day-ul';
             logDayEle.appendChild(logDayUlEle);
 
-            let totalPvCount = 0; // 总访问次数
-            let totalIpCount = 0; // 总IP数
+            var totalPvCount = 0; // 总访问次数
+            var totalIpCount = 0; // 总IP数
             for (var ip in logDayData) {
               var ipCount = logDayData[ip][0];
               totalPvCount += ipCount;
@@ -825,7 +827,7 @@
   }
 
   function customEncrypt (str, secretKey, customEncryptTs) {
-    let ranNum = customEncryptTs || 1234567890123;
+    var ranNum = customEncryptTs || 1234567890123;
   
     for (var i = 0; i < str.length; i++) {
       var character = str.charCodeAt(i);

@@ -17,6 +17,9 @@
 6. 累计站点某页面总访客量(站点页面 uv)
 7. 累计站点某页面今日访问量(站点页面今日 pv)
 8. 累计站点某页面今日访客量(站点页面今日 uv)
+9. IP 统计(站点 IP 访问统计和页面 IP 访问统计)
+10. IP 访问记录(站点 IP 访问记录和页面 IP 访问记录)
+11. 提供监听器和方法(可自定义开发，自行处理数据)
 
 
 ### 快速上手
@@ -258,8 +261,33 @@
         </ul>
     </div>
    ```
-3. 作者提供了关于 logs 页面的样式文件 [logs-table.css](https://github.com/qiushaocloud/site-counter/blob/master/examples/css/logs-table.css)，您可以直接引入到您的页面中，再根据需要调整样式，引入代码 `<link rel="stylesheet" href="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/css/logs-table.css">`，参考 [示例 ips-stats-search.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-search.html)：[代码 ips-stats-search.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-search.html) 和 [代码 ips-stats-iframe.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-iframe.html)
-4. 作者提供了关于 IP 统计界面样式和逻辑的封装 [ips-stats.js](https://github.com/qiushaocloud/site-counter/blob/master/examples/js/ips-stats.js)，依赖 [logs-table.css](https://github.com/qiushaocloud/site-counter/blob/master/examples/css/logs-table.css)，引入代码 `<link rel="stylesheet" href="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/css/logs-table.css">` 和 `<script src="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/js/ips-stats.js"></script>`
+3. 作者提供了简单 logs 页面的样式文件 [logs-table.css](https://github.com/qiushaocloud/site-counter/blob/master/examples/css/logs-table.css)，您可以直接引入到您的页面中，再根据需要调整样式，引入代码 `<link rel="stylesheet" href="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/css/logs-table.css">`，参考 [示例 complex.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/complex.html)
+4. 作者提供了简单 IP 统计页面的样式和逻辑封装脚本 [ips-stats.js](https://github.com/qiushaocloud/site-counter/blob/master/examples/js/ips-stats.js)，依赖 [logs-table.css](https://github.com/qiushaocloud/site-counter/blob/master/examples/css/logs-table.css)，引入代码 `<link rel="stylesheet" href="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/css/logs-table.css">` 和 `<script src="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/js/ips-stats.js"></script>`，参考 [示例 ips-stats-search.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-search.html)：[代码 ips-stats-search.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-search.html) 和 [示例 ips-stats-iframe.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-iframe.html?page=self)：[代码 ips-stats-iframe.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-iframe.html)
+   ```markdown
+    支持 location.href 或者 script.src 进行参数配置，优先 script.src 中的参数配置
+    例如：
+      * script.src: `<script src="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/js/ips-stats.js?qpage=self&qsortName=desc&qhideCloseBtn=false&qshowIpsStatsBox=true"></script>`
+      * location.href: `https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-iframe.html?qpage=self&qsortName=desc&qhideCloseBtn=false&qshowIpsStatsBox=true`
+    可配置的参数：
+      * qpage: 页面路径，不指定则不请求页面 IP 统计数据，指定为 self 则表示请求当前页面，指定为其他路径则表示请求其他页面的，例如：/about.html
+      * qsortName: 排序方式，可选值 desc/asc，默认 desc
+      * qdateRange: 日志日期范围，最多保留31天日志，默认为 7days，格式：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
+      * qhideCloseBtn: 是否隐藏关闭按钮，默认 false
+      * qshowIpsStatsBox: 是否显示 IP 统计框，默认 false
+
+    提供如下方法：
+      * window.openIpsStatsBox(): 打开 IP 统计框
+      * window.closeIpsStatsBox(): 关闭 IP 统计框
+      * window.toggleIpsStatsBox(): 切换 IP 统计框的显示和隐藏
+      * window.showIpsStatsCloseBtn(): 显示关闭按钮
+      * window.hideIpsStatsCloseBtn(): 隐藏关闭按钮
+      * window.toggleIpsStatsCloseBtn(): 切换关闭按钮的显示和隐藏
+
+    一般流程(参考 `ips-stats-iframe.html`)：
+      * 引入 ips-stats.js 和 logs-table.css
+      * 界面提供按钮或链接，点击按钮或链接，调用 `window.openIpsStatsBox()` 打开 IP 统计框
+   ```
+5. 需要自定义开发时，借助提供的 `window.qiushaocloudSiteCounterNotice` 和 `window.requestQiushaocloudSiteCounterLogsApiByFilter` 进行开发，参考 [示例 custom-development.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/custom-development.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/custom-development.html)
 
 #### 前端高级功能
 
@@ -353,7 +381,7 @@
   * [示例 complex.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/complex.html)
   * [示例 simple.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/simple.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/simple.html)
   * [示例 ips-stats-search.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-search.html)：[代码 ips-stats-search.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-search.html) 和 [代码 ips-stats-iframe.html](https://github.com/qiushaocloud/site-counter/blob/master/examples/ips-stats-iframe.html)
-  * [示例 flexible.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/flexible.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/flexible.html)
+  * [示例 custom-development.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/custom-development.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/custom-development.html)
   * [示例 only-elements.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/only-elements.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/only-elements.html)
 
 

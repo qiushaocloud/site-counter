@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta property="og:site_counter_author" content="邱少羽梦">
+  <meta property="og:site_counter_author_blog" content="https://www.qiushaocloud.top">
+  <title>qiushaocloud 网站统计和IP统计纯节点元素测试</title>
+  <!-- <script>
+    window.localStorage.setItem('qiushaocloud_sitecounter_api_host', 'http://localhost:80');
+  </script> -->
+  <!-- <script async src="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.js?v=3"></script> -->
+  <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
+  <script src="../dist/qiushaocloud_site_counter.min.js"></script>
+</head>
+<body>
+  <script>
+    (function() {
+      var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
+      var sitePagePathnameFromUrl = new URLSearchParams(window.location.search).get('page');
+      sitePagePathnameFromUrl === 'self' && (sitePagePathnameFromUrl = '');
+      if (sitePagePathnameFromUrl && sitePagePathnameFromUrl !== sitePagePathname) {
+        console.log('set QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME to ', sitePagePathnameFromUrl);
+        window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME = sitePagePathnameFromUrl;
+      }
+    })();
+  </script>
+
+  <div class="total-box">
+    <div class="counter-box">
+      <h4>网站统计</h4>
+      <div class="counter-box-content">
+        <p>总访问量: <span id="qiushaocloud_sitecounter_value_site_pv">n</span></p>
+        <p>总访客量: <span id="qiushaocloud_sitecounter_value_site_uv">n</span></p>
+        <p>今日访问量: <span id="qiushaocloud_sitecounter_value_today_site_pv">n</span></p>
+        <p>今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_uv">n</span></p>
+      
+        <p>本页面总访问量: <span id="qiushaocloud_sitecounter_value_site_page_pv">n</span></p>
+        <p>本页面总访客量: <span id="qiushaocloud_sitecounter_value_site_page_uv">n</span></p>
+        <p>本页面今日访访量: <span id="qiushaocloud_sitecounter_value_today_site_page_pv">n</span></p>
+        <p>本页面今日访客量: <span id="qiushaocloud_sitecounter_value_today_site_page_uv">n</span></p>
+      </div>
+    </div>
+  
+    <div class="ips-stats-box">
+      <div class="site-ips-stats-box">
+        <h4>网站IP统计</h4>
+        <div id="qiushaocloud_sitecounter_value_site_ips_stats"
+          data-ips-stats-sort-name="desc"
+          data-logs-sort-name="desc"
+          data-date-range="7days"
+          data-render-mode="ui"
+          data-logs-print-mode="ui"
+        ></div>
+      </div>
+      <div class="site-page-ips-stats-box">
+        <h4 class="site-page-ips-stats-title" title="本页面IP统计" >本页面IP统计</h4>
+        <div id="qiushaocloud_sitecounter_value_site_page_ips_stats"
+          data-ips-stats-sort-name="desc"
+          data-logs-sort-name="desc"
+          data-date-range="7days"
+          data-render-mode="ui"
+          data-logs-print-mode="ui"
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      var sitePagePathname = window.location.pathname + (window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_ID || '');
+      var sitePagePathnameFromUrl = new URLSearchParams(window.location.search).get('page');
+      sitePagePathnameFromUrl === 'self' && (sitePagePathnameFromUrl = '');
+      if (sitePagePathnameFromUrl && sitePagePathnameFromUrl !== sitePagePathname) {
+        document.querySelector('.site-page-ips-stats-box h4.site-page-ips-stats-title').innerHTML = '页面IP统计';
+        document.querySelector('.site-page-ips-stats-box h4.site-page-ips-stats-title').setAttribute('title', '页面IP统计');
+        document.querySelector('.counter-box h4').innerHTML = '网站统计，页面: <span class="other-page-title" title="'+sitePagePathnameFromUrl+'" >'+sitePagePathnameFromUrl+'</span>';
+        document.querySelector('.counter-box .counter-box-content').innerHTML = document.querySelector('.counter-box .counter-box-content').innerHTML.replace(/本页面/g, '页面');
+      }
+    })();
+  </script>
+</body>
+</html>
+  

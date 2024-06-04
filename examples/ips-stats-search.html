@@ -46,7 +46,7 @@
         console.log('createIframe sitePagePathname:', sitePagePathname)
         document.getElementById('iframeContainer').innerHTML = '';
         const iframeEle = document.createElement('iframe');
-        iframeEle.src = './ips-stats-iframe.html' + (sitePagePathname ? `?qpage=${sitePagePathname === 'self' ? window.location.pathname : sitePagePathname}` : '');
+        iframeEle.src = './ips-stats-iframe.html?qhideCloseBtn=true&qshowIpsStatsBox=true' + (sitePagePathname ? `&qpage=${sitePagePathname === 'self' ? window.location.pathname : sitePagePathname}` : '');
         iframeEle.onload = () => {
           console.log('iframe element loaded, iframeEle.src:', iframeEle.src);
         };
