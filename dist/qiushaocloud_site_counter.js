@@ -386,7 +386,7 @@
             var totalIpCount = 0; // 总IP数
 
             var logDayKeys = Object.keys(logDayData).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayData[b][2] - logDayData[a][2] : logDayData[a][2] - logDayData[b][2]});
-            for (var j=0,jlen=logDayKeys.length; i<jlen; j++) {
+            for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
               var ip = logDayKeys[j];
               var ipCount = logDayData[ip][0];
               var ipLocation = logDayData[ip][1];
