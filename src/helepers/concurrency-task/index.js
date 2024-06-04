@@ -2,10 +2,12 @@ class ConcurrencyTaskController {
   #maxConcurrency = 5;
   #runningTaskCount = 0;
   #queue = [];
+  #taskTimeout = 10000;
 
-  constructor(maxConcurrency) {  
+  constructor(maxConcurrency, taskTimeout) {  
     typeof maxConcurrency === 'number' && maxConcurrency > 0 && (this.#maxConcurrency = maxConcurrency);  
-  }  
+    typeof taskTimeout === 'number' && taskTimeout > 0 && (this.#taskTimeout = taskTimeout);  
+  }
   
   addTask(task) {
     const taskTmp = this.#wrapTask(task);
@@ -17,11 +19,17 @@ class ConcurrencyTaskController {
   
   #wrapTask(task) {  
     return () => {  
+      let timer;
       return new Promise((resolve, reject) => {  
         try {
           let result;
           let isPromise = false;
           let taskArgsLength = task.length;
+          timer && clearTimeout(timer);
+          timer = setTimeout(() => {  
+            timer = null;
+            reject(new Error('Task timeout'));  
+          }, this.#taskTimeout);
 
           if (taskArgsLength === 1) {
             result = task((...callArgs) => {
@@ -31,7 +39,6 @@ class ConcurrencyTaskController {
                 reject(callArgs[0]);
                 return;
               }
-
               resolve(callArgs.length === 1? callArgs[0] : callArgs);
             });  
           } else if (taskArgsLength > 1) {
@@ -49,10 +56,10 @@ class ConcurrencyTaskController {
         } catch (err) {  
           reject(err);  
         }
-      }).then((...args) => {
-        console.log('Task result:', task.taskid, ' ,args:', args);  
-        return args;
-      });  
+      }).finally(() => {
+        timer && clearTimeout(timer);
+        timer = null;
+      });
     };  
   }  
   
