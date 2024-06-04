@@ -1,5 +1,5 @@
 class ConcurrencyTaskController {  
-  #maxConcurrency = 5;
+  #maxConcurrency = 20;
   #runningTaskCount = 0;
   #queue = [];
   #taskTimeout = 10000;

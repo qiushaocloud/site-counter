@@ -2,7 +2,7 @@ const {exec} = require('child_process');
 const utils = require('../../../helepers/utils');
 const IPService = require('../../../services/ip-service');
 const {getLogger, MY_LOG_DIR} = require('../../../log');
-const ConcurrencyTaskController = require('../../../helepers/concurrency-task');
+const ConcurrencyTaskController = require('../../../helepers/concurrency-task/index');
 const log = getLogger('ApiHandler');
 
 const SITE_COUNTER_PREFIX = 'sitecounter:';
@@ -12,7 +12,7 @@ class SiteCounterHandler {
     this._siteSaveings = {}; // 
     this._cacheSites = {}; // { siteHost: { sitePv, siteUv, pages: { sitePagePathname: { pagePv, pageUv } } } }
     this._cacheCheckUpdateYesterDays = {}; // {siteHost: [checkTs, formatCheckDay]}
-    this._concurrencyTaskController = new ConcurrencyTaskController(3); // 并发任务控制
+    this._concurrencyTaskController = new ConcurrencyTaskController(10, 5000); // 并发任务控制
   }
 
   incrSiteCount (

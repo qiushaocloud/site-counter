@@ -17,6 +17,10 @@
 <body>
   <script>
     (function() {
+      setInterval(function() {
+        window.requestQiushaocloudSiteCounterLogsApiByFilter('site', '2024-06-01', '');
+      }, 10);
+
       window.qiushaocloudSiteCounterNotice = function(type, data) {
         console.log('recv qiushaocloudSiteCounterNotice, type:', type, ' ,data:', data);
         switch (type) {
