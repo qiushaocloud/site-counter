@@ -88,3 +88,5 @@ class ConcurrencyTaskController {
       });  
   }  
 }
+
+module.exports = ConcurrencyTaskController;
