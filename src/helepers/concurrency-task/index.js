@@ -1,19 +1,30 @@
-class ConcurrencyTaskController {  
+class ConcurrencyTaskController {
+  #insId = Math.random();
   #maxConcurrency = 20;
   #runningTaskCount = 0;
   #taskQueue = [];
   #taskTimeout = 10000;
+  #log = null;
 
-  constructor(maxConcurrency, taskTimeout) {  
+  constructor(log, {maxConcurrency, taskTimeout}={}) {  
+    log && (this.#log = log);
     typeof maxConcurrency === 'number' && maxConcurrency > 0 && (this.#maxConcurrency = maxConcurrency);  
-    typeof taskTimeout === 'number' && taskTimeout > 0 && (this.#taskTimeout = taskTimeout);  
+    typeof taskTimeout === 'number' && taskTimeout > 0 && (this.#taskTimeout = taskTimeout);
+    this.#printLog('info', 'ConcurrencyTaskController initialized with maxConcurrency:', this.#maxConcurrency, 'and taskTimeout:', this.#taskTimeout);
+  }
+
+  destroy() {
+    this.#printLog('info', 'Task controller destroyed');
+    this.#log = null;
+    this.#taskQueue = [];
+    this.#runningTaskCount = 0;
   }
   
   addTask(task) {
     const taskTmp = this.#wrapTask(task);
     taskTmp.taskid = Math.random();
     this.#taskQueue.push(taskTmp);
-    console.log('Task added:', taskTmp.taskid, ' ,taskArgsLength:', task.length, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length);  
+    this.#printLog('debug', 'Task added:', taskTmp.taskid, ' ,taskArgsLength:', task.length, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length);  
     this.#processQueue();  
   }  
   
@@ -73,20 +84,29 @@ class ConcurrencyTaskController {
   #runTask(task) {  
     this.#runningTaskCount++;
     const taskid = task.taskid;  
-    console.log('Task started:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length);  
+    this.#printLog('debug', 'Task started:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length);  
     task()
       .then((result) => {  
         this.#runningTaskCount--;  
-        console.log('Task completed:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length);  
+        this.#printLog('debug', 'Task completed:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length);  
         this.#processQueue();  
         return result;  
       })  
       .catch((err) => {  
         this.#runningTaskCount--;  
-        console.error('Task failed:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length, ' ,err:', err);  
+        this.#printLog('error', 'Task failed:', taskid, ' ,runningTaskCount:', this.#runningTaskCount, ' ,queueLength:', this.#taskQueue.length, ' ,err:', err);  
         this.#processQueue();
       });  
-  }  
+  }
+
+  #printLog(method, ...args) {
+    if (!this.#log) return;
+    if (!this.#log[method]) {
+      this.#log.error(`Invalid log method: ${method}`, ...args, ' ,insId:', this.#insId);
+      return;
+    }
+    this.#log[method](...args, ' ,insId:', this.#insId);
+  }
 }
 
 module.exports = ConcurrencyTaskController;

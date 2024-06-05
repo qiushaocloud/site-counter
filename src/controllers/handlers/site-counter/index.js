@@ -12,7 +12,7 @@ class SiteCounterHandler {
     this._siteSaveings = {}; // 
     this._cacheSites = {}; // { siteHost: { sitePv, siteUv, pages: { sitePagePathname: { pagePv, pageUv } } } }
     this._cacheCheckUpdateYesterDays = {}; // {siteHost: [checkTs, formatCheckDay]}
-    this._concurrencyTaskController = new ConcurrencyTaskController(3, 3000); // 并发任务控制
+    this._concurrencyTaskController = new ConcurrencyTaskController(log, {maxConcurrency: 3, taskTimeout: 3000}); // 并发任务控制
   }
 
   incrSiteCount (
