@@ -11,6 +11,7 @@ const {getLogger} = require('../log');
 const ipsLog = getLogger('RequestIps');
 const {FailResStateCode} = require('../enum/api-fail-code');
 const utils = require('../helepers/utils');
+const dbServiceInstance = require('../services/db-service');
 const log = getLogger('API');
 
 productPostRouter(router, '/site_counter', (apiId, req, res) => {
@@ -82,6 +83,14 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
         if (isIncrPageBool)
           incrType += ((incrType ? 'and' : '') +'page');
 
+        dbServiceInstance.insertIpRecord({
+          site_host: siteHost,
+          page_pathname: sitePagePathname,
+          user_agent: req.headers['user-agent'],
+          ipv4: clientIp,
+          incr_type: incrType,
+          href: href
+        })
         ipsLog.info(
           'request post /site_counter api success',
           ' ,siteHost:'+siteHost,

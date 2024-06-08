@@ -1,3 +1,4 @@
+const path = require('path');
 const axios = require('axios');
 const {getLogger} = require('../../log/index.js');
 const defaultConfig = require('./config.js');
@@ -62,8 +63,8 @@ const checkEffectiveAddressInfo = (addressInfo) => {
 
 const DEFAULT_USE_API_URL = process.env.DEFAULT_IP_SERVICE_URL || defaultConfig.defaultUseApiUrl || 'USE_LOCAL_IP2REGION';
 const DEFAULT_IP2REGION_MODE = process.env.DEFAULT_IP2REGION_MODE && !isNaN(Number(process.env.DEFAULT_IP2REGION_MODE)) ? Number(process.env.DEFAULT_IP2REGION_MODE) : defaultConfig.defaultIp2Region.mode;
-const DEFAULT_IP2REGION_DB_PATH = process.env.DEFAULT_IP2REGION_DB_PATH || defaultConfig.defaultIp2Region.dbPath;
-const DEFAULT_IP2REGION_BINDING_PATH = process.env.DEFAULT_IP2REGION_BINDING_PATH || defaultConfig.defaultIp2Region.bindingPath;
+const DEFAULT_IP2REGION_DB_PATH = path.resolve(__dirname, process.env.DEFAULT_IP2REGION_DB_PATH || defaultConfig.defaultIp2Region.dbPath);
+const DEFAULT_IP2REGION_BINDING_PATH = path.resolve(__dirname, process.env.DEFAULT_IP2REGION_BINDING_PATH || defaultConfig.defaultIp2Region.bindingPath);
 
 let defaultPartApiConfigMap = defaultConfig.partApiConfigMap;
 if (process.env.PART_API_CONFIG_MAP_BASE64_STR) { // 环境变量存在 partApiConfigMap base64 字符串

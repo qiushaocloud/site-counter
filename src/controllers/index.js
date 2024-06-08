@@ -2,7 +2,7 @@ require('./site-counter');
 require('./site-proxy');
 const utils = require('../helepers/utils');
 const {getLogger} = require('../log');
-const IPService = require('../services/ip-service');
+const ipServiceInstance = require('../services/ip-service');
 const log = getLogger('API');
 
 const {
@@ -42,7 +42,7 @@ productGetRouter(router, '/get_ip_location', (apiId, req, res) => {
   );
   
   const searchIpTmp = searchIp || lastClientIp;
-  IPService.search(searchIpTmp, {forceType, isCache})
+  ipServiceInstance.search(searchIpTmp, {forceType, isCache})
     .then((resopnse) => {
       if (resopnse.code !== 200) {
         log.error('get_ip_location api fail, resopnse.code:', resopnse.code, ' ,resopnse:', resopnse, ' ,apiId:', apiId);

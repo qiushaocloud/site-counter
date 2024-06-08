@@ -1,9 +1,10 @@
 const fs = require('fs');
 const {exec} = require('child_process');
 const utils = require('../../../helepers/utils');
-const IPService = require('../../../services/ip-service');
+const ipServiceInstance = require('../../../services/ip-service');
 const {getLogger, MY_LOG_DIR} = require('../../../log');
 const ConcurrencyTaskController = require('../../../helepers/concurrency-task/index');
+const dbServiceInstance = require('../../../services/db-service');
 const log = getLogger('ApiHandler');
 
 const SITE_COUNTER_PREFIX = 'sitecounter:';
@@ -106,7 +107,7 @@ class SiteCounterHandler {
 
           const proArr = [];
           for (const logClientIp in clinetIpInfos) {
-            const pro = IPService.search(logClientIp, {isCache: true})
+            const pro = ipServiceInstance.search(logClientIp, {isCache: true})
               .then((resopnse) => {
                 clinetIpInfos[logClientIp] = resopnse.code === 200 ? resopnse.data.location : '';
               })
@@ -199,7 +200,7 @@ class SiteCounterHandler {
 
           const proArr = [];
           for (const logClientIp in clinetIpInfos) {
-            const pro = IPService.search(logClientIp, {isCache: true})
+            const pro = ipServiceInstance.search(logClientIp, {isCache: true})
               .then((resopnse) => {
                 clinetIpInfos[logClientIp] = resopnse.code === 200 ? resopnse.data.location : '';
               })
@@ -350,15 +351,14 @@ class SiteCounterHandler {
     return resResult;
   }
 
-  _getSiteCounterIpsLogs (siteHost, dateRangeStr, otherGrepFilters) {
+  _getSiteCounterIpsLogs (siteHost, dateRangeStr, otherGrepFilters, pageNum = 1, pageSize = 1000) {
+    log.debug('_getSiteCounterIpsLogs siteHost:', siteHost, ' ,dateRangeStr:', dateRangeStr, ' ,otherGrepFilters:', otherGrepFilters, ' ,pageNum:', pageNum, ' ,pageSize:', pageSize);
     return new Promise((resolve, reject) => {
       try {
-        let logFilePathRegexStr = `site-counter-ips.log.`;
-        let dateRangeRegexStr = utils.getCurrFormatTs(undefined, undefined, true);
-    
+        const filterDayArr = [utils.getCurrFormatTs(undefined, undefined, true)];
         if (dateRangeStr) {
           // dateRangeStr: 最多一个月以内的日期范围，格式如：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
-          dateRangeRegexStr = '';
+          filterDayArr.length = 0;
           try {
             const dateRangeArr = dateRangeStr.trim().split(',');
             for (const item of dateRangeArr) {
@@ -370,8 +370,8 @@ class SiteCounterHandler {
                 const endTs = Date.now();
                 const itemRange = utils.getDateRange(utils.getCurrFormatTs(startTs, undefined, true), utils.getCurrFormatTs(endTs, undefined, true), days);
                 for (const day of itemRange) {
-                  if (dateRangeRegexStr.includes(day)) continue;
-                  dateRangeRegexStr += `${dateRangeRegexStr ? `|${day}` : day}`;
+                  if (filterDayArr.includes(day)) continue;
+                  filterDayArr.push(day);
                 }
                 continue;
               }
@@ -380,92 +380,93 @@ class SiteCounterHandler {
                 const [startDay, endDay] = item.trim().split('to');
                 const itemRange = utils.getDateRange(startDay.trim(), endDay.trim(), 31)
                 for (const day of itemRange) {
-                  if (dateRangeRegexStr.includes(day)) continue;
-                  dateRangeRegexStr += `${dateRangeRegexStr ? `|${day}` : day}`;
+                  if (filterDayArr.includes(day)) continue;
+                  filterDayArr.push(day);
                 }
                 continue;
               }
               
-              if (dateRangeRegexStr.includes(item)) continue;
-              dateRangeRegexStr += `${dateRangeRegexStr ? `|${item}` : item}`
+              if (filterDayArr.includes(item)) continue;
+              filterDayArr.push(item);
             }
           } catch (err) {
             log.error('_getSiteCounterIpsLogs dateRangeStr catch error:', err, siteHost, dateRangeStr);
           }
     
-          if (!dateRangeRegexStr) {
+          if (!filterDayArr.length) {
             log.error('_getSiteCounterIpsLogs date_range format error, dateRangeStr is empty', siteHost, dateRangeStr);
             return reject(new Error('date_range format error'));
           }
         }
-    
-        logFilePathRegexStr += (dateRangeRegexStr && !/\(.*\)/.test(dateRangeRegexStr) && dateRangeRegexStr.includes('|') ? `(${dateRangeRegexStr})` : dateRangeRegexStr);
-        const tmpFilePath = `/tmp/site-counter-ips-tmp-${Date.now()}-${Math.random().toString().slice(2, 12)}.log`
-        let cmd = `ls ${MY_LOG_DIR}/site-counter-ips.log.* | grep -E "${logFilePathRegexStr}" | xargs grep "request post /site_counter api" | grep -v grep | grep "siteHost:${siteHost} "`;
-        if (otherGrepFilters) {
+
+        let condition = `site_host = '${siteHost}'`;
+        if (otherGrepFilters && Object.keys(otherGrepFilters).length) {
           for (const filterKey in otherGrepFilters) {
             const filterValue = otherGrepFilters[filterKey];
             if (filterValue === undefined || filterValue === null) continue;
-            if (/(clientIp|user-agent)/.test(filterKey)) {
-              cmd += ` | grep "${filterKey}:${filterValue} "`;
-              continue;
-            }
-            cmd += ` | grep "${filterKey}:${filterValue}"`;
+            condition += ` AND ${filterKey} = '${filterValue}'`;
           }
         }
-        cmd += ` > ${tmpFilePath}`
+        dbServiceInstance.getPaginatedIpRecords({pageSize: pageSize, page: pageNum, condition})
+          .then((res) => {
+            const { records, pageSize, page, totalPages, hasNextPage, hasPrevPage } = res;
+          })
+          .catch((err) => {
+             log.error('_getSiteCounterIpsLogs getPaginatedIpRecords catch error:', err, siteHost, dateRangeStr, otherGrepFilters);
+             reject(err);
+           });
         
-        log.debug('_getSiteCounterIpsLogs cmd:', cmd, ' ,tmpFilePath:', tmpFilePath);
-        exec(cmd, (err, stdout, stderr) => {
-          if (err || stderr) {
-            fs.unlink(tmpFilePath, () => {});
-            log.error('_getSiteCounterIpsLogs exec error:', err, stderr, stdout, ' ,cmd:', cmd);
-            resolve([]);
-            return;
-          }
+        // log.debug('_getSiteCounterIpsLogs cmd:', cmd, ' ,tmpFilePath:', tmpFilePath);
+        // exec(cmd, (err, stdout, stderr) => {
+        //   if (err || stderr) {
+        //     fs.unlink(tmpFilePath, () => {});
+        //     log.error('_getSiteCounterIpsLogs exec error:', err, stderr, stdout, ' ,cmd:', cmd);
+        //     resolve([]);
+        //     return;
+        //   }
 
-          log.debug('_getSiteCounterIpsLogs exec success:', stdout, ' ,cmd:', cmd);
-          fs.readFile(tmpFilePath, 'utf8', (readErr, readStdout) => {
-            fs.unlink(tmpFilePath, () => {});
-            if (readErr)
-              log.error('_getSiteCounterIpsLogs readFile error:', readErr, ' ,tmpFilePath:', tmpFilePath);
-            else
-              log.debug('_getSiteCounterIpsLogs readFile success ,tmpFilePath:', tmpFilePath);
+        //   log.debug('_getSiteCounterIpsLogs exec success:', stdout, ' ,cmd:', cmd);
+        //   fs.readFile(tmpFilePath, 'utf8', (readErr, readStdout) => {
+        //     fs.unlink(tmpFilePath, () => {});
+        //     if (readErr)
+        //       log.error('_getSiteCounterIpsLogs readFile error:', readErr, ' ,tmpFilePath:', tmpFilePath);
+        //     else
+        //       log.debug('_getSiteCounterIpsLogs readFile success ,tmpFilePath:', tmpFilePath);
             
-            const ipLogs = [];
-            const resArr = !readStdout ? [] : readStdout.trim().split('\n');
-            for (const line of resArr) {
-              // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:34:30.208] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost  ,sitePagePathname:/common-static/qiushaocloud-site-counter-test-demo.html  ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_2  ,incrType:siteandpage  ,href:https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html
-              // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:36:19.614] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost   ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_4  ,incrType:siteandpage  ,href:https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html
-              try {
-                const lineMatchArr = line.trim().replace(/^.*\/site-counter-ips.log.\d{4}-\d{2}-\d{2}:/, '').match(/^\[(.*?)\] \[(.*?)\] RequestIps - request post \/site_counter api success(  ,siteHost:.*?)?(  ,sitePagePathname:.*?)?(  ,clientIp:.*?)?(  ,user-agent:.*?)?(  ,apiId:.*?)?(  ,incrType:.*?)?(  ,href:.*?)?$/);
-                if (!lineMatchArr) continue;
+        //     const ipLogs = [];
+        //     const resArr = !readStdout ? [] : readStdout.trim().split('\n');
+        //     for (const line of resArr) {
+        //       // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:34:30.208] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost  ,sitePagePathname:/common-static/qiushaocloud-site-counter-test-demo.html  ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_2  ,incrType:siteandpage  ,href:https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html
+        //       // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:36:19.614] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost   ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_4  ,incrType:siteandpage  ,href:https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html
+        //       try {
+        //         const lineMatchArr = line.trim().replace(/^.*\/site-counter-ips.log.\d{4}-\d{2}-\d{2}:/, '').match(/^\[(.*?)\] \[(.*?)\] RequestIps - request post \/site_counter api success(  ,siteHost:.*?)?(  ,sitePagePathname:.*?)?(  ,clientIp:.*?)?(  ,user-agent:.*?)?(  ,apiId:.*?)?(  ,incrType:.*?)?(  ,href:.*?)?$/);
+        //         if (!lineMatchArr) continue;
         
-                const ts = new Date(lineMatchArr[1].trim()).getTime();
-                const siteHost = lineMatchArr[3] ? lineMatchArr[3].replace(',siteHost:', '').trim() : '';
-                const sitePagePathname = lineMatchArr[4] ? lineMatchArr[4].replace(',sitePagePathname:', '').trim() : '';
-                const clientIp = lineMatchArr[5] ? lineMatchArr[5].replace(',clientIp:', '').trim() : '';
-                const userAgent = lineMatchArr[6] ? lineMatchArr[6].replace(',user-agent:', '').trim() : '';
-                const apiId = lineMatchArr[7] ? lineMatchArr[7].replace(',apiId:', '').trim() : '';
-                const incrType = lineMatchArr[8] ? lineMatchArr[8].replace(',incrType:', '').trim() : '';
-                const href = lineMatchArr[9] ? lineMatchArr[9].replace(',href:', '').trim() : '';
+        //         const ts = new Date(lineMatchArr[1].trim()).getTime();
+        //         const siteHost = lineMatchArr[3] ? lineMatchArr[3].replace(',siteHost:', '').trim() : '';
+        //         const sitePagePathname = lineMatchArr[4] ? lineMatchArr[4].replace(',sitePagePathname:', '').trim() : '';
+        //         const clientIp = lineMatchArr[5] ? lineMatchArr[5].replace(',clientIp:', '').trim() : '';
+        //         const userAgent = lineMatchArr[6] ? lineMatchArr[6].replace(',user-agent:', '').trim() : '';
+        //         const apiId = lineMatchArr[7] ? lineMatchArr[7].replace(',apiId:', '').trim() : '';
+        //         const incrType = lineMatchArr[8] ? lineMatchArr[8].replace(',incrType:', '').trim() : '';
+        //         const href = lineMatchArr[9] ? lineMatchArr[9].replace(',href:', '').trim() : '';
   
-                const ipLog = {
-                  ts, siteHost, sitePagePathname,
-                  clientIp, userAgent, apiId,
-                  incrType, href
-                }
+        //         const ipLog = {
+        //           ts, siteHost, sitePagePathname,
+        //           clientIp, userAgent, apiId,
+        //           incrType, href
+        //         }
   
-                ipLogs.push(ipLog);
-              } catch (err) {
-                log.error('_getSiteCounterIpsLogs lineMatchArr catch error:', err, line, siteHost);
-              }
-            }
+        //         ipLogs.push(ipLog);
+        //       } catch (err) {
+        //         log.error('_getSiteCounterIpsLogs lineMatchArr catch error:', err, line, siteHost);
+        //       }
+        //     }
       
-            log.debug('_getSiteCounterIpsLogs ipLogsLength:', ipLogs.length, ' ,resArrLength:', resArr.length, ' ,siteHost:', siteHost, ' ,dateRangeStr:', dateRangeStr, ' ,otherGrepFilters:', otherGrepFilters);
-            resolve(ipLogs);
-          });
-        });
+        //     log.debug('_getSiteCounterIpsLogs ipLogsLength:', ipLogs.length, ' ,resArrLength:', resArr.length, ' ,siteHost:', siteHost, ' ,dateRangeStr:', dateRangeStr, ' ,otherGrepFilters:', otherGrepFilters);
+        //     resolve(ipLogs);
+        //   });
+        // });
       } catch (err) {
         log.error('_getSiteCounterIpsLogs catch error:', err, siteHost, dateRangeStr, otherGrepFilters);
         reject(err);
