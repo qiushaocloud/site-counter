@@ -407,12 +407,12 @@ class SiteCounterHandler {
             condition += ` AND ${filterKey} = '${filterValue}'`;
           }
         }
-        dbServiceInstance.getPaginatedIpRecords({pageSize: pageSize, page: pageNum, condition})
+        dbServiceInstance.getPaginatedSiteCounterIpRecords({pageSize: pageSize, page: pageNum, condition})
           .then((res) => {
             const { records, pageSize, page, totalPages, hasNextPage, hasPrevPage } = res;
           })
           .catch((err) => {
-             log.error('_getSiteCounterIpsLogs getPaginatedIpRecords catch error:', err, siteHost, dateRangeStr, otherGrepFilters);
+             log.error('_getSiteCounterIpsLogs getPaginatedSiteCounterIpRecords catch error:', err, siteHost, dateRangeStr, otherGrepFilters);
              reject(err);
            });
         

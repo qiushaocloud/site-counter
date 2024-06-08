@@ -83,7 +83,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
         if (isIncrPageBool)
           incrType += ((incrType ? 'and' : '') +'page');
 
-        dbServiceInstance.insertIpRecord({
+        dbServiceInstance.insertSiteCounterIpRecord({
           site_host: siteHost,
           page_pathname: sitePagePathname,
           user_agent: req.headers['user-agent'],

@@ -198,7 +198,7 @@ class Sqlite3DBManager {
      * @param {string} condition 删除条件
      * @returns {Promise} Promise 对象，表示删除操作完成
      */
-    deleteRecord(tableName, condition) {
+    deleteRecords(tableName, condition) {
         const sql = `DELETE FROM ${tableName} WHERE ${condition}`;
         return this.run(sql);
     }
@@ -225,10 +225,11 @@ class Sqlite3DBManager {
      * @param {Array} [params=[]] 查询参数
      * @param {Object} [opts={}] 配置项
      *  - [opts.columnKeys] {Array} 要查询的字段名数组，为空则查询所有字段
+     *  - [opts.extraFilter] {string} 额外的SQL过滤，如：'ORDER BY id DESC'
      * @returns {Promise} Promise 对象，返回查询结果
      */
     getRecords(tableName, condition = '', params = [], opts = {}) {
-        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}`;
+        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extraFilter ? ' '+opts.extraFilter : ''}`;
         return this.all(sql, params);
     }
 
@@ -239,10 +240,11 @@ class Sqlite3DBManager {
      * @param {Array} [params=[]] 查询参数
      * @param {Object} [opts={}] 配置项
      *  - [opts.columnKeys] {Array} 要查询的字段名数组，为空则查询所有字段
+     *  - [opts.extraFilter] {string} 额外的SQL过滤，如：'ORDER BY id DESC'
      * @returns {Promise} Promise 对象，返回查询结果
      */
     getRecord(tableName, condition, params = [], opts = {}) {
-        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} WHERE ${condition}`;
+        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extraFilter ? ' '+opts.extraFilter : ''}`;
         return this.get(sql, params);
     }
 
@@ -252,10 +254,11 @@ class Sqlite3DBManager {
      * @param {number} id 记录 ID
      * @param {Object} [opts={}] 配置项
      *  - [opts.columnKeys] {Array} 要查询的字段名数组，为空则查询所有字段
+     *  - [opts.extraFilter] {string} 额外的SQL过滤，如：'ORDER BY id DESC'
      * @returns {Promise} Promise 对象，返回查询结果
      */
     getRecordById(tableName, id, opts={}) {
-        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} WHERE id = ?`;
+        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} WHERE id = ?${opts.extraFilter ? ' '+opts.extraFilter : ''}`;
         return this.get(sql, [id]);
     }
 
@@ -266,10 +269,11 @@ class Sqlite3DBManager {
      * @param {string} value 字段值
      * @param {Object} [opts={}] 配置项
      *  - [opts.columnKeys] {Array} 要查询的字段名数组，为空则查询所有字段
+     *  - [opts.extraFilter] {string} 额外的SQL过滤，如：'ORDER BY id DESC'
      * @returns {Promise} Promise 对象，返回查询结果
      */
     getRecordByField(tableName, field, value, opts={}) {
-        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} WHERE ${field} = ?`;
+        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} WHERE ${field} = ?${opts.extraFilter ? ' '+opts.extraFilter : ''}`;
         return this.get(sql, [value]);
     }
 
@@ -278,10 +282,12 @@ class Sqlite3DBManager {
      * @param {string} tableName 表名
      * @param {string} [condition=''] 查询条件
      * @param {Array} [params=[]] 查询参数
+     * @param {Object} [opts={}] 配置项
+     *  - [opts.extraFilter] {string} 额外的SQL过滤，如：'ORDER BY id DESC'
      * @returns {Promise} Promise 对象，返回记录总数
      */
-    getRecordCount(tableName, condition = '', params = []) {
-        const sql = `SELECT COUNT(*) as count FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}`;
+    getRecordCount(tableName, condition = '', params = [], opts={}) {
+        const sql = `SELECT COUNT(*) as count FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extraFilter ? ' '+opts.extraFilter : ''}`;
         return this.get(sql, params);
     }
 
@@ -294,13 +300,13 @@ class Sqlite3DBManager {
      * @param {Array} [params=[]] 查询参数
      * @param {Object} [opts={}] 配置项
      *  - [opts.columnKeys] {Array} 要查询的字段名数组，为空则查询所有字段
-     *  - [opts.extra] {string} 额外查询条件，如：'ORDER BY id DESC'
+     *  - [opts.extraFilter] {string} 额外的SQL过滤，如：'ORDER BY id DESC'
      *  - [opts.isGetTotalPages] {boolean} 是否获取总页数，默认 false
      * @returns {Promise} Promise 对象，返回分页查询结果
      */
     async getPaginatedRecords(tableName, page, pageSize, condition = '', params = [], opts={}) {
         const offset = (page - 1) * pageSize;
-        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extra ? ' '+opts.extra : ''} LIMIT ${pageSize} OFFSET ${offset}`;
+        const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extraFilter ? ' '+opts.extraFilter : ''} LIMIT ${pageSize} OFFSET ${offset}`;
         
         if (opts.isGetTotalPages) {
             const records = await this.all(sql, params);
@@ -321,16 +327,20 @@ class Sqlite3DBManager {
      * @param {string} [condition=''] 查询条件
      * @param {Array} [params=[]] 查询参数
      * @param {Object} [opts={}] 配置项
+     *  - [opts.columnKeys] {Array} 要查询的字段名数组，为空则查询所有字段
+     *  - [opts.extraFilter] {string} 额外的SQL过滤，如：'ORDER BY id DESC'
      *  - [opts.responsePage] {boolean} 是否返回每页记录，默认 false
      * @returns {Promise} Promise 对象，返回所有记录
      */
     async getAllPaginatedRecords(tableName, pageSize, condition = '', params = [], opts={}) {
-        const totalCount = await this.getRecordCount(tableName, condition, params);
+        const totalCount = await this.getRecordCount(tableName, condition, params, opts);
         const totalPages = Math.ceil(totalCount.count / pageSize);
         const records = [];
         for (let page = 1; page <= totalPages; page++) {
             try {
-                const pageRecords = await this.getPaginatedRecords(tableName, page, pageSize, condition, params);
+                const optsTmp = JSON.parse(JSON.stringify(opts));
+                delete optsTmp.isGetTotalPages;
+                const pageRecords = await this.getPaginatedRecords(tableName, page, pageSize, condition, params, optsTmp);
                 opts.responsePage ? records.push(pageRecords) : records.push(...pageRecords);
             } catch (err) {
                 opts.responsePage && records.push(null);
