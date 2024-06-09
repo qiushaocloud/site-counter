@@ -5,6 +5,7 @@ const apiControllers = require('./src/controllers');
 const StaticRedis = require('./src/common-modules/static-redis');
 const CacheStaticRedis = require('./src/helepers/cache-redis/static-redis');
 const {getLogger} = require('./src/log');
+const dbServiceInstance = require('./src/services/db-service');
 
 const log = getLogger('App');
 const expressApp = express();
@@ -100,6 +101,11 @@ const runExpressServer = async () => {
 
     expressServer.on('listening',  () => {
       log.info('recv server listening evt');
+
+      dbServiceInstance.cleanExpiredSiteCounterIpRecords();
+      setInterval(() => {
+        dbServiceInstance.cleanExpiredSiteCounterIpRecords();
+      }, 1000 * 60 * 60 * 24); // 每天清理一次过期的记录
     });
 
     expressServer.on('error', (err) => {

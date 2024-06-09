@@ -1,17 +1,75 @@
 const sqlite3 = require('sqlite3').verbose();
 
 class Sqlite3DBManager {
+    #log = console;
+    
     /**
      * 构造函数，初始化数据库连接
      * @param {string} dbFilePath 数据库文件路径
      */
-    constructor(dbFilePath) {
-        this.db = new sqlite3.Database(dbFilePath, (err) => {
-            if (err) {
-                console.error('Database opening error: ', err);
-            } else {
-                console.log('Database opened successfully.');
-            }
+    constructor(dbFilePath, log) {
+        this.setLog(log);
+        this.#printlog('info', 'call constructor');
+        this.open(dbFilePath);
+    }
+
+    /** */
+    async destroy() {
+        try {
+            this.#printlog('info', 'call destroy');
+            await this.close();
+            this.#log = null;
+        } catch (err) {
+            this.#printlog('destroy catch error: ', err);
+            this.#log = null;
+        }
+    }
+
+    /**
+     * 设置日志对象
+     * @param {Log} log 日志对象
+     */
+    setLog(log) {
+        this.#log = log;
+    }
+
+    /**
+     * 打开数据库连接
+     * @param {string} dbFilePath 数据库文件路径
+     * @returns {Promise} Promise 对象，表示打开操作完成
+     */
+    async open(dbFilePath) {
+        this.#printlog('info', 'call open, dbFilePath: ' + dbFilePath);
+        return new Promise((resolve, reject) => {
+            this.db = new sqlite3.Database(dbFilePath, (err) => {
+                if (err) {
+                    this.#printlog('error', 'Database opening error: ', err);
+                    reject(err);
+                } else {
+                    this.#printlog('info', 'Database opened successfully.');
+                    resolve();
+                }
+            });
+        });
+    }
+
+    /**
+     * 关闭数据库连接
+     * @returns {Promise} Promise 对象，表示关闭操作完成
+     */
+    close() {
+        this.#printlog('info', 'call close');
+        if (!this.db) return Promise.resolve();
+        return new Promise((resolve, reject) => {
+            this.db.close((err) => {
+                if (err) {
+                    this.#printlog('error', 'Error closing database: ', err);
+                    reject(err);
+                } else {
+                    this.#printlog('info', 'Database connection closed.');
+                    resolve();
+                }
+            });
         });
     }
 
@@ -30,14 +88,38 @@ class Sqlite3DBManager {
      * @returns {Promise} Promise 对象，返回最后插入的行的 ID
      */
     run(sql, params = []) {
+        this.#printlog('debug', 'call run, sql:', sql, 'params:', params);
         return new Promise((resolve, reject) => {
+            const that = this;
             this.db.run(sql, params, function (err) {
                 if (err) {
-                    console.error('Error running sql: ' + sql);
-                    console.error(err);
+                    that.#printlog('error', 'run => Error running sql: ' + sql);
+                    that.#printlog('error', err);
                     reject(err);
                 } else {
+                    that.#printlog('debug', 'run => SQL executed successfully. sql: ' + sql, this.lastID);
                     resolve({ id: this.lastID });
+                }
+            });
+        });
+    }
+
+    /**
+     * 执行 SQL 语句
+     * @param {string} sql SQL 语句
+     * @returns {Promise} Promise 对象，表示执行操作完成
+     */
+    exec(sql) {
+        this.#printlog('debug', 'call exec, sql:', sql);
+        return new Promise((resolve, reject) => {
+            this.db.exec(sql, (err) => {
+                if (err) {
+                    this.#printlog('error', 'exec => Error running sql: ' + sql);
+                    this.#printlog('error', err);
+                    reject(err);
+                } else {
+                    this.#printlog('debug', 'exec => SQL executed successfully. sql: ' + sql);
+                    resolve();
                 }
             });
         });
@@ -50,13 +132,15 @@ class Sqlite3DBManager {
      * @returns {Promise} Promise 对象，返回查询结果
      */
     get(sql, params = []) {
+        this.#printlog('debug', 'call get, sql:', sql, 'params:', params);
         return new Promise((resolve, reject) => {
             this.db.get(sql, params, (err, result) => {
                 if (err) {
-                    console.error('Error running sql: ' + sql);
-                    console.error(err);
+                    this.#printlog('error', 'exec => Error running sql: ' + sql);
+                    this.#printlog('error', err);
                     reject(err);
                 } else {
+                    this.#printlog('debug', 'exec => SQL executed successfully. sql: ' + sql);
                     resolve(result);
                 }
             });
@@ -70,13 +154,15 @@ class Sqlite3DBManager {
      * @returns {Promise} Promise 对象，返回查询结果
      */
     all(sql, params = []) {
+        this.#printlog('debug', 'call all, sql:', sql, 'params:', params);
         return new Promise((resolve, reject) => {
             this.db.all(sql, params, (err, rows) => {
                 if (err) {
-                    console.error('Error running sql: ' + sql);
-                    console.error(err);
+                    this.#printlog('error', 'Error running sql: ' + sql);
+                    this.#printlog('error', err);
                     reject(err);
                 } else {
+                    this.#printlog('debug', 'all => SQL executed successfully. sql: ' + sql);
                     resolve(rows);
                 }
             });
@@ -91,21 +177,24 @@ class Sqlite3DBManager {
      * @returns {Promise} Promise 对象，表示遍历操作完成
      */
     each(sql, params = [], rowCallback) {
+        this.#printlog('debug', 'call each, sql:', sql, 'params:', params, !!rowCallback);
         return new Promise((resolve, reject) => {
             this.db.each(sql, params, (err, row) => {
                 if (err) {
-                    console.error('Error running sql: ' + sql);
-                    console.error(err);
+                    this.#printlog('error', 'Error running sql: ' + sql);
+                    this.#printlog('error', err);
                     reject(err);
                 } else {
+                    this.#printlog('debug', 'each => row processed. SQL executed successfully. sql: ' + sql);
                     rowCallback(row);
                 }
             }, (err, count) => {
                 if (err) {
-                    console.error('Error completing query: ' + sql);
-                    console.error(err);
+                    this.#printlog('error', 'Error completing query: ' + sql);
+                    this.#printlog('error', err);
                     reject(err);
                 } else {
+                    this.#printlog('debug', 'each => all rows processed. SQL executed successfully. sql: ' + sql, count);
                     resolve(count);
                 }
             });
@@ -138,24 +227,6 @@ class Sqlite3DBManager {
     }
 
     /**
-     * 关闭数据库连接
-     * @returns {Promise} Promise 对象，表示关闭操作完成
-     */
-    close() {
-        return new Promise((resolve, reject) => {
-            this.db.close((err) => {
-                if (err) {
-                    console.error('Error closing database: ', err);
-                    reject(err);
-                } else {
-                    console.log('Database connection closed.');
-                    resolve();
-                }
-            });
-        });
-    }
-
-    /**
      * 检测表是否存在
      * @param {string} tableName 表名
      * @returns {Promise<boolean>} Promise 对象，返回表是否存在的布尔值
@@ -175,6 +246,16 @@ class Sqlite3DBManager {
     createTable(tableName, columns) {
         const columnsStr = columns.map(col => `${col.name} ${col.type}${col.extra ? ' ' + col.extra : ''}`).join(', ');
         const sql = `CREATE TABLE IF NOT EXISTS ${tableName} (${columnsStr})`;
+        return this.run(sql);
+    }
+
+    /**
+     * 删除表
+     * @param {string} tableName 表名
+     * @returns {Promise} Promise 对象，表示删除操作完成
+     */
+    dropTable(tableName) {
+        const sql = `DROP TABLE IF EXISTS ${tableName}`;
         return this.run(sql);
     }
 
@@ -210,7 +291,7 @@ class Sqlite3DBManager {
      * @param {string} condition 更新条件
      * @returns {Promise} Promise 对象，表示更新操作完成
      */
-    updateRecord(tableName, record, condition) {
+    updateRecords(tableName, record, condition) {
         const keys = Object.keys(record);
         const values = Object.values(record);
         const sets = keys.map(key => `${key} = ?`).join(', ');
@@ -288,7 +369,10 @@ class Sqlite3DBManager {
      */
     getRecordCount(tableName, condition = '', params = [], opts={}) {
         const sql = `SELECT COUNT(*) as count FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extraFilter ? ' '+opts.extraFilter : ''}`;
-        return this.get(sql, params);
+        return this.get(sql, params)
+            .then((result) => {
+                return result.count;
+            });
     }
 
     /**
@@ -312,9 +396,7 @@ class Sqlite3DBManager {
             const records = await this.all(sql, params);
             const totalCount = await this.getRecordCount(tableName, condition, params);
             const totalPages = Math.ceil(totalCount.count / pageSize);
-            const hasNextPage = page < totalPages;
-            const hasPrevPage = page > 1;
-            return { records, pageSize, page, totalPages, hasNextPage, hasPrevPage };
+            return { records, pageSize, page, totalPages };
         }
 
         return this.all(sql, params);
@@ -344,10 +426,28 @@ class Sqlite3DBManager {
                 opts.responsePage ? records.push(pageRecords) : records.push(...pageRecords);
             } catch (err) {
                 opts.responsePage && records.push(null);
-                console.error('getAllPaginatedRecords page error:', err, ' ,page:', page, tableName, pageSize, condition, params, opts);
+                this.#printlog('error', 'getAllPaginatedRecords page error:', err, ' ,page:', page, tableName, pageSize, condition, params, opts);
             }
         }
         return records;
+    }
+
+    #printlog (method, ...args) {
+        if (!this.#log) {
+            if (!console[method]) {
+                console.error(new Error(`Invalid console method: ${method}`), ...args, ' ,Sqlite3DBManager');
+                return;
+            }
+            console[method](...args, ' ,Sqlite3DBManager');
+            return;
+        }
+
+        if (!this.#log[method]) {
+            this.#log.error(new Error(`Invalid log method: ${method}`), ...args, ' ,Sqlite3DBManager');
+            return;
+        }
+
+        this.#log[method](...args, ' ,Sqlite3DBManager');
     }
 }
 

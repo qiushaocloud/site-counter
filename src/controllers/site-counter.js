@@ -87,7 +87,7 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
           site_host: siteHost,
           page_pathname: sitePagePathname,
           user_agent: req.headers['user-agent'],
-          ipv4: clientIp,
+          ip: clientIp,
           incr_type: incrType,
           href: href
         })
