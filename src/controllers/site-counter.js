@@ -8,7 +8,6 @@ const {
 } = require('./router-base');
 const siteCounterHandler = require('./handlers/site-counter');
 const {getLogger} = require('../log');
-const ipsLog = getLogger('RequestIps');
 const {FailResStateCode} = require('../enum/api-fail-code');
 const utils = require('../helepers/utils');
 const dbServiceInstance = require('../services/db-service');
@@ -91,16 +90,6 @@ productPostRouter(router, '/site_counter', (apiId, req, res) => {
           incr_type: incrType,
           href: href
         })
-        ipsLog.info(
-          'request post /site_counter api success',
-          ' ,siteHost:'+siteHost,
-          sitePagePathname ? ' ,sitePagePathname:'+sitePagePathname : '',
-          ' ,clientIp:'+clientIp,
-          ' ,user-agent:'+req.headers['user-agent'],
-          ' ,apiId:'+apiId,
-          ' ,incrType:'+incrType, // 'site' | 'page' | 'siteandpage'
-          ' ,href:'+href
-        );
       }
 
       res.json(result);
@@ -123,9 +112,14 @@ productGetRouter(router, '/site_counter_ips_stats', (apiId, req, res) => {
     site_host: siteHost,
     site_page_pathname: sitePagePathname,
     date_range: dateRangeStr, // 最多一个月以内的日期范围，格式如: '31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
-    is_only_page: isOnlyPage,
-    filter_client_ip: filterClientIp
+    is_only_page: isOnlyPageParam,
+    filter_client_ip: filterClientIp,
+    page_size: pageSizeParam,
+    page_no: pageNoParam
   } = allParams;
+  const isOnlyPage = isOnlyPageParam === undefined ? undefined : utils.toParseBoolean(isOnlyPageParam);
+  const pageSize = pageSizeParam === undefined ? undefined : utils.toParseNumber(pageSizeParam);
+  const pageNo = pageNoParam === undefined ? undefined : utils.toParseNumber(pageNoParam);
 
   if (!siteHost) {
     log.error('invalid params, apiId:', apiId);
@@ -153,10 +147,12 @@ productGetRouter(router, '/site_counter_ips_stats', (apiId, req, res) => {
   siteCounterHandler.siteCounterIpsStats(
     siteHostTmp,
     {
-      sitePagePathname,
       dateRangeStr,
-      isOnlyPage: isOnlyPage === undefined ? undefined : utils.toParseBoolean(isOnlyPage),
-      filterClientIp
+      sitePagePathname,
+      isOnlyPage,
+      filterClientIp,
+      pageSize,
+      pageNo
     },
     (err, result) => {
       if (err) {
@@ -188,9 +184,14 @@ productGetRouter(router, '/site_counter_logs', (apiId, req, res) => {
     site_host: siteHost,
     site_page_pathname: sitePagePathname,
     date_range: dateRangeStr, // 最多一个月以内的日期范围，格式如: '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
-    is_only_page: isOnlyPage,
-    filter_client_ip: filterClientIp
+    is_only_page: isOnlyPageParam,
+    filter_client_ip: filterClientIp,
+    page_size: pageSizeParam,
+    page_no: pageNoParam
   } = allParams;
+  const isOnlyPage = isOnlyPageParam === undefined ? undefined : utils.toParseBoolean(isOnlyPageParam);
+  const pageSize = pageSizeParam === undefined ? undefined : utils.toParseNumber(pageSizeParam);
+  const pageNo = pageNoParam === undefined ? undefined : utils.toParseNumber(pageNoParam);
 
   if (!siteHost) {
     log.error('invalid params, apiId:', apiId);
@@ -218,10 +219,12 @@ productGetRouter(router, '/site_counter_logs', (apiId, req, res) => {
   siteCounterHandler.siteCounterLogs(
     siteHostTmp,
     {
-      sitePagePathname,
       dateRangeStr,
-      isOnlyPage: isOnlyPage === undefined ? undefined : utils.toParseBoolean(isOnlyPage),
-      filterClientIp
+      sitePagePathname,
+      isOnlyPage,
+      filterClientIp,
+      pageSize,
+      pageNo
     },
     (err, result) => {
       if (err) {

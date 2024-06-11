@@ -369,16 +369,20 @@ class Sqlite3DBManager {
      */
     getRecordCount(tableName, condition = '', params = [], opts={}) {
         const sql = `SELECT COUNT(*) as count FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extraFilter ? ' '+opts.extraFilter : ''}`;
-        return this.get(sql, params)
+        return this.all(sql, params)
             .then((result) => {
-                return result.count;
+                let count = 0;
+                result.forEach(item => {
+                    count += item.count;
+                });
+                return count;
             });
     }
 
     /**
      * 获取分页记录
      * @param {string} tableName 表名
-     * @param {number} page 页码
+     * @param {number} pageNo 页码
      * @param {number} pageSize 每页记录数
      * @param {string} [condition=''] 查询条件
      * @param {Array} [params=[]] 查询参数
@@ -388,15 +392,18 @@ class Sqlite3DBManager {
      *  - [opts.isGetTotalPages] {boolean} 是否获取总页数，默认 false
      * @returns {Promise} Promise 对象，返回分页查询结果
      */
-    async getPaginatedRecords(tableName, page, pageSize, condition = '', params = [], opts={}) {
-        const offset = (page - 1) * pageSize;
+    async getPaginatedRecords(tableName, pageNo, pageSize, condition = '', params = [], opts={}) {
+        const totalCount = await this.getRecordCount(tableName, condition, params);
+        const totalPages = Math.ceil(totalCount / pageSize);
+        pageNo < 1 && (pageNo = 1);
+        pageNo > totalPages && (pageNo = totalPages);
+
+        const offset = (pageNo - 1) * pageSize;
         const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extraFilter ? ' '+opts.extraFilter : ''} LIMIT ${pageSize} OFFSET ${offset}`;
         
         if (opts.isGetTotalPages) {
             const records = await this.all(sql, params);
-            const totalCount = await this.getRecordCount(tableName, condition, params);
-            const totalPages = Math.ceil(totalCount.count / pageSize);
-            return { records, pageSize, page, totalPages };
+            return { totalPages, totalCount, pageSize, pageNo, records };
         }
 
         return this.all(sql, params);
@@ -416,17 +423,17 @@ class Sqlite3DBManager {
      */
     async getAllPaginatedRecords(tableName, pageSize, condition = '', params = [], opts={}) {
         const totalCount = await this.getRecordCount(tableName, condition, params, opts);
-        const totalPages = Math.ceil(totalCount.count / pageSize);
+        const totalPages = Math.ceil(totalCount / pageSize);
         const records = [];
-        for (let page = 1; page <= totalPages; page++) {
+        for (let pageNo = 1; pageNo <= totalPages; pageNo++) {
             try {
                 const optsTmp = JSON.parse(JSON.stringify(opts));
                 delete optsTmp.isGetTotalPages;
-                const pageRecords = await this.getPaginatedRecords(tableName, page, pageSize, condition, params, optsTmp);
+                const pageRecords = await this.getPaginatedRecords(tableName, pageNo, pageSize, condition, params, optsTmp);
                 opts.responsePage ? records.push(pageRecords) : records.push(...pageRecords);
             } catch (err) {
                 opts.responsePage && records.push(null);
-                this.#printlog('error', 'getAllPaginatedRecords page error:', err, ' ,page:', page, tableName, pageSize, condition, params, opts);
+                this.#printlog('error', 'getAllPaginatedRecords pageNo error:', err, ' ,pageNo:', pageNo, tableName, pageSize, condition, params, opts);
             }
         }
         return records;

@@ -140,6 +140,19 @@ class DBService {
             this.#printlog('error',  'updateSiteCounterIpRecord catch error, tableName:', tableName, ' ,error:', err, ' ,id:', id, ' ,updateColumns:', updateColumns);
         }
     }
+
+    async updateSiteCounterIpRecords (updateColumns, condition) {
+        const tableName ='site_counter_ips';
+        try {
+            this.#printlog('debug',  'call updateSiteCounterIpRecords, tableName:', tableName, ' ,updateColumns:', updateColumns, ' ,condition:', condition);
+            await this.#createDefaultDBMgrTable(tableName);
+            this.#printlog('debug',  'updateSiteCounterIpRecords updateRecords start ,tableName:', tableName, ' ,updateColumns:', updateColumns, ' ,condition:', condition);
+            const result = await this.#defaultDBMgr.updateRecords(tableName, updateColumns, condition);
+            this.#printlog('debug',  'updateSiteCounterIpRecords updateRecords end, tableName:', tableName, ' ,updated', result);
+        } catch (err) {
+            this.#printlog('error',  'updateSiteCounterIpRecords catch error, tableName:', tableName, ' ,error:', err, ' ,updateColumns:', updateColumns, ' ,condition:', condition);
+        }
+    }
     
     async cleanExpiredSiteCounterIpRecords (expiredDay=31) {
       const tableName ='site_counter_ips';
@@ -168,16 +181,16 @@ class DBService {
         }
     }
 
-    async getPaginatedSiteCounterIpRecords ({pageSize=200, page=1, condition, extraFilter}) {
+    async getPaginatedSiteCounterIpRecords ({pageSize=200, pageNo=1, condition, extraFilter}) {
         const tableName ='site_counter_ips';
         try {
-            this.#printlog('debug',  'call getPaginatedSiteCounterIpRecords, tableName:', tableName, ' ,pageSize:', pageSize, ' ,page:', page, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
+            this.#printlog('debug',  'call getPaginatedSiteCounterIpRecords, tableName:', tableName, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
             await this.#createDefaultDBMgrTable(tableName);
-            const result = await this.#defaultDBMgr.getPaginatedRecords(tableName, page, pageSize, condition, undefined, {isGetTotalPages: true, extraFilter});
-            this.#printlog('debug',  'getPaginatedSiteCounterIpRecords getPaginatedRecords end, tableName:', tableName, ' ,pageSize:', pageSize, ' ,page:', page, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
-            return result;
+            const result = await this.#defaultDBMgr.getPaginatedRecords(tableName, pageNo, pageSize, condition, undefined, {isGetTotalPages: true, extraFilter});
+            this.#printlog('debug',  'getPaginatedSiteCounterIpRecords getPaginatedRecords end, tableName:', tableName, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
+            return result; // { totalPages, totalCount, pageSize, pageNo, records }
         } catch (err) {
-            this.#printlog('error',  'getPaginatedSiteCounterIpRecords catch error, tableName:', tableName, ' ,error:', err, ' ,pageSize:', pageSize, ' ,page:', page, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
+            this.#printlog('error',  'getPaginatedSiteCounterIpRecords catch error, tableName:', tableName, ' ,error:', err, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
             throw err;
         }
     }
@@ -189,17 +202,17 @@ class DBService {
             await this.#createDefaultDBMgrTable(tableName);
             const result = await this.#defaultDBMgr.getAllPaginatedRecords(tableName, pageSize, condition, undefined, {extraFilter});
             this.#printlog('debug',  'getAllSiteCounterIpRecords getAllPaginatedRecords end, tableName:', tableName, ' ,pageSize:', pageSize, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
-            return result;
+            return result; // records
         } catch (err) {
             this.#printlog('error',  'getAllSiteCounterIpRecords catch error, tableName:', tableName, ' ,error:', err, ' ,pageSize:', pageSize, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
             throw err;
         }
     }
     
-    async getPaginatedSiteCounterIpsStats ({pageSize=200, page=1, condition, extraFilter}) {
+    async getPaginatedSiteCounterIpsStats ({pageSize=200, pageNo=1, condition, extraFilter}) {
         const tableName ='site_counter_ips';
         try {
-            this.#printlog('debug',  'call getPaginatedSiteCounterIpsStats, tableName:', tableName, ' ,pageSize:', pageSize, ' ,page:', page, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
+            this.#printlog('debug',  'call getPaginatedSiteCounterIpsStats, tableName:', tableName, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
             await this.#createDefaultDBMgrTable(tableName);
             const ipsStatsSql = `
                 WITH RankedIps AS (
@@ -210,46 +223,48 @@ class DBService {
                 )
                 SELECT part_date, ip, ip_location, count, lastTs
                 FROM RankedIps
-                WHERE row_num BETWEEN ((${page}-1)*${pageSize}+1) AND ${page}*${pageSize}
+                WHERE row_num BETWEEN ((${pageNo}-1)*${pageSize}+1) AND ${pageNo}*${pageSize}
             `;
-            const partDateCountsSql = `SELECT part_date, COUNT(*) AS part_date_total_count FROM ${tableName} ${condition ? `WHERE ${condition}` : ''} GROUP BY part_date${extraFilter ? ` ${extraFilter}` : ''}`
+            const partDateCountsSql = `SELECT part_date, COUNT(*) AS part_date_log_count, COUNT(DISTINCT ip) AS part_date_ip_count FROM ${tableName} ${condition ? `WHERE ${condition}` : ''} GROUP BY part_date${extraFilter ? ` ${extraFilter}` : ''}`
 
             const ipsStatsSqlResult = await this.#defaultDBMgr.all(ipsStatsSql); // [{part_date, ip, ip_location, count, lastTs}]
-            const partDateCountsSqlResult = await this.#defaultDBMgr.all(partDateCountsSql); // [{part_date, total_count}]
-            const partDateTotalPagesJson = {};
-            for (const {part_date, total_count} of partDateCountsSqlResult) {
-                partDateTotalPagesJson[part_date] =  Math.ceil(total_count / pageSize);
+            const partDateCountsSqlResult = await this.#defaultDBMgr.all(partDateCountsSql); // [{part_date, part_date_log_count, part_date_ip_count}]
+            
+            const partDateTotalPagesJson = {}; // { [part_date]: [totalPages, totalCount, logCount] }
+            for (const {part_date, part_date_log_count, part_date_ip_count} of partDateCountsSqlResult) {
+                partDateTotalPagesJson[part_date] = [Math.ceil(part_date_ip_count / pageSize), part_date_ip_count, part_date_log_count];
             }
 
-            const result = {}; // { [part_date]: { totalPages, pageSize, page, ips: { [ip]: {ip_location, count, lastTs} } } }
+            const result = {}; // { [part_date]: { totalPages, totalCount, logCount, pageSize, pageNo, ipDatas: { [ip]: [count, ip_location, lastTs] } } }
             for (const {part_date, ip, ip_location, count, lastTs} of ipsStatsSqlResult) {
-                !result[part_date] && (result[part_date] = {totalPages: partDateTotalPagesJson[part_date] || page, pageSize, page, ips: {}});
-                result[part_date].ips[ip] = {ip_location, count, lastTs};
+                if (!partDateTotalPagesJson[part_date]) continue;
+                const [totalPages, totalCount, logCount] = partDateTotalPagesJson[part_date];
+                !result[part_date] && (result[part_date] = {totalPages, totalCount, logCount, pageSize, pageNo, ipDatas: {}});
+                result[part_date].ipDatas[ip] = [count, ip_location, lastTs];
             }
 
-            this.#printlog('debug',  'getPaginatedSiteCounterIpsStats getPaginatedRecords end, tableName:', tableName, ' ,pageSize:', pageSize, ' ,page:', page, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
-            return result; // { records, pageSize, page, totalPages, hasNextPage, hasPrevPage }  records: [{part_date, ip, ip_location, count, lastTs}]
+            this.#printlog('debug',  'getPaginatedSiteCounterIpsStats getPaginatedRecords end, tableName:', tableName, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
+            return result;
         } catch (err) {
-            this.#printlog('error',  'getPaginatedSiteCounterIpsStats catch error, tableName:', tableName, ' ,error:', err, ' ,pageSize:', pageSize, ' ,page:', page, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
+            this.#printlog('error',  'getPaginatedSiteCounterIpsStats catch error, tableName:', tableName, ' ,error:', err, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
             throw err;
         }
     }
 
-    async getAllSiteCounterIpsStats ({pageSize=200, condition, extraFilter}) {
+    async getPaginatedSiteCounterIpLogs ({pageSize=200, pageNo=1, condition, extraFilter}) {
         const tableName ='site_counter_ips';
         try {
-            this.#printlog('debug',  'call getAllSiteCounterIpsStats, tableName:', tableName, ' ,pageSize:', pageSize, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
-            await this.#createDefaultDBMgrTable(tableName);
-            const opts = {
-              columnKeys: ['part_date', 'ip', 'ip_location', 'COUNT(*) as count', 'MAX(logts) as lastTs'],
-              extraFilter: 'GROUP BY part_date, ip, ip_location' + (extraFilter ? ` ${extraFilter}` : ''),
-              isGetTotalPages: true
-            };
-            const result = await this.#defaultDBMgr.getAllPaginatedRecords(tableName, pageSize, condition, undefined, opts);
-            this.#printlog('debug',  'getAllSiteCounterIpsStats getAllPaginatedRecords end, tableName:', tableName, ' ,pageSize:', pageSize, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
-            return result; // records: [{part_date, ip, ip_location, count, lastTs}]
+            this.#printlog('debug',  'call getPaginatedSiteCounterIpLogs, tableName:', tableName, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
+            const { totalPages, totalCount, pageSize: pageSizeTmp, pageNo: pageNoTmp, records } = await this.getPaginatedSiteCounterIpRecords({pageSize, pageNo, condition, extraFilter});
+            const logDatas = [];
+            records.forEach((record) => {
+              const { logts, ip, ip_location, user_agent, href } = record;
+              logDatas.push([logts, ip, ip_location, user_agent, href]);
+            })
+            this.#printlog('debug',  'getPaginatedSiteCounterIpLogs getPaginatedSiteCounterIpRecords end, tableName:', tableName, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
+            return {totalPages, totalCount, pageSize: pageSizeTmp, pageNo: pageNoTmp, logDatas};
         } catch (err) {
-            this.#printlog('error',  'getAllSiteCounterIpsStats catch error, tableName:', tableName, ' ,error:', err, ' ,pageSize:', pageSize, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
+            this.#printlog('error',  'getPaginatedSiteCounterIpLogs catch error, tableName:', tableName, ' ,error:', err, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
             throw err;
         }
     }

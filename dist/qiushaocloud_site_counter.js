@@ -232,9 +232,8 @@
         var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname(true) ? '页面(<span class="other-page-title">'+dataSitePagePathname+'</span>)' : '本页面')
 
         for (var ipsStatsKey in totalIpsStatsDataMap) {
-          var ipsStats = totalIpsStatsDataMap[ipsStatsKey];
-          var ipsStatsData = ipsStats.data;
-          var ipsStatsEle = ipsStats.ele;
+          var ipsStatsData = totalIpsStatsDataMap[ipsStatsKey].data;
+          var ipsStatsEle = totalIpsStatsDataMap[ipsStatsKey].ele;
           if (!ipsStatsEle || !ipsStatsData) continue;
           var ipsStatsRenderMode = ipsStatsEle.getAttribute('data-render-mode');
           if (ipsStatsRenderMode === 'none') continue; // 日志打印模式为none，不在控制台打印IP详情，页面不渲染IP详情
@@ -247,13 +246,15 @@
             for (var i=0,len=ipsStatsDataDays.length; i<len; i++) {
               var logDay = ipsStatsDataDays[i];
               var logDayData = ipsStatsData[logDay];
-              console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : sitePageTitle)+' '+logDay+' 访问IP详情 ====================');
+              var logDayIpDatas = logDayData.ipDatas;
+
+              console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : sitePageTitle)+' '+logDay+' 访问IP详情 【totalPages:'+logDayData.totalPages+', page:'+logDayData.page+', totalCount:'+logDayData.totalCount+', logCount:'+logDayData.logCount+'】 ====================');
               var ipsTableData = [];
-              var logDayKeys = Object.keys(logDayData).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayData[b][2] - logDayData[a][2] : logDayData[a][2] - logDayData[b][2]});
+              var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayIpDatas[b][2] - logDayIpDatas[a][2] : logDayIpDatas[a][2] - logDayIpDatas[b][2]});
               for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
                 var ip = logDayKeys[j];
-                var ipCount = logDayData[ip][0];
-                var ipLocation = logDayData[ip][1];
+                var ipCount = logDayIpDatas[ip][0];
+                var ipLocation = logDayIpDatas[ip][1];
                 ipsTableData.push({
                   'IP': ip,
                   '访问次数': ipCount,
@@ -374,24 +375,39 @@
           for (var i=0, len=ipsStatsDataDays.length; i<len; i++) {
             var logDay = ipsStatsDataDays[i];
             var logDayData = ipsStatsData[logDay];
+            var logDayIpDatas = logDayData.ipDatas;
             var logDayEle = document.createElement('div');
             logDayEle.className = ipsStatsKey+'-log-day';
+            logDayEle.setAttribute('data-day', logDay);
+            logDayEle.setAttribute('data-total-pages', logDayData.totalPages);
+            logDayEle.setAttribute('data-current-page', logDayData.page);
+            logDayEle.setAttribute('data-total-count', logDayData.totalCount);
+            logDayEle.setAttribute('data-log-count', logDayData.logCount);
+            logDayEle.setAttribute('data-page-size', logDayData.pageSize);
             logDayEle.innerHTML = '<h5 class="'+ipsStatsKey+'-log-day-title" ><span class="day-content">'+logDay+'</span><button class="'+ipsStatsKey+'-log-day-ul-fold-btn">折叠</button></h5>';
             ipsStatsEle.appendChild(logDayEle);
             var logDayUlEle = document.createElement('ul');
             logDayUlEle.className = ipsStatsKey+'-log-day-ul';
             logDayEle.appendChild(logDayUlEle);
+            if (logDayData.page < logDayData.totalPages) {
+              var moreBoxEle = document.createElement('div');
+              moreBoxEle.className = ipsStatsKey+'-log-day-more-box';
+              logDayEle.appendChild(moreBoxEle);
 
-            var totalPvCount = 0; // 总访问次数
-            var totalIpCount = 0; // 总IP数
+              // 加载更多按钮
+              var loadMoreBtnEle = document.createElement('button');
+              loadMoreBtnEle.className = ipsStatsKey+'-log-day-load-more-btn';
+              loadMoreBtnEle.innerHTML = '加载更多';
+              loadMoreBtnEle.setAttribute('data-day', logDay);
+              loadMoreBtnEle.setAttribute('data-page', logDayData.page+1);
+              moreBoxEle.appendChild(loadMoreBtnEle);
+            }
 
-            var logDayKeys = Object.keys(logDayData).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayData[b][2] - logDayData[a][2] : logDayData[a][2] - logDayData[b][2]});
+            var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayIpDatas[b][2] - logDayIpDatas[a][2] : logDayIpDatas[a][2] - logDayIpDatas[b][2]});
             for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
               var ip = logDayKeys[j];
-              var ipCount = logDayData[ip][0];
-              var ipLocation = logDayData[ip][1];
-              totalPvCount += ipCount;
-              totalIpCount++;
+              var ipCount = logDayIpDatas[ip][0];
+              var ipLocation = logDayIpDatas[ip][1];
               // console.debug('ipsStatsData => ip:', ip, 'count:', ipCount, 'location:', ipLocation);
               var ipLiEle = document.createElement('li');
               ipLiEle.className = ipsStatsKey+'-log-day-ip-li';
@@ -410,7 +426,7 @@
               logDayUlEle.appendChild(ipLiEle);
             }
 
-            logDayEle.querySelector('.'+ipsStatsKey+'-log-day-title').innerHTML += '<span class="total-pv-count-content">（'+totalIpCount+'个IP访问'+totalPvCount+'次）</span>';
+            logDayEle.querySelector('.'+ipsStatsKey+'-log-day-title').innerHTML += '<span class="total-pv-count-content">（'+logDayData.totalCount+'个IP访问'+logDayData.logCount+'次）</span>';
           }
         }
 
@@ -748,7 +764,7 @@
     delete opts.site_page_date_range;
     if (opts.site_page_pathname && site_page_date_range !== opts.date_range) {
       if (opts.site_page_pathname && opts.is_only_page) { // 只请求 site_page 数据
-        var reqParams = {site_host: siteHost};
+        var reqParams = {site_host: siteHost, page_size: 2};
         Object.assign(reqParams, opts, {date_range: site_page_date_range});
         addExtraRequestData(reqParams);
         sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
@@ -773,7 +789,7 @@
       }
 
       // 请求 site 数据
-      var reqSiteParams = {site_host: siteHost};
+      var reqSiteParams = {site_host: siteHost, page_size: 2};
       opts.date_range && (reqSiteParams.date_range = opts.date_range);
       opts.filter_client_ip && (reqSiteParams.filter_client_ip = opts.filter_client_ip);
       addExtraRequestData(reqSiteParams);
@@ -790,7 +806,7 @@
       });
 
       // 请求 site_page 数据
-      var reqPageParams = {site_host: siteHost, site_page_pathname: opts.site_page_pathname};
+      var reqPageParams = {site_host: siteHost, site_page_pathname: opts.site_page_pathname, page_size: 2};
       site_page_date_range && (reqPageParams.date_range = site_page_date_range);
       opts.filter_client_ip && (reqPageParams.filter_client_ip = opts.filter_client_ip);
       reqPageParams.is_only_page = true;
@@ -810,7 +826,7 @@
       return;
     }
 
-    var reqParams = {site_host: siteHost};
+    var reqParams = {site_host: siteHost, page_size: 2};
     Object.assign(reqParams, opts);
     addExtraRequestData(reqParams);
     sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);

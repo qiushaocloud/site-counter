@@ -42,99 +42,25 @@ class SiteCounterHandler {
     }
   }
 
-  siteCounterIpsStats (siteHost, {sitePagePathname, dateRangeStr, isOnlyPage, filterClientIp} = {}, onCallback) {
-    let otherGrepFilters;
-    if (isOnlyPage) {
-      if (!sitePagePathname) return onCallback && onCallback(new Error('only get page ips stats, but site_page_pathname is empty'));
-      !otherGrepFilters && (otherGrepFilters = {});
-      otherGrepFilters.sitePagePathname = sitePagePathname;
-    }
-    
-    if (filterClientIp) {
-      !otherGrepFilters && (otherGrepFilters = {});
-      otherGrepFilters.clientIp = filterClientIp;
-    }
+  siteCounterIpsStats (
+    siteHost,
+    {
+      dateRangeStr,
+      sitePagePathname,
+      isOnlyPage,
+      filterClientIp,
+      pageSize,
+      pageNo
+    } = {},
+    onCallback
+  ) {
+    if (isOnlyPage && !sitePagePathname)
+      return onCallback && onCallback(new Error('only get page ips stats, but site_page_pathname is empty'));
 
     this._concurrencyTaskController.addTask(() => {
-      return this._getSiteCounterIpsLogs(siteHost, dateRangeStr, otherGrepFilters)
-        .then((ipLogs) => {
-          const resResult = {
-            site_host: siteHost,
-            site_ips: {},
-            page_ips: {}
-          }; // {site_ips: {{[logDay]:{[ip]:[count,ipLocation,lastTs]}}}, page_ips: {[logDay]:{[ip]:[count,ipLocation,lastTs]}}}
-          sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
-
-          const clinetIpInfos = {};
-
-          for (const ipLog of ipLogs) {
-            const {
-              ts: logTs,
-              clientIp: logClientIp,
-              siteHost: logSiteHost,
-              sitePagePathname: logSitePagePathname,
-              incrType: logIncrType,
-            } = ipLog;
-
-            const logDay = utils.getCurrFormatTs(logTs, undefined, true);
-            if (siteHost !== logSiteHost) continue;
-
-            if (
-              sitePagePathname
-              && sitePagePathname === logSitePagePathname
-              && (!logIncrType || logIncrType === 'page' || logIncrType === 'siteandpage')
-            ) {
-              clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
-              let dayPageIps = resResult.page_ips[logDay];
-              !dayPageIps && (dayPageIps = resResult.page_ips[logDay] = {});
-              !dayPageIps[logClientIp] && (dayPageIps[logClientIp] = [0, '', logTs]);
-              dayPageIps[logClientIp][0] = dayPageIps[logClientIp][0] + 1;
-              (logTs > dayPageIps[logClientIp][2]) && (dayPageIps[logClientIp][2] = logTs);
-            }
-
-            if (isOnlyPage) continue;
-            if (!(!logIncrType || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
-            clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
-            let daySiteIps = resResult.site_ips[logDay];
-            !daySiteIps && (daySiteIps = resResult.site_ips[logDay] = {});
-            !daySiteIps[logClientIp] && (daySiteIps[logClientIp] = [0, '', logTs]);
-            daySiteIps[logClientIp][0] = daySiteIps[logClientIp][0] + 1;
-            (logTs > daySiteIps[logClientIp][2]) && (daySiteIps[logClientIp][2] = logTs);
-          }
-
-          isOnlyPage && delete resResult.site_ips;
-          !sitePagePathname && delete resResult.page_ips;
-
-          const proArr = [];
-          for (const logClientIp in clinetIpInfos) {
-            const pro = ipServiceInstance.search(logClientIp, {isCache: true})
-              .then((resopnse) => {
-                clinetIpInfos[logClientIp] = resopnse.code === 200 ? resopnse.data.location : '';
-              })
-            proArr.push(pro);
-          }
-
-          Promise.all(proArr).then(() => {
-            if (resResult.site_ips) {
-              for (const logDayTmp in resResult.site_ips) {
-                const daySiteIpsTmp = resResult.site_ips[logDayTmp];
-                for (const logClientIpTmp in daySiteIpsTmp) {
-                  daySiteIpsTmp[logClientIpTmp][1] = clinetIpInfos[logClientIpTmp] || '';
-                }
-              }
-            }
-
-            if (resResult.page_ips) {
-              for (const logDayTmp in resResult.page_ips) {
-                const dayPageIpsTmp = resResult.page_ips[logDayTmp];
-                for (const logClientIpTmp in dayPageIpsTmp) {
-                  dayPageIpsTmp[logClientIpTmp][1] = clinetIpInfos[logClientIpTmp] || '';
-                }
-              }
-            }
-
-            onCallback && onCallback(undefined, resResult);
-          });
+      return this._getSiteCounterIpsStatsOrIpLogs('IpsStats', {siteHost, dateRangeStr, sitePagePathname, isOnlyPage, filterClientIp, pageSize, pageNo})
+        .then((resResult) => {
+          onCallback && onCallback(undefined, resResult);
         })
         .catch((err) => {
           onCallback && onCallback(err);
@@ -142,86 +68,25 @@ class SiteCounterHandler {
     });
   }
 
-  siteCounterLogs (siteHost, {sitePagePathname, dateRangeStr, isOnlyPage, filterClientIp} = {}, onCallback) {
-    let otherGrepFilters;
-    if (isOnlyPage) {
-      if (!sitePagePathname) return onCallback && onCallback(new Error('only get page ips stats, but site_page_pathname is empty'));
-      !otherGrepFilters && (otherGrepFilters = {});
-      otherGrepFilters.sitePagePathname = sitePagePathname;
-    }
-    
-    if (filterClientIp) {
-      !otherGrepFilters && (otherGrepFilters = {});
-      otherGrepFilters.clientIp = filterClientIp;
-    }
-
+  siteCounterLogs (
+    siteHost,
+    {
+      dateRangeStr,
+      sitePagePathname,
+      isOnlyPage,
+      filterClientIp,
+      pageSize,
+      pageNo
+    } = {},
+    onCallback
+  ) {
+    if (isOnlyPage && !sitePagePathname)
+      return onCallback && onCallback(new Error('only get page ips logs, but site_page_pathname is empty'));
+  
     this._concurrencyTaskController.addTask(() => {
-      return this._getSiteCounterIpsLogs(siteHost, dateRangeStr, otherGrepFilters)
-        .then((ipLogs) => {
-          const resResult = {
-            site_host: siteHost,
-            site_logs: [],
-            page_logs: []
-          }; // {site_logs: [[ts, siteHost, clientIp, ipLocation, userAgent]], page_logs: [[ts, siteHost, sitePagePathname, clientIp, ipLocation, userAgent]]}
-          sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
-
-          const clinetIpInfos = {};
-
-          ipLogs.sort((a, b) => a.ts - b.ts); // 通过时间戳进行升序排序
-          for (const ipLog of ipLogs) {
-            const { 
-              ts: logTs,
-              clientIp: logClientIp,
-              siteHost: logSiteHost, 
-              sitePagePathname: logSitePagePathname,
-              userAgent: logUserAgent,
-              incrType: logIncrType,
-              href: logHref
-            } = ipLog;
-            if (siteHost !== logSiteHost) continue;
-
-            if (
-              sitePagePathname
-              && sitePagePathname === logSitePagePathname
-              && (!logIncrType || logIncrType === 'page' || logIncrType === 'siteandpage')
-            ) {
-              clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
-              resResult.page_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
-            }
-
-            if (isOnlyPage) continue;
-            if (!(!logIncrType || logIncrType ==='site' || logIncrType ==='siteandpage')) continue;
-            clinetIpInfos[logClientIp] === undefined && (clinetIpInfos[logClientIp] = '');
-            resResult.site_logs.push([logTs, logClientIp, '', logUserAgent, logHref]);
-          }
-
-          isOnlyPage && delete resResult.site_logs;
-          !sitePagePathname && delete resResult.page_logs;
-
-          const proArr = [];
-          for (const logClientIp in clinetIpInfos) {
-            const pro = ipServiceInstance.search(logClientIp, {isCache: true})
-              .then((resopnse) => {
-                clinetIpInfos[logClientIp] = resopnse.code === 200 ? resopnse.data.location : '';
-              })
-            proArr.push(pro);
-          }
-
-          Promise.all(proArr).then(() => {
-            if (resResult.site_logs && resResult.site_logs.length) {
-              for (const logTmp of resResult.site_logs) {
-                logTmp[2] = clinetIpInfos[logTmp[1]] || '';
-              }
-            }
-
-            if (resResult.page_logs && resResult.page_logs.length) {
-              for (const logTmp of resResult.page_logs) {
-                logTmp[2] = clinetIpInfos[logTmp[1]] || '';
-              }
-            }
-
-            onCallback && onCallback(undefined, resResult);
-          });
+      return this._getSiteCounterIpsStatsOrIpLogs('IpLogs', {siteHost, dateRangeStr, sitePagePathname, isOnlyPage, filterClientIp, pageSize, pageNo})
+        .then((resResult) => {
+          onCallback && onCallback(undefined, resResult);
         })
         .catch((err) => {
           onCallback && onCallback(err);
@@ -351,127 +216,225 @@ class SiteCounterHandler {
     return resResult;
   }
 
-  _getSiteCounterIpsLogs (siteHost, dateRangeStr, otherGrepFilters, pageNum = 1, pageSize = 1000) {
-    log.debug('_getSiteCounterIpsLogs siteHost:', siteHost, ' ,dateRangeStr:', dateRangeStr, ' ,otherGrepFilters:', otherGrepFilters, ' ,pageNum:', pageNum, ' ,pageSize:', pageSize);
-    return new Promise((resolve, reject) => {
-      try {
-        const filterDayArr = [utils.getCurrFormatTs(undefined, undefined, true)];
-        if (dateRangeStr) {
-          // dateRangeStr: 最多一个月以内的日期范围，格式如：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
-          filterDayArr.length = 0;
-          try {
-            const dateRangeArr = dateRangeStr.trim().split(',');
-            for (const item of dateRangeArr) {
-              if (/^\d+days$/.test(item)) { // 多少天内
-                let days = parseInt(item.replace('days', ''));
-                if (isNaN(days) || days <= 0) continue;
-                days > 31 && (days = 31);
-                const startTs = Date.now() - (days-1) * 24 * 60 * 60 * 1000;
-                const endTs = Date.now();
-                const itemRange = utils.getDateRange(utils.getCurrFormatTs(startTs, undefined, true), utils.getCurrFormatTs(endTs, undefined, true), days);
-                for (const day of itemRange) {
-                  if (filterDayArr.includes(day)) continue;
-                  filterDayArr.push(day);
-                }
-                continue;
-              }
+  async _getSiteCounterIpsStatsOrIpLogs (typeName, {
+    siteHost,
+    dateRangeStr,
+    sitePagePathname,
+    isOnlyPage,
+    filterClientIp,
+    pageSize = 200,
+    pageNo = 1
+  }) {
+    let methodNmae = typeName === 'IpsStats' ? '_getSiteCounterIpsStats' : '_getSiteCounterIpLogs';
+    log.debug(
+      methodNmae+' siteHost:', siteHost, ' ,dateRangeStr:', dateRangeStr, ' ,sitePagePathname:', sitePagePathname,
+      ' ,isOnlyPage:', isOnlyPage, ' ,filterClientIp:', filterClientIp, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo
+    );
+    try {
+      if (isOnlyPage && !sitePagePathname) throw new Error('only get page ips stats or logs, but site_page_pathname is empty');
 
-              if (item.includes('to')) { // 日期范围
-                const [startDay, endDay] = item.trim().split('to');
-                const itemRange = utils.getDateRange(startDay.trim(), endDay.trim(), 31)
-                for (const day of itemRange) {
-                  if (filterDayArr.includes(day)) continue;
-                  filterDayArr.push(day);
-                }
-                continue;
+      const filterDayArr = [utils.getCurrFormatTs(undefined, undefined, true)];
+      if (dateRangeStr) {
+        // dateRangeStr: 最多一个月以内的日期范围，格式如：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
+        filterDayArr.length = 0;
+        try {
+          const dateRangeArr = dateRangeStr.trim().split(',');
+          for (const item of dateRangeArr) {
+            if (/^\d+days$/.test(item)) { // 多少天内
+              let days = parseInt(item.replace('days', ''));
+              if (isNaN(days) || days <= 0) continue;
+              days > 31 && (days = 31);
+              const startTs = Date.now() - (days-1) * 24 * 60 * 60 * 1000;
+              const endTs = Date.now();
+              const itemRange = utils.getDateRange(utils.getCurrFormatTs(startTs, undefined, true), utils.getCurrFormatTs(endTs, undefined, true), days);
+              for (const day of itemRange) {
+                if (filterDayArr.includes(day)) continue;
+                filterDayArr.push(day);
               }
-              
-              if (filterDayArr.includes(item)) continue;
-              filterDayArr.push(item);
+              continue;
             }
-          } catch (err) {
-            log.error('_getSiteCounterIpsLogs dateRangeStr catch error:', err, siteHost, dateRangeStr);
-          }
-    
-          if (!filterDayArr.length) {
-            log.error('_getSiteCounterIpsLogs date_range format error, dateRangeStr is empty', siteHost, dateRangeStr);
-            return reject(new Error('date_range format error'));
-          }
-        }
 
-        let condition = `site_host = '${siteHost}'`;
-        if (otherGrepFilters && Object.keys(otherGrepFilters).length) {
-          for (const filterKey in otherGrepFilters) {
-            const filterValue = otherGrepFilters[filterKey];
-            if (filterValue === undefined || filterValue === null) continue;
-            condition += ` AND ${filterKey} = '${filterValue}'`;
-          }
-        }
-        dbServiceInstance.getPaginatedSiteCounterIpRecords({pageSize: pageSize, page: pageNum, condition})
-          .then((res) => {
-            const { records, pageSize, page, totalPages, hasNextPage, hasPrevPage } = res;
-          })
-          .catch((err) => {
-             log.error('_getSiteCounterIpsLogs getPaginatedSiteCounterIpRecords catch error:', err, siteHost, dateRangeStr, otherGrepFilters);
-             reject(err);
-           });
-        
-        // log.debug('_getSiteCounterIpsLogs cmd:', cmd, ' ,tmpFilePath:', tmpFilePath);
-        // exec(cmd, (err, stdout, stderr) => {
-        //   if (err || stderr) {
-        //     fs.unlink(tmpFilePath, () => {});
-        //     log.error('_getSiteCounterIpsLogs exec error:', err, stderr, stdout, ' ,cmd:', cmd);
-        //     resolve([]);
-        //     return;
-        //   }
-
-        //   log.debug('_getSiteCounterIpsLogs exec success:', stdout, ' ,cmd:', cmd);
-        //   fs.readFile(tmpFilePath, 'utf8', (readErr, readStdout) => {
-        //     fs.unlink(tmpFilePath, () => {});
-        //     if (readErr)
-        //       log.error('_getSiteCounterIpsLogs readFile error:', readErr, ' ,tmpFilePath:', tmpFilePath);
-        //     else
-        //       log.debug('_getSiteCounterIpsLogs readFile success ,tmpFilePath:', tmpFilePath);
+            if (item.includes('to')) { // 日期范围
+              const [startDay, endDay] = item.trim().split('to');
+              const itemRange = utils.getDateRange(startDay.trim(), endDay.trim(), 31)
+              for (const day of itemRange) {
+                if (filterDayArr.includes(day)) continue;
+                filterDayArr.push(day);
+              }
+              continue;
+            }
             
-        //     const ipLogs = [];
-        //     const resArr = !readStdout ? [] : readStdout.trim().split('\n');
-        //     for (const line of resArr) {
-        //       // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:34:30.208] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost  ,sitePagePathname:/common-static/qiushaocloud-site-counter-test-demo.html  ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_2  ,incrType:siteandpage  ,href:https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html
-        //       // line: /Users/qiushaocloud/Desktop/Codes/qiushao-git-codes/site-counter/logs/site-counter-ips.log.2024-05-23:[2024-05-23T09:36:19.614] [INFO] RequestIps - request post /site_counter api success  ,siteHost:localhost   ,clientIp:::1  ,user-agent:PostmanRuntime/7.35.0  ,apiId:1716687255951_4  ,incrType:siteandpage  ,href:https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html
-        //       try {
-        //         const lineMatchArr = line.trim().replace(/^.*\/site-counter-ips.log.\d{4}-\d{2}-\d{2}:/, '').match(/^\[(.*?)\] \[(.*?)\] RequestIps - request post \/site_counter api success(  ,siteHost:.*?)?(  ,sitePagePathname:.*?)?(  ,clientIp:.*?)?(  ,user-agent:.*?)?(  ,apiId:.*?)?(  ,incrType:.*?)?(  ,href:.*?)?$/);
-        //         if (!lineMatchArr) continue;
-        
-        //         const ts = new Date(lineMatchArr[1].trim()).getTime();
-        //         const siteHost = lineMatchArr[3] ? lineMatchArr[3].replace(',siteHost:', '').trim() : '';
-        //         const sitePagePathname = lineMatchArr[4] ? lineMatchArr[4].replace(',sitePagePathname:', '').trim() : '';
-        //         const clientIp = lineMatchArr[5] ? lineMatchArr[5].replace(',clientIp:', '').trim() : '';
-        //         const userAgent = lineMatchArr[6] ? lineMatchArr[6].replace(',user-agent:', '').trim() : '';
-        //         const apiId = lineMatchArr[7] ? lineMatchArr[7].replace(',apiId:', '').trim() : '';
-        //         const incrType = lineMatchArr[8] ? lineMatchArr[8].replace(',incrType:', '').trim() : '';
-        //         const href = lineMatchArr[9] ? lineMatchArr[9].replace(',href:', '').trim() : '';
+            if (filterDayArr.includes(item)) continue;
+            filterDayArr.push(item);
+          }
+        } catch (err) {
+          log.error(methodNmae+' dateRangeStr catch error:', err, siteHost, dateRangeStr);
+        }
   
-        //         const ipLog = {
-        //           ts, siteHost, sitePagePathname,
-        //           clientIp, userAgent, apiId,
-        //           incrType, href
-        //         }
-  
-        //         ipLogs.push(ipLog);
-        //       } catch (err) {
-        //         log.error('_getSiteCounterIpsLogs lineMatchArr catch error:', err, line, siteHost);
-        //       }
-        //     }
-      
-        //     log.debug('_getSiteCounterIpsLogs ipLogsLength:', ipLogs.length, ' ,resArrLength:', resArr.length, ' ,siteHost:', siteHost, ' ,dateRangeStr:', dateRangeStr, ' ,otherGrepFilters:', otherGrepFilters);
-        //     resolve(ipLogs);
-        //   });
-        // });
-      } catch (err) {
-        log.error('_getSiteCounterIpsLogs catch error:', err, siteHost, dateRangeStr, otherGrepFilters);
-        reject(err);
+        if (!filterDayArr.length) {
+          log.error(methodNmae+' date_range format error, dateRangeStr is empty', siteHost, dateRangeStr);
+          throw new Error('date_range format error');
+        }
       }
-    });
+
+      let commonCondition = `site_host = '${siteHost}'`;
+      filterDayArr.length && (commonCondition += ` AND part_date IN ('${filterDayArr.join("','")}')`);
+      filterClientIp && (commonCondition += ` AND ip = '${filterClientIp}'`);
+
+      // typeName === 'IpsStats': {site_host, site_ips?: {[logDay]: {totalPages, totalCount, ipCount, pageSize, pageNo, ipDatas:{[ip]:{ip_location, count, lastTs}}}}, page_ips?: {[logDay]: {totalPages, totalCount, pageSize, pageNo, ipDatas:{[ip]:{ip_location, count, lastTs}}}}, site_page_pathname?}
+      // typeName === 'IpLogs': {site_host, site_logs?: {totalPages, totalCount, pageSize, pageNo, logDatas: [[ts, ip, ip_location, user_agent, href]]}, page_logs?: {totalPages, totalCount, pageSize, pageNo, logDatas: [[ts, ip, ip_location, user_agent, href]]}, site_page_pathname?}
+      const resResult = {site_host: siteHost};
+      sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
+
+      if (!isOnlyPage) {
+        const siteCondition = commonCondition;
+        if (typeName === 'IpsStats') {
+          resResult.site_ips = await dbServiceInstance.getPaginatedSiteCounterIpsStats({pageSize, pageNo: pageNo, condition: siteCondition});
+        } else {
+          resResult.site_logs = await dbServiceInstance.getPaginatedSiteCounterIpLogs({pageSize, pageNo: pageNo, condition: siteCondition});
+        }
+        log.debug(methodNmae+' getPaginatedSiteCounterIpsStats siteCondition success', pageSize, pageNo, siteCondition);
+      }
+
+      if (sitePagePathname) {
+        const sitePageCondition = `${commonCondition} AND page_pathname = '${sitePagePathname}'`;
+        if (typeName === 'IpsStats') {
+          resResult.page_ips = await dbServiceInstance.getPaginatedSiteCounterIpsStats({pageSize, pageNo: pageNo, condition: sitePageCondition});
+        } else {
+          resResult.page_logs = await dbServiceInstance.getPaginatedSiteCounterIpLogs({pageSize, pageNo: pageNo, condition: sitePageCondition});
+        }
+        log.debug(methodNmae+' getPaginatedSiteCounterIpsStats sitePageCondition success', pageSize, pageNo, sitePageCondition);
+      }
+
+      // 获取所有ip的地理位置信息
+      try {
+        const awaitIpLocations = {};
+
+        if (typeName === 'IpsStats') {
+          if (resResult.site_ips) {
+            for (const logDay in resResult.site_ips) {
+              for (const ip in resResult.site_ips[logDay].ipDatas) {
+                if (!ip || awaitIpLocations[ip] !== undefined || resResult.site_ips[logDay].ipDatas[ip][0]) continue;
+                if (/^(::1|127\.0\.0\.1|0\.0\.0\.0)$/.test(ip)) {
+                  resResult.site_ips[logDay].ipDatas[ip][0] = 'localhost';
+                  continue;
+                }
+                awaitIpLocations[ip] = '';
+              }
+            }
+          }
+        } else {
+          if (resResult.site_logs) {
+            for (const logTmp of resResult.site_logs.logDatas) {
+              if (!logTmp[1] || awaitIpLocations[logTmp[1]] !== undefined || logTmp[2]) continue;
+              if (/^(::1|127\.0\.0\.1|0\.0\.0\.0)$/.test(logTmp[1])) {
+                logTmp[2] = 'localhost';
+                continue;
+              }
+              awaitIpLocations[logTmp[1]] = '';
+            }
+          }
+        }
+        
+        if (typeName === 'IpsStats') {
+          if (resResult.page_ips) {
+            for (const logDay in resResult.page_ips) {
+              for (const ip in resResult.page_ips[logDay].ipDatas) {
+                if (!ip || awaitIpLocations[ip] !== undefined || resResult.page_ips[logDay].ipDatas[ip][0]) continue;
+                if (/^(::1|127\.0\.0\.1|0\.0\.0\.0)$/.test(ip)) {
+                  resResult.page_ips[logDay].ipDatas[ip][0] = 'localhost';
+                  continue;
+                }
+                awaitIpLocations[ip] = '';
+              }
+            }
+          }
+        } else {
+          if (resResult.page_logs) {
+            for (const logTmp of resResult.page_logs.logDatas) {
+              if (!logTmp[1] || awaitIpLocations[logTmp[1]] !== undefined || logTmp[2]) continue;
+              if (/^(::1|127\.0\.0\.1|0\.0\.0\.0)$/.test(logTmp[1])) {
+                logTmp[2] = 'localhost';
+                continue;
+              }
+              awaitIpLocations[logTmp[1]] = '';
+            }
+          }
+        }
+  
+        const proArr = [];
+        for (const ip in awaitIpLocations) {
+          const pro = ipServiceInstance.search(ip, {isCache: true})
+           .then((resopnse) => {
+              awaitIpLocations[ip] = resopnse.code === 200 ? resopnse.data.location : '';
+            })
+          proArr.push(pro);
+        }
+  
+        await Promise.all(proArr);
+
+        if (typeName === 'IpsStats') {
+          if (resResult.site_ips) {
+            for (const logDayTmp in resResult.site_ips) {
+              const {ipDatas} = resResult.site_ips[logDayTmp];
+              for (const logIpTmp in ipDatas) {
+                if (ipDatas[logIpTmp][0]) continue;
+                ipDatas[logIpTmp][0] = awaitIpLocations[logIpTmp] || '';
+              }
+            }
+          }
+        } else {
+          if (resResult.site_logs) {
+            for (const logTmp of resResult.site_logs.logDatas) {
+              if (logTmp[2]) continue;
+              logTmp[2] = awaitIpLocations[logTmp[1]] || '';
+            }
+          }
+        }
+       
+        if (typeName === 'IpsStats') {
+          if (resResult.page_ips) {
+            for (const logDayTmp in resResult.page_ips) {
+              const {ipDatas} = resResult.page_ips[logDayTmp];
+              for (const logIpTmp in ipDatas) {
+                if (ipDatas[logIpTmp][0]) continue;
+                ipDatas[logIpTmp][0] = awaitIpLocations[logIpTmp] || '';
+              }
+            }
+          }
+        } else {
+          if (resResult.page_logs) {
+            for (const logTmp of resResult.page_logs.logDatas) {
+              if (logTmp[2]) continue;
+              logTmp[2] = awaitIpLocations[logTmp[1]] || '';
+            }
+          }
+        }
+
+        const updateProArr = [];
+        for (const logIpTmp in awaitIpLocations) {
+          const logIpLocationTmp = awaitIpLocations[logIpTmp];
+          if (!logIpLocationTmp) continue;
+          const updateCondition = `${commonCondition} AND ip_location != '${logIpLocationTmp}'${commonCondition.includes(`AND ip = '${logIpTmp}'`) ? '' : ` AND ip = '${logIpTmp}'`}`;
+          updateProArr.push(dbServiceInstance.updateSiteCounterIpRecords({ip_location: logIpLocationTmp}, updateCondition));
+        }
+        const updateProArrLen = updateProArr.length;
+        log.debug(methodNmae+' updateSiteCounterIpRecords start, updateProArrLen:', updateProArrLen);
+        Promise.all(updateProArr).then(() => {
+          log.debug(methodNmae+' updateSiteCounterIpRecords success, updateProArrLen:', updateProArrLen);
+        }).catch((err) => {
+          log.error(methodNmae+' updateSiteCounterIpRecords catch error:', err, ' ,updateProArrLen:', updateProArrLen);
+        });
+      } catch (ipLocationsCatchErr) {
+        log.error(methodNmae+' get ipLocations catch error:', ipLocationsCatchErr);
+      }
+      
+      log.debug(methodNmae+' success', siteHost, dateRangeStr, sitePagePathname, isOnlyPage, filterClientIp, pageSize, pageNo)
+      return resResult;
+    } catch (err) {
+      log.error(methodNmae+' catch error:', err, siteHost, dateRangeStr, sitePagePathname, isOnlyPage, filterClientIp, pageSize, pageNo);
+      throw err;
+    }
   }
 
   _printLog (method, ...args) {
