@@ -223,7 +223,8 @@ class SiteCounterHandler {
     isOnlyPage,
     filterClientIp,
     pageSize = 200,
-    pageNo = 1
+    pageNo = 1,
+    order = 'DESC' // ASC | DESC，默认 DESC
   }) {
     let methodNmae = typeName === 'IpsStats' ? '_getSiteCounterIpsStats' : '_getSiteCounterIpLogs';
     log.debug(
@@ -289,9 +290,11 @@ class SiteCounterHandler {
       if (!isOnlyPage) {
         const siteCondition = commonCondition;
         if (typeName === 'IpsStats') {
-          resResult.site_ips = await dbServiceInstance.getPaginatedSiteCounterIpsStats({pageSize, pageNo: pageNo, condition: siteCondition});
+          const extraFilter = `ORDER BY lastTs ${order}`;
+          resResult.site_ips = await dbServiceInstance.getPaginatedSiteCounterIpsStats({pageSize, pageNo: pageNo, condition: siteCondition, extraFilter});
         } else {
-          resResult.site_logs = await dbServiceInstance.getPaginatedSiteCounterIpLogs({pageSize, pageNo: pageNo, condition: siteCondition});
+          const extraFilter = `ORDER BY logts ${order}`;
+          resResult.site_logs = await dbServiceInstance.getPaginatedSiteCounterIpLogs({pageSize, pageNo: pageNo, condition: siteCondition, extraFilter});
         }
         log.debug(methodNmae+' getPaginatedSiteCounterIpsStats siteCondition success', pageSize, pageNo, siteCondition);
       }
@@ -299,9 +302,11 @@ class SiteCounterHandler {
       if (sitePagePathname) {
         const sitePageCondition = `${commonCondition} AND page_pathname = '${sitePagePathname}'`;
         if (typeName === 'IpsStats') {
-          resResult.page_ips = await dbServiceInstance.getPaginatedSiteCounterIpsStats({pageSize, pageNo: pageNo, condition: sitePageCondition});
+          const extraFilter = `ORDER BY lastTs ${order}`;
+          resResult.page_ips = await dbServiceInstance.getPaginatedSiteCounterIpsStats({pageSize, pageNo: pageNo, condition: sitePageCondition, extraFilter});
         } else {
-          resResult.page_logs = await dbServiceInstance.getPaginatedSiteCounterIpLogs({pageSize, pageNo: pageNo, condition: sitePageCondition});
+          const extraFilter = `ORDER BY logts ${order}`;
+          resResult.page_logs = await dbServiceInstance.getPaginatedSiteCounterIpLogs({pageSize, pageNo: pageNo, condition: sitePageCondition, extraFilter});
         }
         log.debug(methodNmae+' getPaginatedSiteCounterIpsStats sitePageCondition success', pageSize, pageNo, sitePageCondition);
       }
@@ -366,7 +371,7 @@ class SiteCounterHandler {
         for (const ip in awaitIpLocations) {
           const pro = ipServiceInstance.search(ip, {isCache: true})
            .then((resopnse) => {
-              awaitIpLocations[ip] = resopnse.code === 200 ? resopnse.data.location : '';
+              awaitIpLocations[ip] = resopnse.code === 200 ? resopnse.data.location || 'empty' : '';
             })
           proArr.push(pro);
         }

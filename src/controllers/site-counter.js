@@ -115,11 +115,13 @@ productGetRouter(router, '/site_counter_ips_stats', (apiId, req, res) => {
     is_only_page: isOnlyPageParam,
     filter_client_ip: filterClientIp,
     page_size: pageSizeParam,
-    page_no: pageNoParam
+    page_no: pageNoParam,
+    order: orderParam
   } = allParams;
   const isOnlyPage = isOnlyPageParam === undefined ? undefined : utils.toParseBoolean(isOnlyPageParam);
   const pageSize = pageSizeParam === undefined ? undefined : utils.toParseNumber(pageSizeParam);
   const pageNo = pageNoParam === undefined ? undefined : utils.toParseNumber(pageNoParam);
+  const order = orderParam ? orderParam.toUpperCase() : undefined;
 
   if (!siteHost) {
     log.error('invalid params, apiId:', apiId);
@@ -152,7 +154,8 @@ productGetRouter(router, '/site_counter_ips_stats', (apiId, req, res) => {
       isOnlyPage,
       filterClientIp,
       pageSize,
-      pageNo
+      pageNo,
+      order
     },
     (err, result) => {
       if (err) {
@@ -187,11 +190,13 @@ productGetRouter(router, '/site_counter_logs', (apiId, req, res) => {
     is_only_page: isOnlyPageParam,
     filter_client_ip: filterClientIp,
     page_size: pageSizeParam,
-    page_no: pageNoParam
+    page_no: pageNoParam,
+    order: orderParam
   } = allParams;
   const isOnlyPage = isOnlyPageParam === undefined ? undefined : utils.toParseBoolean(isOnlyPageParam);
   const pageSize = pageSizeParam === undefined ? undefined : utils.toParseNumber(pageSizeParam);
   const pageNo = pageNoParam === undefined ? undefined : utils.toParseNumber(pageNoParam);
+  const order = orderParam ? orderParam.toUpperCase() : undefined;
 
   if (!siteHost) {
     log.error('invalid params, apiId:', apiId);
@@ -224,7 +229,8 @@ productGetRouter(router, '/site_counter_logs', (apiId, req, res) => {
       isOnlyPage,
       filterClientIp,
       pageSize,
-      pageNo
+      pageNo,
+      order
     },
     (err, result) => {
       if (err) {

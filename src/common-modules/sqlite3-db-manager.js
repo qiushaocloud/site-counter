@@ -1,15 +1,15 @@
 const sqlite3 = require('sqlite3').verbose();
 
 class Sqlite3DBManager {
-    #log = console;
+    #log = null;
     
     /**
      * 构造函数，初始化数据库连接
      * @param {string} dbFilePath 数据库文件路径
      */
     constructor(dbFilePath, log) {
-        this.setLog(log);
-        this.#printlog('info', 'call constructor');
+        this.setLog(log || console);
+        this.#printlog('info', 'call constructor', dbFilePath, !!log);
         this.open(dbFilePath);
     }
 
@@ -393,16 +393,13 @@ class Sqlite3DBManager {
      * @returns {Promise} Promise 对象，返回分页查询结果
      */
     async getPaginatedRecords(tableName, pageNo, pageSize, condition = '', params = [], opts={}) {
-        const totalCount = await this.getRecordCount(tableName, condition, params);
-        const totalPages = Math.ceil(totalCount / pageSize);
-        pageNo < 1 && (pageNo = 1);
-        pageNo > totalPages && (pageNo = totalPages);
-
         const offset = (pageNo - 1) * pageSize;
         const sql = `SELECT ${opts.columnKeys ? opts.columnKeys.join(', ') : '*'} FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extraFilter ? ' '+opts.extraFilter : ''} LIMIT ${pageSize} OFFSET ${offset}`;
         
         if (opts.isGetTotalPages) {
             const records = await this.all(sql, params);
+            const totalCount = await this.getRecordCount(tableName, condition, params);
+            const totalPages = Math.ceil(totalCount / pageSize);
             return { totalPages, totalCount, pageSize, pageNo, records };
         }
 

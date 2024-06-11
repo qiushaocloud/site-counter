@@ -758,13 +758,13 @@
     onCallback
   ) {
     !opts && (opts = {});
-    // opts = {site_page_pathname, date_range, site_page_date_range, is_only_page, filter_client_ip}
+    // opts = {site_page_pathname, date_range, site_page_date_range, is_only_page, filter_client_ip, page_size, page_no, order}
 
     var site_page_date_range = opts.site_page_date_range;
     delete opts.site_page_date_range;
     if (opts.site_page_pathname && site_page_date_range !== opts.date_range) {
       if (opts.site_page_pathname && opts.is_only_page) { // 只请求 site_page 数据
-        var reqParams = {site_host: siteHost, page_size: 2};
+        var reqParams = {site_host: siteHost};
         Object.assign(reqParams, opts, {date_range: site_page_date_range});
         addExtraRequestData(reqParams);
         sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
@@ -789,7 +789,7 @@
       }
 
       // 请求 site 数据
-      var reqSiteParams = {site_host: siteHost, page_size: 2};
+      var reqSiteParams = {site_host: siteHost};
       opts.date_range && (reqSiteParams.date_range = opts.date_range);
       opts.filter_client_ip && (reqSiteParams.filter_client_ip = opts.filter_client_ip);
       addExtraRequestData(reqSiteParams);
@@ -806,7 +806,7 @@
       });
 
       // 请求 site_page 数据
-      var reqPageParams = {site_host: siteHost, site_page_pathname: opts.site_page_pathname, page_size: 2};
+      var reqPageParams = {site_host: siteHost, site_page_pathname: opts.site_page_pathname};
       site_page_date_range && (reqPageParams.date_range = site_page_date_range);
       opts.filter_client_ip && (reqPageParams.filter_client_ip = opts.filter_client_ip);
       reqPageParams.is_only_page = true;
@@ -826,7 +826,7 @@
       return;
     }
 
-    var reqParams = {site_host: siteHost, page_size: 2};
+    var reqParams = {site_host: siteHost};
     Object.assign(reqParams, opts);
     addExtraRequestData(reqParams);
     sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
@@ -838,7 +838,7 @@
     onCallback
   ) {
     !opts && (opts = {});
-    // opts = {site_page_pathname, date_range, is_only_page, filter_client_ip}
+    // opts = {site_page_pathname, date_range, is_only_page, filter_client_ip, page_size, page_no, order}
     var reqParams = {site_host: siteHost};
     Object.assign(reqParams, opts);
     addExtraRequestData(reqParams);
