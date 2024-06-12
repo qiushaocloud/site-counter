@@ -282,7 +282,7 @@ class SiteCounterHandler {
       filterDayArr.length && (commonCondition += ` AND part_date IN ('${filterDayArr.join("','")}')`);
       filterClientIp && (commonCondition += ` AND ip = '${filterClientIp}'`);
 
-      // typeName === 'IpsStats': {site_host, site_ips?: {[logDay]: {totalPages, totalCount, ipCount, pageSize, pageNo, ipDatas:{[ip]:{ip_location, count, lastTs}}}}, page_ips?: {[logDay]: {totalPages, totalCount, pageSize, pageNo, ipDatas:{[ip]:{ip_location, count, lastTs}}}}, site_page_pathname?}
+      // typeName === 'IpsStats': {site_host, site_ips?: {[logDay]: {totalPages, totalCount, ipCount, pageSize, pageNo, ipDatas:{[ip]:{count, ip_location, lastTs}}}}, page_ips?: {[logDay]: {totalPages, totalCount, pageSize, pageNo, ipDatas:{[ip]:{count, ip_location, lastTs}}}}, site_page_pathname?}
       // typeName === 'IpLogs': {site_host, site_logs?: {totalPages, totalCount, pageSize, pageNo, logDatas: [[ts, ip, ip_location, user_agent, href]]}, page_logs?: {totalPages, totalCount, pageSize, pageNo, logDatas: [[ts, ip, ip_location, user_agent, href]]}, site_page_pathname?}
       const resResult = {site_host: siteHost};
       sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
@@ -319,9 +319,9 @@ class SiteCounterHandler {
           if (resResult.site_ips) {
             for (const logDay in resResult.site_ips) {
               for (const ip in resResult.site_ips[logDay].ipDatas) {
-                if (!ip || awaitIpLocations[ip] !== undefined || resResult.site_ips[logDay].ipDatas[ip][0]) continue;
+                if (!ip || awaitIpLocations[ip] !== undefined || resResult.site_ips[logDay].ipDatas[ip][1]) continue;
                 if (/^(::1|127\.0\.0\.1|0\.0\.0\.0)$/.test(ip)) {
-                  resResult.site_ips[logDay].ipDatas[ip][0] = 'localhost';
+                  resResult.site_ips[logDay].ipDatas[ip][1] = 'localhost';
                   continue;
                 }
                 awaitIpLocations[ip] = '';
@@ -345,9 +345,9 @@ class SiteCounterHandler {
           if (resResult.page_ips) {
             for (const logDay in resResult.page_ips) {
               for (const ip in resResult.page_ips[logDay].ipDatas) {
-                if (!ip || awaitIpLocations[ip] !== undefined || resResult.page_ips[logDay].ipDatas[ip][0]) continue;
+                if (!ip || awaitIpLocations[ip] !== undefined || resResult.page_ips[logDay].ipDatas[ip][1]) continue;
                 if (/^(::1|127\.0\.0\.1|0\.0\.0\.0)$/.test(ip)) {
-                  resResult.page_ips[logDay].ipDatas[ip][0] = 'localhost';
+                  resResult.page_ips[logDay].ipDatas[ip][1] = 'localhost';
                   continue;
                 }
                 awaitIpLocations[ip] = '';
@@ -383,8 +383,8 @@ class SiteCounterHandler {
             for (const logDayTmp in resResult.site_ips) {
               const {ipDatas} = resResult.site_ips[logDayTmp];
               for (const logIpTmp in ipDatas) {
-                if (ipDatas[logIpTmp][0]) continue;
-                ipDatas[logIpTmp][0] = awaitIpLocations[logIpTmp] || '';
+                if (ipDatas[logIpTmp][1]) continue;
+                ipDatas[logIpTmp][1] = awaitIpLocations[logIpTmp] || '';
               }
             }
           }
@@ -402,8 +402,8 @@ class SiteCounterHandler {
             for (const logDayTmp in resResult.page_ips) {
               const {ipDatas} = resResult.page_ips[logDayTmp];
               for (const logIpTmp in ipDatas) {
-                if (ipDatas[logIpTmp][0]) continue;
-                ipDatas[logIpTmp][0] = awaitIpLocations[logIpTmp] || '';
+                if (ipDatas[logIpTmp][1]) continue;
+                ipDatas[logIpTmp][1] = awaitIpLocations[logIpTmp] || '';
               }
             }
           }

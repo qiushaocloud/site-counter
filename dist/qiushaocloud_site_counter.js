@@ -190,7 +190,9 @@
 
       var siteIpsStatsDateRange = (siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-date-range')) || undefined;
       var sitePageIpsStatsDateRange = (sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-date-range')) || undefined;
-      
+      var siteIpsStatsPageSize = (siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-page-size')) || undefined;
+      var sitePageIpsStatsPageSize = (sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-page-size')) || undefined;
+
       sitePageIpsStatsEle && !isReqedSitePageIpsStats && (apiIpsStatsOpts.site_page_pathname = sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || getSitePagePathname());
       (!siteIpsStatsEle || isReqedSiteIpsStats) && (apiIpsStatsOpts.is_only_page = true);
 
@@ -199,6 +201,12 @@
 
       if (sitePageIpsStatsDateRange && apiIpsStatsOpts.site_page_pathname)
         apiIpsStatsOpts.site_page_date_range = sitePageIpsStatsDateRange;
+
+      if (siteIpsStatsPageSize && !apiIpsStatsOpts.is_only_page && !isNaN(Number(siteIpsStatsPageSize)))
+        apiIpsStatsOpts.page_size = Number(siteIpsStatsPageSize);
+
+      if (sitePageIpsStatsPageSize && apiIpsStatsOpts.site_page_pathname && !isNaN(Number(sitePageIpsStatsPageSize)))
+        apiIpsStatsOpts.site_page_page_size = Number(sitePageIpsStatsPageSize);
 
       siteIpsStatsEle && !isReqedSiteIpsStats && (isReqedSiteIpsStats = true);
       sitePageIpsStatsEle && !isReqedSitePageIpsStats && (isReqedSitePageIpsStats = true);
@@ -248,7 +256,7 @@
               var logDayData = ipsStatsData[logDay];
               var logDayIpDatas = logDayData.ipDatas;
 
-              console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : sitePageTitle)+' '+logDay+' 访问IP详情 【totalPages:'+logDayData.totalPages+', page:'+logDayData.page+', totalCount:'+logDayData.totalCount+', logCount:'+logDayData.logCount+'】 ====================');
+              console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : sitePageTitle)+' '+logDay+' 访问IP详情 【totalPages:'+logDayData.totalPages+', pageNo:'+logDayData.pageNo+', totalCount:'+logDayData.totalCount+', logCount:'+logDayData.logCount+'】 ====================');
               var ipsTableData = [];
               var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayIpDatas[b][2] - logDayIpDatas[a][2] : logDayIpDatas[a][2] - logDayIpDatas[b][2]});
               for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
@@ -275,7 +283,7 @@
                 var ip = target.getAttribute('data-ip');
                 var day = target.getAttribute('data-day');
                 console.debug(ipsStatsKey+'-log-day-ip-detail-btn click, run requestQiushaocloudSiteCounterLogsApiByFilter => ip:', ip, 'day:', day);
-                window.requestQiushaocloudSiteCounterLogsApiByFilter(ipsStatsKey, day, ip, function (err, res) {
+                window.requestQiushaocloudSiteCounterLogsApiByFilter(ipsStatsKey, day, ip, 1, function (err, res) {
                   if (err) {
                     console.error(ipsStatsKey+'-log-day-ip-detail-btn click requestQiushaocloudSiteCounterLogsApiByFilter failure', ip, day);
                     return;
@@ -369,7 +377,38 @@
                 }
                 return;
               }
-            };
+
+              if (target.nodeName === 'BUTTON' && target.classList.contains(ipsStatsKey+'-log-day-load-more-btn')) {
+                var logDayEle = findParentsNode(target, '.'+ipsStatsKey+'-log-day');
+                if (!logDayEle) return;
+                var logDay = logDayEle.getAttribute('data-day');
+                var pageNo = target.getAttribute('data-page');
+                console.debug(ipsStatsKey+'-log-day-load-more-btn click, run requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter => day:', logDay, 'pageNo:', pageNo);
+                window.requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter(ipsStatsKey, logDay, pageNo, function (err, res) {
+                  if (err) {
+                    console.error(ipsStatsKey+'-log-day-load-more-btn click requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter failure', logDay, pageNo);
+                    return;
+                  }
+
+                  console.debug(ipsStatsKey+'-log-day-load-more-btn click requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter success', logDay, pageNo);
+                  var apiResult = res;
+                  var ipsStatsData = apiResult.ips_stats; // {[logDay]:{[ip]:[count,ipLocation]}}
+                  var ipsTableData = [];
+                  var logDayKeys = Object.keys(ipsStatsData[logDay].ipDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? ipsStatsData[logDay].ipDatas[b][2] - ipsStatsData[logDay].ipDatas[a][2] : ipsStatsData[logDay].ipDatas[a][2] - ipsStatsData[logDay].ipDatas[b][2]});
+                  for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
+                    var ip = logDayKeys[j];
+                    var ipCount = ipsStatsData[logDay].ipDatas[ip][0];
+                    var ipLocation = ipsStatsData[logDay].ipDatas[ip][1];
+                    ipsTableData.push({
+                      'IP': ip,
+                      '访问次数': ipCount,
+                      'IP信息': ipLocation
+                    });
+                  }
+                });
+                return;
+              }
+            }
           })(ipsStatsKey, ipsStatsEle);
 
           for (var i=0, len=ipsStatsDataDays.length; i<len; i++) {
@@ -380,7 +419,7 @@
             logDayEle.className = ipsStatsKey+'-log-day';
             logDayEle.setAttribute('data-day', logDay);
             logDayEle.setAttribute('data-total-pages', logDayData.totalPages);
-            logDayEle.setAttribute('data-current-page', logDayData.page);
+            logDayEle.setAttribute('data-page-no', logDayData.pageNo);
             logDayEle.setAttribute('data-total-count', logDayData.totalCount);
             logDayEle.setAttribute('data-log-count', logDayData.logCount);
             logDayEle.setAttribute('data-page-size', logDayData.pageSize);
@@ -389,7 +428,7 @@
             var logDayUlEle = document.createElement('ul');
             logDayUlEle.className = ipsStatsKey+'-log-day-ul';
             logDayEle.appendChild(logDayUlEle);
-            if (logDayData.page < logDayData.totalPages) {
+            if (logDayData.pageNo < logDayData.totalPages) {
               var moreBoxEle = document.createElement('div');
               moreBoxEle.className = ipsStatsKey+'-log-day-more-box';
               logDayEle.appendChild(moreBoxEle);
@@ -399,7 +438,7 @@
               loadMoreBtnEle.className = ipsStatsKey+'-log-day-load-more-btn';
               loadMoreBtnEle.innerHTML = '加载更多';
               loadMoreBtnEle.setAttribute('data-day', logDay);
-              loadMoreBtnEle.setAttribute('data-page', logDayData.page+1);
+              loadMoreBtnEle.setAttribute('data-page', logDayData.pageNo+1);
               moreBoxEle.appendChild(loadMoreBtnEle);
             }
 
@@ -436,52 +475,63 @@
   }, 100);
 
   /** 
-   * 请求日志API
+   * 请求分页IP统计API
    * @param filterType {site|site-page} 日志类型，'site' |'site-page'
    * @param filterDay {string} 哪一天日志，格式：'2024-05-06'
-   * @param filterIp {string} [可选]过滤的客户端IP
+   * @param pageNo {number} [可选]第几页，默认1
    * @param onCallback {function} [可选]请求成功回调函数，参数：(err, res)
    */
-  window.requestQiushaocloudSiteCounterLogsApiByFilter = function(
+  window.requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter = function(
     filterType,
     filterDay,
-    filterIp,
+    pageNo,
     onCallback
   ) {
-    console.debug('requestQiushaocloudSiteCounterLogsApiByFilter:', filterType, filterIp, filterDay, !!onCallback);
+    console.debug('call requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter', filterType, filterDay, pageNo, !!onCallback);
     if (!(filterType && filterDay && /^(site|site-page)$/.test(filterType) && /^\d{4}-\d{2}-\d{2}$/.test(filterDay))) {
-      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: invalid params', filterType, filterDay, filterIp);
-      return typeof onCallback === 'function' && onCallback('requestQiushaocloudSiteCounterLogsApiByFilter err: invalid params', {});
+      console.error('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err: invalid params', filterType, filterDay, pageNo);
+      return typeof onCallback === 'function' && onCallback('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err: invalid params');
     }
 
     var siteIpsStatsEle = document.getElementById('qiushaocloud_sitecounter_value_site_ips_stats');
     var sitePageIpsStatsEle = document.getElementById('qiushaocloud_sitecounter_value_site_page_ips_stats');
 
     if (filterType === 'site' && !siteIpsStatsEle) {
-      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist', filterType, filterDay, filterIp);
-      return typeof onCallback === 'function' && onCallback('is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist', {});
+      console.error('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err: is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist', filterType, filterDay, pageNo);
+      return typeof onCallback === 'function' && onCallback('is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist');
     }
 
     if (filterType === 'site-page' && !sitePageIpsStatsEle) {
-      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', filterType, filterDay, filterIp);
-      return typeof onCallback === 'function' && onCallback('is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', {});
+      console.error('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err: is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', filterType, filterDay, pageNo);
+      return typeof onCallback === 'function' && onCallback('is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist');
     }
 
-    var apiLogsOpts = {date_range: filterDay}; // {site_page_pathname, date_range, is_only_page, filter_client_ip}
-    filterIp && (apiLogsOpts.filter_client_ip = filterIp);
+    var apiIpsStatsOpts = {date_range: filterDay}; // {site_page_pathname, date_range, is_only_page, page_no}
+    pageNo !== undefined && !isNaN(pageNo) && (apiIpsStatsOpts.page_no = pageNo);
 
     if (sitePageIpsStatsEle && filterType === 'site-page') {
-      apiLogsOpts.site_page_pathname = sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || getSitePagePathname();
-      apiLogsOpts.is_only_page = true;
+      apiIpsStatsOpts.site_page_pathname = sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || getSitePagePathname();
+      apiIpsStatsOpts.is_only_page = true;
+      var pageSize = sitePageIpsStatsEle.getAttribute('data-page-size');
+      if (pageSize) {
+        pageSize = Number(pageSize);
+        !isNaN(pageSize) && (apiIpsStatsOpts.page_size = pageSize);
+      }
+    } else if (siteIpsStatsEle && filterType ==='site') {
+      var pageSize = siteIpsStatsEle.getAttribute('data-page-size');
+      if (pageSize) {
+        pageSize = Number(pageSize);
+        !isNaN(pageSize) && (apiIpsStatsOpts.page_size = pageSize);
+      }
     }
 
-    reqSiteCounterLogsAPI(getSiteHost(), apiLogsOpts, function (err, res) {
+    reqSiteCounterIpsStatsAPI(getSiteHost(), apiIpsStatsOpts, function (err, res) {
       if (err) {
-        console.error('requestQiushaocloudSiteCounterLogsApiByFilter err:', err, filterType, filterDay, filterIp);
-        sendNotice('api:get:site_counter_logs:ip', {
+        console.error('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err:', err, filterType, filterDay, pageNo);
+        sendNotice('api:get:site_counter_ips_stats:pagination', {
           filterType,
           filterDay,
-          filterIp,
+          pageNo,
           err: err,
           res: res
         });
@@ -489,12 +539,94 @@
         return;
       }
 
-      // console.debug('requestQiushaocloudSiteCounterLogsApiByFilter res:', res, filterType, filterDay, filterIp);
+      // console.debug('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter res:', res, filterType, filterDay, pageNo);
+      var apiResult = JSON.parse(res);
+      sendNotice('api:get:site_counter_ips_stats:pagination', {
+        filterType,
+        filterDay,
+        pageNo,
+        res: apiResult
+      });
+      typeof onCallback === 'function' && onCallback(null, apiResult);
+    });
+  }
+
+  /** 
+   * 请求日志API
+   * @param filterType {site|site-page} 日志类型，'site' |'site-page'
+   * @param filterDay {string} 哪一天日志，格式：'2024-05-06'
+   * @param filterIp {string} [可选]过滤的客户端IP
+   * @param pageNo {number} [可选]第几页，默认1
+   * @param onCallback {function} [可选]请求成功回调函数，参数：(err, res)
+   */
+  window.requestQiushaocloudSiteCounterLogsApiByFilter = function(
+    filterType,
+    filterDay,
+    filterIp,
+    pageNo,
+    onCallback
+  ) {
+    console.debug('call requestQiushaocloudSiteCounterLogsApiByFilter', filterType, filterDay, filterIp, pageNo, !!onCallback);
+    if (!(filterType && filterDay && /^(site|site-page)$/.test(filterType) && /^\d{4}-\d{2}-\d{2}$/.test(filterDay))) {
+      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: invalid params', filterType, filterDay, filterIp, pageNo);
+      return typeof onCallback === 'function' && onCallback('requestQiushaocloudSiteCounterLogsApiByFilter err: invalid params');
+    }
+
+    var siteIpsStatsEle = document.getElementById('qiushaocloud_sitecounter_value_site_ips_stats');
+    var sitePageIpsStatsEle = document.getElementById('qiushaocloud_sitecounter_value_site_page_ips_stats');
+
+    if (filterType === 'site' && !siteIpsStatsEle) {
+      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist', filterType, filterDay, filterIp, pageNo);
+      return typeof onCallback === 'function' && onCallback('is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist');
+    }
+
+    if (filterType === 'site-page' && !sitePageIpsStatsEle) {
+      console.error('requestQiushaocloudSiteCounterLogsApiByFilter err: is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', filterType, filterDay, filterIp, pageNo);
+      return typeof onCallback === 'function' && onCallback('is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist');
+    }
+
+    var apiLogsOpts = {date_range: filterDay}; // {site_page_pathname, date_range, is_only_page, filter_client_ip}
+    filterIp && (apiLogsOpts.filter_client_ip = filterIp);
+    pageNo !== undefined && !isNaN(pageNo) && (apiLogsOpts.page_no = pageNo);
+
+    if (sitePageIpsStatsEle && filterType === 'site-page') {
+      apiLogsOpts.site_page_pathname = sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || getSitePagePathname();
+      apiLogsOpts.is_only_page = true;
+      var pageSize = sitePageIpsStatsEle.getAttribute('data-page-size');
+      if (pageSize) {
+        pageSize = Number(pageSize);
+        !isNaN(pageSize) && (apiLogsOpts.page_size = pageSize);
+      }
+    } else if (siteIpsStatsEle && filterType ==='site') {
+      var pageSize = siteIpsStatsEle.getAttribute('data-page-size');
+      if (pageSize) {
+        pageSize = Number(pageSize);
+        !isNaN(pageSize) && (apiLogsOpts.page_size = pageSize);
+      }
+    }
+
+    reqSiteCounterLogsAPI(getSiteHost(), apiLogsOpts, function (err, res) {
+      if (err) {
+        console.error('requestQiushaocloudSiteCounterLogsApiByFilter err:', err, filterType, filterDay, filterIp, pageNo);
+        sendNotice('api:get:site_counter_logs:ip', {
+          filterType,
+          filterDay,
+          filterIp,
+          pageNo,
+          err: err,
+          res: res
+        });
+        typeof onCallback === 'function' && onCallback(err, res);
+        return;
+      }
+
+      // console.debug('requestQiushaocloudSiteCounterLogsApiByFilter res:', res, filterType, filterDay, filterIp, pageNo);
       var apiResult = JSON.parse(res);
       sendNotice('api:get:site_counter_logs:ip', {
         filterType,
         filterDay,
         filterIp,
+        pageNo,
         res: apiResult
       });
       typeof onCallback === 'function' && onCallback(undefined, res);
@@ -758,14 +890,26 @@
     onCallback
   ) {
     !opts && (opts = {});
-    // opts = {site_page_pathname, date_range, site_page_date_range, is_only_page, filter_client_ip}
-
+    // opts = {site_page_pathname, date_range, site_page_date_range, is_only_page, filter_client_ip, page_size, site_page_page_size, page_no, site_page_page_no, order}
     var site_page_date_range = opts.site_page_date_range;
+    var site_page_page_size = opts.site_page_page_size;
+    var site_page_page_no = opts.site_page_page_no;
     delete opts.site_page_date_range;
-    if (opts.site_page_pathname && site_page_date_range !== opts.date_range) {
+    delete opts.site_page_page_size;
+    delete opts.site_page_page_no;
+
+    if (opts.site_page_pathname && (
+      site_page_date_range !== opts.date_range
+      || site_page_page_size !== opts.page_size
+      || site_page_page_no !== opts.page_no
+    )) {
       if (opts.site_page_pathname && opts.is_only_page) { // 只请求 site_page 数据
-        var reqParams = {site_host: siteHost, page_size: 2};
-        Object.assign(reqParams, opts, {date_range: site_page_date_range});
+        var reqParams = {site_host: siteHost};
+        var reqPagePartParams = {};
+        site_page_date_range && (reqPagePartParams.date_range = site_page_date_range);
+        site_page_page_size !== undefined && (reqPagePartParams.page_size = site_page_page_size);
+        site_page_page_no !== undefined && (reqPagePartParams.page_no = site_page_page_no);
+        Object.assign(reqParams, opts, reqPagePartParams);
         addExtraRequestData(reqParams);
         sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
         return;
@@ -789,9 +933,11 @@
       }
 
       // 请求 site 数据
-      var reqSiteParams = {site_host: siteHost, page_size: 2};
+      var reqSiteParams = {site_host: siteHost};
       opts.date_range && (reqSiteParams.date_range = opts.date_range);
       opts.filter_client_ip && (reqSiteParams.filter_client_ip = opts.filter_client_ip);
+      opts.page_size !== undefined && (reqSiteParams.page_size = opts.page_size);
+      opts.page_no !== undefined && (reqSiteParams.page_no = opts.page_no);
       addExtraRequestData(reqSiteParams);
       sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqSiteParams, {method: 'GET'}, function (err, res) {
         if (err) {
@@ -806,9 +952,11 @@
       });
 
       // 请求 site_page 数据
-      var reqPageParams = {site_host: siteHost, site_page_pathname: opts.site_page_pathname, page_size: 2};
+      var reqPageParams = {site_host: siteHost, site_page_pathname: opts.site_page_pathname};
       site_page_date_range && (reqPageParams.date_range = site_page_date_range);
       opts.filter_client_ip && (reqPageParams.filter_client_ip = opts.filter_client_ip);
+      site_page_page_size !== undefined && (reqPageParams.page_size = site_page_page_size);
+      site_page_page_no !== undefined && (reqPageParams.page_no = site_page_page_no);
       reqPageParams.is_only_page = true;
       addExtraRequestData(reqPageParams);
       sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqPageParams, {method: 'GET'}, function (err, res) {
@@ -826,7 +974,7 @@
       return;
     }
 
-    var reqParams = {site_host: siteHost, page_size: 2};
+    var reqParams = {site_host: siteHost};
     Object.assign(reqParams, opts);
     addExtraRequestData(reqParams);
     sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
@@ -838,7 +986,7 @@
     onCallback
   ) {
     !opts && (opts = {});
-    // opts = {site_page_pathname, date_range, is_only_page, filter_client_ip}
+    // opts = {site_page_pathname, date_range, is_only_page, filter_client_ip, page_size, page_no, order}
     var reqParams = {site_host: siteHost};
     Object.assign(reqParams, opts);
     addExtraRequestData(reqParams);
@@ -879,5 +1027,15 @@
 
     // 您可以使用 sha256 加密签名，对应服务器也使用 sha256 即可
     // return sha256Encrypt(sign);
-  };
+  }
+
+  function findParentsNode (node, selector) {
+    var parentNode = node.parentNode;
+    while (parentNode && parentNode.nodeType === 1) {
+      if (parentNode.matches(selector))
+        return parentNode;
+      parentNode = parentNode.parentNode;
+    }
+    return null;
+  }
 })();

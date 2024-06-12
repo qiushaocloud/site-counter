@@ -225,7 +225,7 @@ class DBService {
                 FROM RankedIps
                 WHERE row_num BETWEEN ((${pageNo}-1)*${pageSize}+1) AND ${pageNo}*${pageSize}
             `;
-            const partDateCountsSql = `SELECT part_date, COUNT(*) AS part_date_log_count, COUNT(DISTINCT ip) AS part_date_ip_count FROM ${tableName} ${condition ? `WHERE ${condition}` : ''} GROUP BY part_date${extraFilter ? ` ${extraFilter}` : ''}`
+            const partDateCountsSql = `SELECT part_date, COUNT(*) AS part_date_log_count, COUNT(DISTINCT ip) AS part_date_ip_count FROM ${tableName} ${condition ? `WHERE ${condition}` : ''} GROUP BY part_date`
 
             const ipsStatsSqlResult = await this.#defaultDBMgr.all(ipsStatsSql); // [{part_date, ip, ip_location, count, lastTs}]
             const partDateCountsSqlResult = await this.#defaultDBMgr.all(partDateCountsSql); // [{part_date, part_date_log_count, part_date_ip_count}]

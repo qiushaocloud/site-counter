@@ -363,12 +363,10 @@ class Sqlite3DBManager {
      * @param {string} tableName 表名
      * @param {string} [condition=''] 查询条件
      * @param {Array} [params=[]] 查询参数
-     * @param {Object} [opts={}] 配置项
-     *  - [opts.extraFilter] {string} 额外的SQL过滤，如：'ORDER BY id DESC'
      * @returns {Promise} Promise 对象，返回记录总数
      */
-    getRecordCount(tableName, condition = '', params = [], opts={}) {
-        const sql = `SELECT COUNT(*) as count FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}${opts.extraFilter ? ' '+opts.extraFilter : ''}`;
+    getRecordCount(tableName, condition = '', params = []) {
+        const sql = `SELECT COUNT(*) as count FROM ${tableName} ${condition ? 'WHERE ' + condition : ''}`;
         return this.all(sql, params)
             .then((result) => {
                 let count = 0;
@@ -419,7 +417,7 @@ class Sqlite3DBManager {
      * @returns {Promise} Promise 对象，返回所有记录
      */
     async getAllPaginatedRecords(tableName, pageSize, condition = '', params = [], opts={}) {
-        const totalCount = await this.getRecordCount(tableName, condition, params, opts);
+        const totalCount = await this.getRecordCount(tableName, condition, params);
         const totalPages = Math.ceil(totalCount / pageSize);
         const records = [];
         for (let pageNo = 1; pageNo <= totalPages; pageNo++) {
