@@ -222,7 +222,7 @@ class SiteCounterHandler {
     sitePagePathname,
     isOnlyPage,
     filterClientIp,
-    pageSize = 200,
+    pageSize = 100,
     pageNo = 1,
     order = 'DESC' // ASC | DESC，默认 DESC
   }) {
@@ -288,27 +288,30 @@ class SiteCounterHandler {
       sitePagePathname && (resResult.site_page_pathname = sitePagePathname);
 
       if (!isOnlyPage) {
-        const siteCondition = commonCondition;
         if (typeName === 'IpsStats') {
+          const siteCondition = `${commonCondition} AND incr_type IN ('site','siteandpage')`;
           const extraFilter = `ORDER BY lastTs ${order}`;
           resResult.site_ips = await dbServiceInstance.getPaginatedSiteCounterIpsStats({pageSize, pageNo: pageNo, condition: siteCondition, extraFilter});
+          log.debug(methodNmae+' getPaginatedSiteCounterIpsStats siteCondition success', pageSize, pageNo, siteCondition);
         } else {
+          const siteCondition = `${commonCondition} AND incr_type IN ('site','siteandpage')${sitePagePathname ? ` AND (page_pathname != '${sitePagePathname}' OR page_pathname IS NULL)` : ''}`;
           const extraFilter = `ORDER BY logts ${order}`;
           resResult.site_logs = await dbServiceInstance.getPaginatedSiteCounterIpLogs({pageSize, pageNo: pageNo, condition: siteCondition, extraFilter});
+          log.debug(methodNmae+' getPaginatedSiteCounterIpLogs siteCondition success', pageSize, pageNo, siteCondition);
         }
-        log.debug(methodNmae+' getPaginatedSiteCounterIpsStats siteCondition success', pageSize, pageNo, siteCondition);
       }
 
       if (sitePagePathname) {
-        const sitePageCondition = `${commonCondition} AND page_pathname = '${sitePagePathname}'`;
+        const sitePageCondition = `${commonCondition} AND incr_type IN ('page','siteandpage') AND page_pathname = '${sitePagePathname}'`;
         if (typeName === 'IpsStats') {
           const extraFilter = `ORDER BY lastTs ${order}`;
           resResult.page_ips = await dbServiceInstance.getPaginatedSiteCounterIpsStats({pageSize, pageNo: pageNo, condition: sitePageCondition, extraFilter});
+          log.debug(methodNmae+' getPaginatedSiteCounterIpsStats sitePageCondition success', pageSize, pageNo, sitePageCondition);
         } else {
           const extraFilter = `ORDER BY logts ${order}`;
           resResult.page_logs = await dbServiceInstance.getPaginatedSiteCounterIpLogs({pageSize, pageNo: pageNo, condition: sitePageCondition, extraFilter});
+          log.debug(methodNmae+' getPaginatedSiteCounterIpLogs sitePageCondition success', pageSize, pageNo, sitePageCondition);
         }
-        log.debug(methodNmae+' getPaginatedSiteCounterIpsStats sitePageCondition success', pageSize, pageNo, sitePageCondition);
       }
 
       // 获取所有ip的地理位置信息
@@ -420,7 +423,7 @@ class SiteCounterHandler {
         for (const logIpTmp in awaitIpLocations) {
           const logIpLocationTmp = awaitIpLocations[logIpTmp];
           if (!logIpLocationTmp) continue;
-          const updateCondition = `${commonCondition} AND ip_location != '${logIpLocationTmp}'${commonCondition.includes(`AND ip = '${logIpTmp}'`) ? '' : ` AND ip = '${logIpTmp}'`}`;
+          const updateCondition = `${commonCondition} AND (ip_location != '${logIpLocationTmp}' OR ip_location IS NULL)${commonCondition.includes(`AND ip = '${logIpTmp}'`) ? '' : ` AND ip = '${logIpTmp}'`}`;
           updateProArr.push(dbServiceInstance.updateSiteCounterIpRecords({ip_location: logIpLocationTmp}, updateCondition));
         }
         const updateProArrLen = updateProArr.length;

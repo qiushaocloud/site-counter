@@ -192,6 +192,8 @@
       var sitePageIpsStatsDateRange = (sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-date-range')) || undefined;
       var siteIpsStatsPageSize = (siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-page-size')) || undefined;
       var sitePageIpsStatsPageSize = (sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-page-size')) || undefined;
+      var siteIpsStatsSortName = (siteIpsStatsEle && siteIpsStatsEle.getAttribute('data-ips-stats-sort-name')) || undefined;
+      var sitePageIpsStatsSortName = (sitePageIpsStatsEle && sitePageIpsStatsEle.getAttribute('data-ips-stats-sort-name')) || undefined;
 
       sitePageIpsStatsEle && !isReqedSitePageIpsStats && (apiIpsStatsOpts.site_page_pathname = sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || getSitePagePathname());
       (!siteIpsStatsEle || isReqedSiteIpsStats) && (apiIpsStatsOpts.is_only_page = true);
@@ -208,6 +210,12 @@
       if (sitePageIpsStatsPageSize && apiIpsStatsOpts.site_page_pathname && !isNaN(Number(sitePageIpsStatsPageSize)))
         apiIpsStatsOpts.site_page_page_size = Number(sitePageIpsStatsPageSize);
 
+      if (siteIpsStatsSortName && !apiIpsStatsOpts.is_only_page)
+        apiIpsStatsOpts.order = siteIpsStatsSortName.toUpperCase();
+
+      if (sitePageIpsStatsSortName && apiIpsStatsOpts.site_page_pathname)
+        apiIpsStatsOpts.site_page_order = sitePageIpsStatsSortName.toUpperCase();
+
       siteIpsStatsEle && !isReqedSiteIpsStats && (isReqedSiteIpsStats = true);
       sitePageIpsStatsEle && !isReqedSitePageIpsStats && (isReqedSitePageIpsStats = true);
 
@@ -219,18 +227,14 @@
         }
 
         var apiResult = JSON.parse(res);
-
-        var siteIpsStatsData = apiResult.site_ips; // {[logDay]:{[ip]:[count,ipLocation]}}
-        var sitePageIpsStatsData = apiResult.page_ips; // {[logDay]:{[ip]:[count,ipLocation]}}
-
         var totalIpsStatsDataMap = {
           'site': {
             ele: siteIpsStatsEle,
-            data: siteIpsStatsData,
+            data: apiResult.site_ips // { [logDay]: { totalPages, totalCount, logCount, pageSize, pageNo, ipDatas: { [ip]: [count, ip_location, lastTs] } } }
           },
           'site-page': {
             ele: sitePageIpsStatsEle,
-            data: sitePageIpsStatsData
+            data: apiResult.page_ips // { [logDay]: { totalPages, totalCount, logCount, pageSize, pageNo, ipDatas: { [ip]: [count, ip_location, lastTs] } } }
           }
         };
 
@@ -276,9 +280,12 @@
           }
  
           ipsStatsEle.innerHTML = '';
-          ipsStatsEle.onclick = (function(ipsStatsKey, ipsStatsEle) {
+          ipsStatsEle.onclick = (function(ipsStatsKey, ipsStatsEleId) {
             return function (e) {
               var target = e.target;
+              var ipsStatsEle = document.getElementById(ipsStatsEleId);
+              if (!ipsStatsEle) return;
+
               if (target.nodeName === 'BUTTON' && target.classList.contains(ipsStatsKey+'-log-day-ip-detail-btn')) {
                 var ip = target.getAttribute('data-ip');
                 var day = target.getAttribute('data-day');
@@ -296,9 +303,8 @@
                   if (logsPrintMode === 'none') return; // 日志打印模式为none，不打印日志详情
 
                   if (ipsStatsKey === 'site') {
-                    var logs = apiResult.site_logs.slice(0);
-                    if (apiResult.page_logs && apiResult.page_logs.length > 0)
-                      logs = logs.concat(apiResult.page_logs);
+                    var siteLogsData = apiResult.site_logs;
+                    var logs = siteLogsData.logDatas.slice(0);
                     logs.sort(function(a, b) {return logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime()});
                     
                     if (logsPrintMode === 'console') {
@@ -311,13 +317,25 @@
                       console.log('==================== 网站 '+day+' 访问日志：'+ip+' ====================');
                       console.table(tableData);
                     } else {
-                      createLogsTableToUI(logs, document.body, {boxClass: 'site-logs-box', boxTitle: '<span class="pg1">网站</span> <span class="logs-date">'+day+'</span> <span class="pg2">访问日志:</span><span class="ip">'+ip+'</span>'})
+                      createLogsTableToUI(logs, document.body, {
+                        boxClass: 'site-logs-box',
+                        boxTitle: '<span class="pg1">网站</span> <span class="logs-date">'+day+'</span> <span class="pg2">访问日志:</span><span class="ip">'+ip+'</span>',
+                        ipsStatsKey: ipsStatsKey,
+                        ipsStatsEleId: ipsStatsEleId,
+                        day: day,
+                        ip: ip,
+                        logsSortName: logsSortName,
+                        totalPages: siteLogsData.totalPages,
+                        totalCount: siteLogsData.totalCount,
+                        pageSize: siteLogsData.pageSize,
+                        pageNo: siteLogsData.pageNo
+                      })
                     }
                   } else {
                     var dataSitePagePathname = ipsStatsEle && ipsStatsEle.getAttribute('data-site-page-pathname') || window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME;
                     var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname(true) ? '<span class="pg1">页面</span><span class="other-page-title">(<span class="content">'+dataSitePagePathname+'</span>)</span>' : '本页面')
             
-                    var logs = apiResult.page_logs.slice(0);
+                    var logs = apiResult.page_logs.logDatas.slice(0);
                     logs.sort(function(a, b) {return logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime()});
                     
                     if (logsPrintMode === 'console') {
@@ -330,7 +348,19 @@
                       console.log('==================== '+sitePageTitle+' '+day+' 访问日志：'+ip+' ====================');
                       console.table(tableData);
                     } else {
-                      createLogsTableToUI(logs, document.body, {boxClass: 'site-page-logs-box', boxTitle: sitePageTitle+' <span class="logs-date">'+day+'</span> <span class="pg2">访问日志:</span><span class="ip">'+ip+'</span>'})
+                      createLogsTableToUI(logs, document.body, {
+                        boxClass: 'site-page-logs-box',
+                        boxTitle: sitePageTitle+' <span class="logs-date">'+day+'</span> <span class="pg2">访问日志:</span><span class="ip">'+ip+'</span>',
+                        ipsStatsKey: ipsStatsKey,
+                        ipsStatsEleId: ipsStatsEleId,
+                        day: day,
+                        ip: ip,
+                        logsSortName: logsSortName,
+                        totalPages: siteLogsData.totalPages,
+                        totalCount: siteLogsData.totalCount,
+                        pageSize: siteLogsData.pageSize,
+                        pageNo: siteLogsData.pageNo
+                      })
                     }
                   }
                 });
@@ -382,34 +412,55 @@
                 var logDayEle = findParentsNode(target, '.'+ipsStatsKey+'-log-day');
                 if (!logDayEle) return;
                 var logDay = logDayEle.getAttribute('data-day');
-                var pageNo = target.getAttribute('data-page');
+                var totalPages = Number(logDayEle.getAttribute('data-total-pages'));
+                var pageNo = Number(logDayEle.getAttribute('data-page-no')) + 1;
+                if (pageNo > totalPages) return console.log(ipsStatsKey+'-log-day-load-more-btn click, pageNo > totalPages, do nothing. logDay:'+logDay+' pageNo:'+pageNo+' totalPages:'+totalPages);
+                target.setAttribute('disabled', true);
                 console.debug(ipsStatsKey+'-log-day-load-more-btn click, run requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter => day:', logDay, 'pageNo:', pageNo);
                 window.requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter(ipsStatsKey, logDay, pageNo, function (err, res) {
+                  var loadMoreBtnEle = logDayEle.querySelector('.'+ipsStatsKey+'-log-day-load-more-btn');
+                  loadMoreBtnEle && loadMoreBtnEle.removeAttribute('disabled');
                   if (err) {
                     console.error(ipsStatsKey+'-log-day-load-more-btn click requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter failure', logDay, pageNo);
                     return;
                   }
 
                   console.debug(ipsStatsKey+'-log-day-load-more-btn click requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter success', logDay, pageNo);
-                  var apiResult = res;
-                  var ipsStatsData = apiResult.ips_stats; // {[logDay]:{[ip]:[count,ipLocation]}}
-                  var ipsTableData = [];
-                  var logDayKeys = Object.keys(ipsStatsData[logDay].ipDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? ipsStatsData[logDay].ipDatas[b][2] - ipsStatsData[logDay].ipDatas[a][2] : ipsStatsData[logDay].ipDatas[a][2] - ipsStatsData[logDay].ipDatas[b][2]});
+                  var logDayData = ipsStatsKey === 'site' ? res.site_ips[logDay] : res.page_ips[logDay]; // { [logDay]: { totalPages, totalCount, logCount, pageSize, pageNo, ipDatas: { [ip]: [count, ip_location, lastTs] } } }
+                  if (!logDayData) return;
+                  logDayEle.setAttribute('data-total-pages', logDayData.totalPages);
+                  logDayEle.setAttribute('data-page-no', logDayData.pageNo);
+                  logDayData.pageNo >= logDayData.totalPages && loadMoreBtnEle && loadMoreBtnEle.parentNode && loadMoreBtnEle.parentNode.removeChild(loadMoreBtnEle);
+                  var logDayUlEle = logDayEle.querySelector('.'+ipsStatsKey+'-log-day-ul');
+                  var ipsStatsSortName = ipsStatsEle.getAttribute('data-ips-stats-sort-name');
+                  var logDayIpDatas = logDayData.ipDatas;
+                  var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayIpDatas[b][2] - logDayIpDatas[a][2] : logDayIpDatas[a][2] - logDayIpDatas[b][2]});
                   for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
                     var ip = logDayKeys[j];
-                    var ipCount = ipsStatsData[logDay].ipDatas[ip][0];
-                    var ipLocation = ipsStatsData[logDay].ipDatas[ip][1];
-                    ipsTableData.push({
-                      'IP': ip,
-                      '访问次数': ipCount,
-                      'IP信息': ipLocation
-                    });
+                    var ipCount = logDayIpDatas[ip][0];
+                    var ipLocation = logDayIpDatas[ip][1];
+                     // console.debug('ipsStatsData => ip:', ip, 'count:', ipCount, 'location:', ipLocation);
+                    var ipLiEle = document.createElement('li');
+                    ipLiEle.className = ipsStatsKey+'-log-day-ip-li';
+                    ipLiEle.innerHTML =
+                      '<span class="'+ipsStatsKey+'-log-day-ip-info-warpper">'
+                        +'<span class="ip-info-warpper">'
+                          +'<span class="ip-content">'+ip+'</span>'
+                          +(ipLocation?'(<span class="ip-location-content">'+ipLocation+'</span>)':'')
+                        +'</span>'
+                        +'<span class="ip-count-warpper">'
+                          +'<span class="count-title">访问次数：</span>'
+                          +'<span class="count-content">'+ipCount+'</span>'
+                        +'</span>'
+                      +'</span>'
+                      +'<button class="'+ipsStatsKey+'-log-day-ip-detail-btn" data-ip="'+ip+'" data-day="'+logDay+'">详细日志</button>';
+                    logDayUlEle.appendChild(ipLiEle);
                   }
                 });
                 return;
               }
             }
-          })(ipsStatsKey, ipsStatsEle);
+          })(ipsStatsKey, ipsStatsEle.id);
 
           for (var i=0, len=ipsStatsDataDays.length; i<len; i++) {
             var logDay = ipsStatsDataDays[i];
@@ -428,17 +479,15 @@
             var logDayUlEle = document.createElement('ul');
             logDayUlEle.className = ipsStatsKey+'-log-day-ul';
             logDayEle.appendChild(logDayUlEle);
+
             if (logDayData.pageNo < logDayData.totalPages) {
               var moreBoxEle = document.createElement('div');
               moreBoxEle.className = ipsStatsKey+'-log-day-more-box';
               logDayEle.appendChild(moreBoxEle);
-
               // 加载更多按钮
               var loadMoreBtnEle = document.createElement('button');
               loadMoreBtnEle.className = ipsStatsKey+'-log-day-load-more-btn';
               loadMoreBtnEle.innerHTML = '加载更多';
-              loadMoreBtnEle.setAttribute('data-day', logDay);
-              loadMoreBtnEle.setAttribute('data-page', logDayData.pageNo+1);
               moreBoxEle.appendChild(loadMoreBtnEle);
             }
 
@@ -512,12 +561,14 @@
     if (sitePageIpsStatsEle && filterType === 'site-page') {
       apiIpsStatsOpts.site_page_pathname = sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || getSitePagePathname();
       apiIpsStatsOpts.is_only_page = true;
+      sitePageIpsStatsEle.getAttribute('data-ips-stats-sort-name') && (apiIpsStatsOpts.order = sitePageIpsStatsEle.getAttribute('data-ips-stats-sort-name').toUpperCase());
       var pageSize = sitePageIpsStatsEle.getAttribute('data-page-size');
       if (pageSize) {
         pageSize = Number(pageSize);
         !isNaN(pageSize) && (apiIpsStatsOpts.page_size = pageSize);
       }
     } else if (siteIpsStatsEle && filterType ==='site') {
+      siteIpsStatsEle.getAttribute('data-ips-stats-sort-name') && (apiIpsStatsOpts.order = siteIpsStatsEle.getAttribute('data-ips-stats-sort-name').toUpperCase());
       var pageSize = siteIpsStatsEle.getAttribute('data-page-size');
       if (pageSize) {
         pageSize = Number(pageSize);
@@ -640,6 +691,13 @@
       return;
     }
 
+    var totalPages = opts.totalPages;
+    var totalCount = opts.totalCount;
+    var pageSize = opts.pageSize;
+    var pageNo = opts.pageNo;
+    var logsSortName = opts.logsSortName;
+    var loadedLogsCount = logsData.length;
+
     !parentEle && (parentEle = document.body);
 
     document.getElementById('qiushaocloud_sitecounter_logs_box') && document.getElementById('qiushaocloud_sitecounter_logs_box').remove();
@@ -676,6 +734,17 @@
     var tbody = document.createElement('tbody');
     tbody.className = 'site-counter-logs-table-tbody';
     logsTable.appendChild(tbody);
+
+    var tfootTr = document.createElement('tfoot');
+    tfootTr.className = 'site-counter-logs-table-tfoot';
+    logsTable.appendChild(tfootTr);
+    var tfootTd = document.createElement('td');
+    tfootTd.colSpan = 6;
+    tfootTd.className = 'site-counter-logs-table-tfoot-td';
+    tfootTd.innerHTML = '<span class="site-counter-logs-table-tfoot-td-content">'
+      + ('已加载<span class="loaded-count">'+loadedLogsCount+'</span>条，共<span class="total-count">'+totalCount+'</span>条')+'</span>'
+      + (totalPages > pageNo ? '<button class="site-counter-logs-table-tfoot-btn">加载更多</button>' : '');
+    tfootTr.appendChild(tfootTd);
 
     for (var i=0, len=logsData.length; i<len; i++) {
       var logData = logsData[i];
@@ -890,25 +959,25 @@
     onCallback
   ) {
     !opts && (opts = {});
-    // opts = {site_page_pathname, date_range, site_page_date_range, is_only_page, filter_client_ip, page_size, site_page_page_size, page_no, site_page_page_no, order}
+    // opts = {site_page_pathname, date_range, site_page_date_range, is_only_page, filter_client_ip, page_size, site_page_page_size, page_no, order, site_page_order}
     var site_page_date_range = opts.site_page_date_range;
     var site_page_page_size = opts.site_page_page_size;
-    var site_page_page_no = opts.site_page_page_no;
+    var site_page_order = opts.site_page_order;
     delete opts.site_page_date_range;
     delete opts.site_page_page_size;
-    delete opts.site_page_page_no;
+    delete opts.site_page_order;
 
     if (opts.site_page_pathname && (
       site_page_date_range !== opts.date_range
       || site_page_page_size !== opts.page_size
-      || site_page_page_no !== opts.page_no
+      || site_page_order !== opts.order
     )) {
       if (opts.site_page_pathname && opts.is_only_page) { // 只请求 site_page 数据
         var reqParams = {site_host: siteHost};
         var reqPagePartParams = {};
         site_page_date_range && (reqPagePartParams.date_range = site_page_date_range);
         site_page_page_size !== undefined && (reqPagePartParams.page_size = site_page_page_size);
-        site_page_page_no !== undefined && (reqPagePartParams.page_no = site_page_page_no);
+        site_page_order && (reqPagePartParams.order = site_page_order);
         Object.assign(reqParams, opts, reqPagePartParams);
         addExtraRequestData(reqParams);
         sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqParams, {method: 'GET'}, onCallback);
@@ -956,7 +1025,7 @@
       site_page_date_range && (reqPageParams.date_range = site_page_date_range);
       opts.filter_client_ip && (reqPageParams.filter_client_ip = opts.filter_client_ip);
       site_page_page_size !== undefined && (reqPageParams.page_size = site_page_page_size);
-      site_page_page_no !== undefined && (reqPageParams.page_no = site_page_page_no);
+      site_page_order && (reqPageParams.order = site_page_order);
       reqPageParams.is_only_page = true;
       addExtraRequestData(reqPageParams);
       sequentialAjaxRequest(getApiAddr() + "/site_counter_ips_stats", reqPageParams, {method: 'GET'}, function (err, res) {

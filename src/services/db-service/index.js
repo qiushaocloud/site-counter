@@ -181,7 +181,7 @@ class DBService {
         }
     }
 
-    async getPaginatedSiteCounterIpRecords ({pageSize=200, pageNo=1, condition, extraFilter}) {
+    async getPaginatedSiteCounterIpRecords ({pageSize=100, pageNo=1, condition, extraFilter}) {
         const tableName ='site_counter_ips';
         try {
             this.#printlog('debug',  'call getPaginatedSiteCounterIpRecords, tableName:', tableName, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
@@ -195,7 +195,7 @@ class DBService {
         }
     }
 
-    async getAllSiteCounterIpRecords ({pageSize=200, condition, extraFilter}) {
+    async getAllSiteCounterIpRecords ({pageSize=100, condition, extraFilter}) {
         const tableName ='site_counter_ips';
         try {
             this.#printlog('debug',  'call getAllSiteCounterIpRecords, tableName:', tableName, ' ,pageSize:', pageSize, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
@@ -209,7 +209,7 @@ class DBService {
         }
     }
     
-    async getPaginatedSiteCounterIpsStats ({pageSize=200, pageNo=1, condition, extraFilter}) {
+    async getPaginatedSiteCounterIpsStats ({pageSize=100, pageNo=1, condition, extraFilter}) {
         const tableName ='site_counter_ips';
         try {
             this.#printlog('debug',  'call getPaginatedSiteCounterIpsStats, tableName:', tableName, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
@@ -251,7 +251,7 @@ class DBService {
         }
     }
 
-    async getPaginatedSiteCounterIpLogs ({pageSize=200, pageNo=1, condition, extraFilter}) {
+    async getPaginatedSiteCounterIpLogs ({pageSize=100, pageNo=1, condition, extraFilter}) {
         const tableName ='site_counter_ips';
         try {
             this.#printlog('debug',  'call getPaginatedSiteCounterIpLogs, tableName:', tableName, ' ,pageSize:', pageSize, ' ,pageNo:', pageNo, ' ,condition:', condition, ' ,extraFilter:', extraFilter);
