@@ -292,7 +292,7 @@
                 console.debug(ipsStatsKey+'-log-day-ip-detail-btn click, run requestQiushaocloudSiteCounterLogsApiByFilter => ip:', ip, 'day:', day);
                 window.requestQiushaocloudSiteCounterLogsApiByFilter(ipsStatsKey, day, ip, 1, function (err, res) {
                   if (err) {
-                    console.error(ipsStatsKey+'-log-day-ip-detail-btn click requestQiushaocloudSiteCounterLogsApiByFilter failure', ip, day);
+                    console.error(ipsStatsKey+'-log-day-ip-detail-btn click requestQiushaocloudSiteCounterLogsApiByFilter failure', ip, day, err);
                     return;
                   }
   
@@ -335,7 +335,8 @@
                     var dataSitePagePathname = ipsStatsEle && ipsStatsEle.getAttribute('data-site-page-pathname') || window.QIUSHAOCLOUD_SITE_COUNTER_PAGE_PATHNAME;
                     var sitePageTitle = (dataSitePagePathname && dataSitePagePathname !== getSitePagePathname(true) ? '<span class="pg1">页面</span><span class="other-page-title">(<span class="content">'+dataSitePagePathname+'</span>)</span>' : '本页面')
             
-                    var logs = apiResult.page_logs.logDatas.slice(0);
+                    var sitePageLogsData = apiResult.page_logs;
+                    var logs = sitePageLogsData.logDatas.slice(0);
                     logs.sort(function(a, b) {return logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime()});
                     
                     if (logsPrintMode === 'console') {
@@ -356,10 +357,10 @@
                         day: day,
                         ip: ip,
                         logsSortName: logsSortName,
-                        totalPages: siteLogsData.totalPages,
-                        totalCount: siteLogsData.totalCount,
-                        pageSize: siteLogsData.pageSize,
-                        pageNo: siteLogsData.pageNo
+                        totalPages: sitePageLogsData.totalPages,
+                        totalCount: sitePageLogsData.totalCount,
+                        pageSize: sitePageLogsData.pageSize,
+                        pageNo: sitePageLogsData.pageNo
                       })
                     }
                   }
@@ -643,12 +644,14 @@
     if (sitePageIpsStatsEle && filterType === 'site-page') {
       apiLogsOpts.site_page_pathname = sitePageIpsStatsEle.getAttribute('data-site-page-pathname') || getSitePagePathname();
       apiLogsOpts.is_only_page = true;
+      sitePageIpsStatsEle.getAttribute('data-logs-sort-name') && (apiLogsOpts.order = sitePageIpsStatsEle.getAttribute('data-logs-sort-name').toUpperCase());
       var pageSize = sitePageIpsStatsEle.getAttribute('data-page-size');
       if (pageSize) {
         pageSize = Number(pageSize);
         !isNaN(pageSize) && (apiLogsOpts.page_size = pageSize);
       }
     } else if (siteIpsStatsEle && filterType ==='site') {
+      siteIpsStatsEle.getAttribute('data-logs-sort-name') && (apiLogsOpts.order = siteIpsStatsEle.getAttribute('data-logs-sort-name').toUpperCase());
       var pageSize = siteIpsStatsEle.getAttribute('data-page-size');
       if (pageSize) {
         pageSize = Number(pageSize);
@@ -684,19 +687,21 @@
     });
   }
 
-  function createLogsTableToUI (logsData, parentEle, opts) {
+  function createLogsTableToUI (logsArg, parentEle, opts) {
     !opts && (opts = {});
-    if (!logsData || !Array.isArray(logsData) || logsData.length === 0) {
-      console.error('createLogsTableToUI err: logsData is not exist or not array or empty');
+    if (!logsArg || !Array.isArray(logsArg) || logsArg.length === 0) {
+      console.error('createLogsTableToUI err: logsArg is not exist or not array or empty');
       return;
     }
 
     var totalPages = opts.totalPages;
     var totalCount = opts.totalCount;
-    var pageSize = opts.pageSize;
     var pageNo = opts.pageNo;
     var logsSortName = opts.logsSortName;
-    var loadedLogsCount = logsData.length;
+    var ipsStatsKey = opts.ipsStatsKey;
+    var filterDay = opts.day;
+    var filterIp = opts.ip;
+    var loadedLogsCount = logsArg.length;
 
     !parentEle && (parentEle = document.body);
 
@@ -741,16 +746,53 @@
     var tfootTd = document.createElement('td');
     tfootTd.colSpan = 6;
     tfootTd.className = 'site-counter-logs-table-tfoot-td';
-    tfootTd.innerHTML = '<span class="site-counter-logs-table-tfoot-td-content">'
+    tfootTd.innerHTML = '<span class="content">'
       + ('已加载<span class="loaded-count">'+loadedLogsCount+'</span>条，共<span class="total-count">'+totalCount+'</span>条')+'</span>'
-      + (totalPages > pageNo ? '<button class="site-counter-logs-table-tfoot-btn">加载更多</button>' : '');
+      + (totalPages > pageNo ? '<button class="load-more-btn">加载更多</button>' : '');
     tfootTr.appendChild(tfootTd);
 
-    for (var i=0, len=logsData.length; i<len; i++) {
-      var logData = logsData[i];
+    for (var i=0, len=logsArg.length; i<len; i++) {
+      var logData = logsArg[i];
       var trEle = document.createElement('tr');
       trEle.innerHTML = '<td data-label="序号">'+(i+1)+'</td><td data-label="时间">'+getCurrFormatTs(logData[0])+'</td><td data-label="IP">'+logData[1]+'</td><td data-label="IP信息">'+logData[2]+'</td><td data-label="UserAgent">'+logData[3]+'</td><td data-label="Href">'+(logData[4] || '-')+'</td>';
       tbody.appendChild(trEle);
+    }
+
+    var loadMoreBtnEle = logsTableBox.querySelector('.site-counter-logs-table-tfoot-td .load-more-btn');
+    if (loadMoreBtnEle && ipsStatsKey && filterDay && filterIp) {
+      loadMoreBtnEle.onclick = function () {
+        var nextPageNo = pageNo + 1;
+        loadMoreBtnEle.setAttribute('disabled', true);
+        requestQiushaocloudSiteCounterLogsApiByFilter(ipsStatsKey, filterDay, filterIp, nextPageNo, function (err, res) {
+          loadMoreBtnEle.removeAttribute('disabled');
+          if (err) {
+            console.error('site-counter-logs-table-tfoot-td loadMoreBtnEle click requestQiushaocloudSiteCounterLogsApiByFilter failure', ipsStatsKey, filterDay, filterIp, nextPageNo, err);
+            return;
+          }
+
+          console.debug('site-counter-logs-table-tfoot-td loadMoreBtnEle click requestQiushaocloudSiteCounterLogsApiByFilter success', ipsStatsKey, filterDay, filterIp, nextPageNo);
+          var apiResult = JSON.parse(res);
+          var logsData = ipsStatsKey === 'site'? apiResult.site_logs : apiResult.page_logs;
+          var logsTmp = logsData.logDatas.slice(0);
+          logsTmp.sort(function(a, b) {return logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime()});
+          pageNo = logsData.pageNo;
+          totalPages = logsData.totalPages;
+          totalCount = logsData.totalCount;
+          var oldLogsCount = loadedLogsCount;
+          loadedLogsCount += logsTmp.length;
+
+          pageNo >= totalPages && loadMoreBtnEle.parentNode && loadMoreBtnEle.parentNode.removeChild(loadMoreBtnEle);
+          logsTableBox.querySelector('.site-counter-logs-table-tfoot-td .loaded-count').innerHTML = loadedLogsCount;
+          logsTableBox.querySelector('.site-counter-logs-table-tfoot-td .total-count').innerHTML = totalCount;
+
+          for (var i=0, len=logsTmp.length; i<len; i++) {
+            var logData = logsTmp[i];
+            var trEle = document.createElement('tr');
+            trEle.innerHTML = '<td data-label="序号">'+(oldLogsCount+i+1)+'</td><td data-label="时间">'+getCurrFormatTs(logData[0])+'</td><td data-label="IP">'+logData[1]+'</td><td data-label="IP信息">'+logData[2]+'</td><td data-label="UserAgent">'+logData[3]+'</td><td data-label="Href">'+(logData[4] || '-')+'</td>';
+            tbody.appendChild(trEle);
+          }
+        });
+      }
     }
   }
 

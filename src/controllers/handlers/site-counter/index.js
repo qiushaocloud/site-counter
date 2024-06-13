@@ -50,7 +50,8 @@ class SiteCounterHandler {
       isOnlyPage,
       filterClientIp,
       pageSize,
-      pageNo
+      pageNo,
+      order
     } = {},
     onCallback
   ) {
@@ -58,7 +59,7 @@ class SiteCounterHandler {
       return onCallback && onCallback(new Error('only get page ips stats, but site_page_pathname is empty'));
 
     this._concurrencyTaskController.addTask(() => {
-      return this._getSiteCounterIpsStatsOrIpLogs('IpsStats', {siteHost, dateRangeStr, sitePagePathname, isOnlyPage, filterClientIp, pageSize, pageNo})
+      return this._getSiteCounterIpsStatsOrIpLogs('IpsStats', {siteHost, dateRangeStr, sitePagePathname, isOnlyPage, filterClientIp, pageSize, pageNo, order})
         .then((resResult) => {
           onCallback && onCallback(undefined, resResult);
         })
@@ -76,7 +77,8 @@ class SiteCounterHandler {
       isOnlyPage,
       filterClientIp,
       pageSize,
-      pageNo
+      pageNo,
+      order
     } = {},
     onCallback
   ) {
@@ -84,7 +86,7 @@ class SiteCounterHandler {
       return onCallback && onCallback(new Error('only get page ips logs, but site_page_pathname is empty'));
   
     this._concurrencyTaskController.addTask(() => {
-      return this._getSiteCounterIpsStatsOrIpLogs('IpLogs', {siteHost, dateRangeStr, sitePagePathname, isOnlyPage, filterClientIp, pageSize, pageNo})
+      return this._getSiteCounterIpsStatsOrIpLogs('IpLogs', {siteHost, dateRangeStr, sitePagePathname, isOnlyPage, filterClientIp, pageSize, pageNo, order})
         .then((resResult) => {
           onCallback && onCallback(undefined, resResult);
         })
