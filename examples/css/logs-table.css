@@ -142,9 +142,38 @@
     background-color: #f2f2f2;
 }
 
+.site-counter-logs-box table .site-counter-logs-table-tfoot tr {
+    position: relative;
+    background-color: #fff;
+    border: none;
+    margin: 0;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
+.site-counter-logs-table-tfoot td .load-more-btn {
+    background: none;
+    color: #6d9296;
+    position: absolute;
+    right: 14px;
+}
+
 @media (any-hover: hover) {
     .site-counter-logs-box table tr:hover {
         background-color: #0b8ddd;
+    }
+
+    .site-counter-logs-box table .site-counter-logs-table-tfoot tr:hover {
+        background-color: #fff;
+    }
+
+    .site-counter-logs-table-tfoot td .load-more-btn:hover {
+        background: none;
+        color: #0097a7;
     }
 }
 

@@ -417,16 +417,16 @@
                 var pageNo = Number(logDayEle.getAttribute('data-page-no')) + 1;
                 if (pageNo > totalPages) return console.log(ipsStatsKey+'-log-day-load-more-btn click, pageNo > totalPages, do nothing. logDay:'+logDay+' pageNo:'+pageNo+' totalPages:'+totalPages);
                 target.setAttribute('disabled', true);
-                console.debug(ipsStatsKey+'-log-day-load-more-btn click, run requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter => day:', logDay, 'pageNo:', pageNo);
-                window.requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter(ipsStatsKey, logDay, pageNo, function (err, res) {
+                console.debug(ipsStatsKey+'-log-day-load-more-btn click, run requestQiushaocloudSiteCounterIpsStatsApiByPagination => day:', logDay, 'pageNo:', pageNo);
+                window.requestQiushaocloudSiteCounterIpsStatsApiByPagination(ipsStatsKey, logDay, pageNo, function (err, res) {
                   var loadMoreBtnEle = logDayEle.querySelector('.'+ipsStatsKey+'-log-day-load-more-btn');
                   loadMoreBtnEle && loadMoreBtnEle.removeAttribute('disabled');
                   if (err) {
-                    console.error(ipsStatsKey+'-log-day-load-more-btn click requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter failure', logDay, pageNo);
+                    console.error(ipsStatsKey+'-log-day-load-more-btn click requestQiushaocloudSiteCounterIpsStatsApiByPagination failure', logDay, pageNo);
                     return;
                   }
 
-                  console.debug(ipsStatsKey+'-log-day-load-more-btn click requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter success', logDay, pageNo);
+                  console.debug(ipsStatsKey+'-log-day-load-more-btn click requestQiushaocloudSiteCounterIpsStatsApiByPagination success', logDay, pageNo);
                   var logDayData = ipsStatsKey === 'site' ? res.site_ips[logDay] : res.page_ips[logDay]; // { [logDay]: { totalPages, totalCount, logCount, pageSize, pageNo, ipDatas: { [ip]: [count, ip_location, lastTs] } } }
                   if (!logDayData) return;
                   logDayEle.setAttribute('data-total-pages', logDayData.totalPages);
@@ -475,22 +475,18 @@
             logDayEle.setAttribute('data-total-count', logDayData.totalCount);
             logDayEle.setAttribute('data-log-count', logDayData.logCount);
             logDayEle.setAttribute('data-page-size', logDayData.pageSize);
-            logDayEle.innerHTML = '<h5 class="'+ipsStatsKey+'-log-day-title" ><span class="day-content">'+logDay+'</span><button class="'+ipsStatsKey+'-log-day-ul-fold-btn">折叠</button></h5>';
+            logDayEle.innerHTML = '<h5 class="'+ipsStatsKey+'-log-day-title">'
+              + '<span class="day-pv-info">'
+              +   '<span class="day-content">'+logDay+'</span>'
+              +   '<span class="total-pv-count-content">（'+logDayData.totalCount+'个IP访问'+logDayData.logCount+'次）</span>'
+              + '</span>'
+              + (logDayData.pageNo < logDayData.totalPages ? '<button class="'+ipsStatsKey+'-log-day-load-more-btn">加载更多</button>' : '')
+              + '<button class="'+ipsStatsKey+'-log-day-ul-fold-btn">折叠</button>'
+              + '</h5>';
             ipsStatsEle.appendChild(logDayEle);
             var logDayUlEle = document.createElement('ul');
             logDayUlEle.className = ipsStatsKey+'-log-day-ul';
             logDayEle.appendChild(logDayUlEle);
-
-            if (logDayData.pageNo < logDayData.totalPages) {
-              var moreBoxEle = document.createElement('div');
-              moreBoxEle.className = ipsStatsKey+'-log-day-more-box';
-              logDayEle.appendChild(moreBoxEle);
-              // 加载更多按钮
-              var loadMoreBtnEle = document.createElement('button');
-              loadMoreBtnEle.className = ipsStatsKey+'-log-day-load-more-btn';
-              loadMoreBtnEle.innerHTML = '加载更多';
-              moreBoxEle.appendChild(loadMoreBtnEle);
-            }
 
             var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayIpDatas[b][2] - logDayIpDatas[a][2] : logDayIpDatas[a][2] - logDayIpDatas[b][2]});
             for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
@@ -514,8 +510,6 @@
                 +'<button class="'+ipsStatsKey+'-log-day-ip-detail-btn" data-ip="'+ip+'" data-day="'+logDay+'">详细日志</button>';
               logDayUlEle.appendChild(ipLiEle);
             }
-
-            logDayEle.querySelector('.'+ipsStatsKey+'-log-day-title').innerHTML += '<span class="total-pv-count-content">（'+logDayData.totalCount+'个IP访问'+logDayData.logCount+'次）</span>';
           }
         }
 
@@ -531,28 +525,28 @@
    * @param pageNo {number} [可选]第几页，默认1
    * @param onCallback {function} [可选]请求成功回调函数，参数：(err, res)
    */
-  window.requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter = function(
+  window.requestQiushaocloudSiteCounterIpsStatsApiByPagination = function(
     filterType,
     filterDay,
     pageNo,
     onCallback
   ) {
-    console.debug('call requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter', filterType, filterDay, pageNo, !!onCallback);
+    console.debug('call requestQiushaocloudSiteCounterIpsStatsApiByPagination', filterType, filterDay, pageNo, !!onCallback);
     if (!(filterType && filterDay && /^(site|site-page)$/.test(filterType) && /^\d{4}-\d{2}-\d{2}$/.test(filterDay))) {
-      console.error('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err: invalid params', filterType, filterDay, pageNo);
-      return typeof onCallback === 'function' && onCallback('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err: invalid params');
+      console.error('requestQiushaocloudSiteCounterIpsStatsApiByPagination err: invalid params', filterType, filterDay, pageNo);
+      return typeof onCallback === 'function' && onCallback('requestQiushaocloudSiteCounterIpsStatsApiByPagination err: invalid params');
     }
 
     var siteIpsStatsEle = document.getElementById('qiushaocloud_sitecounter_value_site_ips_stats');
     var sitePageIpsStatsEle = document.getElementById('qiushaocloud_sitecounter_value_site_page_ips_stats');
 
     if (filterType === 'site' && !siteIpsStatsEle) {
-      console.error('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err: is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist', filterType, filterDay, pageNo);
+      console.error('requestQiushaocloudSiteCounterIpsStatsApiByPagination err: is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist', filterType, filterDay, pageNo);
       return typeof onCallback === 'function' && onCallback('is_only_site is true but qiushaocloud_sitecounter_value_site_ips_stats element is not exist');
     }
 
     if (filterType === 'site-page' && !sitePageIpsStatsEle) {
-      console.error('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err: is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', filterType, filterDay, pageNo);
+      console.error('requestQiushaocloudSiteCounterIpsStatsApiByPagination err: is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist', filterType, filterDay, pageNo);
       return typeof onCallback === 'function' && onCallback('is_only_page is true but qiushaocloud_sitecounter_value_site_page_ips_stats element is not exist');
     }
 
@@ -579,7 +573,7 @@
 
     reqSiteCounterIpsStatsAPI(getSiteHost(), apiIpsStatsOpts, function (err, res) {
       if (err) {
-        console.error('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter err:', err, filterType, filterDay, pageNo);
+        console.error('requestQiushaocloudSiteCounterIpsStatsApiByPagination err:', err, filterType, filterDay, pageNo);
         sendNotice('api:get:site_counter_ips_stats:pagination', {
           filterType,
           filterDay,
@@ -591,7 +585,7 @@
         return;
       }
 
-      // console.debug('requestQiushaocloudSiteCounterPaginationIpsStatsApiByFilter res:', res, filterType, filterDay, pageNo);
+      // console.debug('requestQiushaocloudSiteCounterIpsStatsApiByPagination res:', res, filterType, filterDay, pageNo);
       var apiResult = JSON.parse(res);
       sendNotice('api:get:site_counter_ips_stats:pagination', {
         filterType,
@@ -742,14 +736,13 @@
 
     var tfootTr = document.createElement('tfoot');
     tfootTr.className = 'site-counter-logs-table-tfoot';
+    tfootTr.innerHTML = '<td colspan="6">'
+      + '<span class="content">'
+      +   ('已加载<span class="loaded-count">'+loadedLogsCount+'</span>条，共<span class="total-count">'+totalCount+'</span>条')
+      + '</span>'
+      + (totalPages > pageNo ? '<button class="load-more-btn">加载更多</button>' : '')
+      + '</td>'
     logsTable.appendChild(tfootTr);
-    var tfootTd = document.createElement('td');
-    tfootTd.colSpan = 6;
-    tfootTd.className = 'site-counter-logs-table-tfoot-td';
-    tfootTd.innerHTML = '<span class="content">'
-      + ('已加载<span class="loaded-count">'+loadedLogsCount+'</span>条，共<span class="total-count">'+totalCount+'</span>条')+'</span>'
-      + (totalPages > pageNo ? '<button class="load-more-btn">加载更多</button>' : '');
-    tfootTr.appendChild(tfootTd);
 
     for (var i=0, len=logsArg.length; i<len; i++) {
       var logData = logsArg[i];
@@ -758,7 +751,7 @@
       tbody.appendChild(trEle);
     }
 
-    var loadMoreBtnEle = logsTableBox.querySelector('.site-counter-logs-table-tfoot-td .load-more-btn');
+    var loadMoreBtnEle = logsTableBox.querySelector('.site-counter-logs-table-tfoot .load-more-btn');
     if (loadMoreBtnEle && ipsStatsKey && filterDay && filterIp) {
       loadMoreBtnEle.onclick = function () {
         var nextPageNo = pageNo + 1;
@@ -766,11 +759,11 @@
         requestQiushaocloudSiteCounterLogsApiByFilter(ipsStatsKey, filterDay, filterIp, nextPageNo, function (err, res) {
           loadMoreBtnEle.removeAttribute('disabled');
           if (err) {
-            console.error('site-counter-logs-table-tfoot-td loadMoreBtnEle click requestQiushaocloudSiteCounterLogsApiByFilter failure', ipsStatsKey, filterDay, filterIp, nextPageNo, err);
+            console.error('site-counter-logs-table-tfoot loadMoreBtnEle click requestQiushaocloudSiteCounterLogsApiByFilter failure', ipsStatsKey, filterDay, filterIp, nextPageNo, err);
             return;
           }
 
-          console.debug('site-counter-logs-table-tfoot-td loadMoreBtnEle click requestQiushaocloudSiteCounterLogsApiByFilter success', ipsStatsKey, filterDay, filterIp, nextPageNo);
+          console.debug('site-counter-logs-table-tfoot loadMoreBtnEle click requestQiushaocloudSiteCounterLogsApiByFilter success', ipsStatsKey, filterDay, filterIp, nextPageNo);
           var apiResult = JSON.parse(res);
           var logsData = ipsStatsKey === 'site'? apiResult.site_logs : apiResult.page_logs;
           var logsTmp = logsData.logDatas.slice(0);
@@ -782,8 +775,8 @@
           loadedLogsCount += logsTmp.length;
 
           pageNo >= totalPages && loadMoreBtnEle.parentNode && loadMoreBtnEle.parentNode.removeChild(loadMoreBtnEle);
-          logsTableBox.querySelector('.site-counter-logs-table-tfoot-td .loaded-count').innerHTML = loadedLogsCount;
-          logsTableBox.querySelector('.site-counter-logs-table-tfoot-td .total-count').innerHTML = totalCount;
+          logsTableBox.querySelector('.site-counter-logs-table-tfoot .loaded-count').innerHTML = loadedLogsCount;
+          logsTableBox.querySelector('.site-counter-logs-table-tfoot .total-count').innerHTML = totalCount;
 
           for (var i=0, len=logsTmp.length; i<len; i++) {
             var logData = logsTmp[i];

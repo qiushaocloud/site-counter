@@ -104,16 +104,34 @@
             .ips-stats-box-warpper .site-page-log-day-title {
                 position: relative;
                 padding-top: 5px;
+                display: flex;
+                align-items: center;
+            }
+
+            .ips-stats-box-warpper .site-log-day-title .day-pv-info,
+            .ips-stats-box-warpper .site-page-log-day-title .day-pv-info {
+                flex: 1;
+            }
+
+            .ips-stats-box-warpper .site-log-day-load-more-btn,
+            .ips-stats-box-warpper .site-page-log-day-load-more-btn {
+                background: none;
+                color: #6d9296;
+                padding: 5px 10px;
+            }
+
+            @media (any-hover: hover) {
+                .ips-stats-box-warpper .site-log-day-load-more-btn:hover,
+                .ips-stats-box-warpper .site-page-log-day-load-more-btn:hover {
+                    background: none;
+                    color: #0097a7;
+                }
             }
 
             .ips-stats-box-warpper .site-log-day-ul-fold-btn,
             .ips-stats-box-warpper .site-page-log-day-ul-fold-btn  {
                 background: #6e9296;
                 padding: 5px 10px;
-                position: absolute;
-                right: 0;
-                top: 50%;
-                transform: translateY(-50%);
             }
         
             .ips-stats-box-warpper .site-log-day-ul,
@@ -236,6 +254,7 @@
         const sitePageFromUrl = currSearchParams.get('qpage') || urlSearchParams.get('qpage');
         const sortName = currSearchParams.get('qsortName') || urlSearchParams.get('qsortName') || 'desc';
         const dateRange = currSearchParams.get('qdateRange') || urlSearchParams.get('qdateRange') || '7days';
+        const pageSize = currSearchParams.get('qpageSize') || urlSearchParams.get('qpageSize') || '100';
         const hideCloseBtn = /^(true|1)$/.test(currSearchParams.get('qhideCloseBtn') || urlSearchParams.get('qhideCloseBtn') || 'false');
         const showIpsStatsBox = /^(true|1)$/.test(currSearchParams.get('qshowIpsStatsBox') || urlSearchParams.get('qshowIpsStatsBox') || 'false');
         console.log(
@@ -260,6 +279,7 @@
                             data-date-range="${dateRange}"
                             data-render-mode="ui"
                             data-logs-print-mode="ui"
+                            data-page-size="${pageSize}"
                         ></div>
                     </div>
                     ${!sitePageFromUrl ? '' : `
@@ -272,6 +292,7 @@
                                 data-date-range="${dateRange}"
                                 data-render-mode="ui"
                                 data-logs-print-mode="ui"
+                                data-page-size="${pageSize}"
                                 ${sitePageFromUrl !== 'self' ? `data-site-page-pathname="${sitePageFromUrl}"` : ''}
                             ></div>
                         </div>

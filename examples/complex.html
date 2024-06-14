@@ -12,7 +12,7 @@
   </script> -->
   <!-- <script async src="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/dist/qiushaocloud_site_counter.js?v=3"></script> -->
   <!-- <script src="../dist/qiushaocloud_site_counter.js"></script> -->
-  <script src="../dist/qiushaocloud_site_counter.js"></script>
+  <script src="../dist/qiushaocloud_site_counter.min.js"></script>
   <link rel="stylesheet" href="./css/logs-table.css" />
 </head>
 <body>
@@ -53,7 +53,7 @@
           data-date-range="7days"
           data-render-mode="ui"
           data-logs-print-mode="ui"
-          data-page-size="20"
+          data-page-size="2"
         ></div>
       </div>
       <div class="site-page-ips-stats-box">
@@ -64,7 +64,7 @@
           data-date-range="7days"
           data-render-mode="ui"
           data-logs-print-mode="ui"
-          data-page-size="20"
+          data-page-size="2"
         ></div>
       </div>
     </div>
@@ -195,20 +195,44 @@
       border-radius: 6px;
     }
 
-   .site-log-day-title,
-   .site-page-log-day-title {
+    .site-log-day-title,
+    .site-page-log-day-title {
       position: relative;
       padding-top: 5px;
+      display: flex;
+      align-items: center;
     }
 
-   .site-log-day-ul-fold-btn,
-   .site-page-log-day-ul-fold-btn  {
+    .site-log-day-title .day-pv-info,
+    .site-page-log-day-title .day-pv-info {
+      flex: 1;
+    }
+
+    .site-log-day-load-more-btn,
+    .site-page-log-day-load-more-btn {
+      background: none;
+      color: #6d9296;
+      padding: 5px 10px;
+    }
+
+    @media (any-hover: hover) {
+      .site-log-day-load-more-btn:hover,
+      .site-page-log-day-load-more-btn:hover {
+        background: none;
+        color: #0097a7;
+      }
+    }
+
+    .site-log-day-ul-fold-btn,
+    .site-page-log-day-ul-fold-btn  {
       background: #6e9296;
       padding: 5px 10px;
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
+    }
+
+    .site-log-day-ul-fold-btn,
+    .site-page-log-day-ul-fold-btn  {
+      background: #6e9296;
+      padding: 5px 10px;
     }
 
     .site-log-day-ul,
