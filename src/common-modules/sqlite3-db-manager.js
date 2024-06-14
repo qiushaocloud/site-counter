@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 
 class Sqlite3DBManager {
@@ -41,6 +43,16 @@ class Sqlite3DBManager {
     async open(dbFilePath) {
         this.#printlog('info', 'call open, dbFilePath: ' + dbFilePath);
         return new Promise((resolve, reject) => {
+            try {
+                // 如果不存在，创建 dbFilePath 目录，避免报错
+                const dir = path.dirname(dbFilePath);
+                this.#printlog('info', 'open => create dir:', dir);
+                fs.mkdirSync(dir, { recursive: true });
+                this.#printlog('info', 'open => dir created.');
+            } catch (err) {
+                this.#printlog('error', 'Error creating directory: ', err, ' ,dbFilePath:', dbFilePath);
+            }
+
             this.db = new sqlite3.Database(dbFilePath, (err) => {
                 if (err) {
                     this.#printlog('error', 'Database opening error: ', err);

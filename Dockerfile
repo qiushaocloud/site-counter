@@ -1,5 +1,7 @@
 FROM qiushaocloud/ub1604-nvm-node-base:latest
 
+ENV SQLITE3_DB_FILE_PATH=/root/site-counter/data/db-files/db.sqlite3
+
 COPY ./version /root/site-counter/version
 COPY ./src /root/site-counter/src
 COPY ./app.js /root/site-counter/app.js

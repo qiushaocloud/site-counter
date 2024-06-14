@@ -9,3 +9,4 @@ services:
     volumes:
       - .env:/root/site-counter/.env
       - $LOGS_DIR:/root/site-counter/logs
+      - $DATA_DIR:/root/site-counter/data

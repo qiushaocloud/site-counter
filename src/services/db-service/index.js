@@ -32,7 +32,7 @@ const getDefaultTables = (dbMgrName) => {
 
 class DBService {
     #sqlite3DBStore = {
-        filePath: path.resolve(__dirname, process.env.SQLITE3_DB_FILE_PATH || './db.sqlite3'),
+        filePath: path.resolve(__dirname, process.env.SQLITE3_DB_FILE_PATH || './data/db.sqlite3'),
         tables: getDefaultTables('sqlite3DBMgr'),
         instance: null
     }

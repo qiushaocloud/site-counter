@@ -7,3 +7,5 @@ yarn.lock
 .gitee
 /logs
 *.sqlite3
+/src/services/db-service/data
+/data

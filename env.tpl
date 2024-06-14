@@ -13,6 +13,7 @@ EXPOSE_API_PORT = 80
 
 # volumes 配置
 LOGS_DIR = './logs'
+DATA_DIR = './data'
 
 # app 配置
 # NODE_ENV set to development or production
