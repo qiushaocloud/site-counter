@@ -435,7 +435,7 @@
       * 引入 ips-stats.js 和 logs-table.css
       * 界面提供按钮或链接，点击按钮或链接，调用 `window.openIpsStatsBox()` 打开 IP 统计框
    ```
-5. 需要自定义开发时，借助提供的 `window.qiushaocloudSiteCounterNotice` 和 `window.requestQiushaocloudSiteCounterLogsApiByFilter` 进行开发，参考 [示例 custom-development.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/custom-development.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/custom-development.html)
+5. 需要自定义开发时，借助提供的 `window.qiushaocloudSiteCounterNotice`、`window.requestQiushaocloudSiteCounterIpsStatsApiByPagination`、`window.requestQiushaocloudSiteCounterLogsApiByFilter` 进行开发，参考 [示例 custom-development.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/custom-development.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/custom-development.html)
 
 #### 前端高级功能
 
