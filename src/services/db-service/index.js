@@ -40,7 +40,7 @@ class DBService {
 
     get #sqlite3DBMgr () {
         if (this.#sqlite3DBStore.instance) return this.#sqlite3DBStore.instance;
-        this.#sqlite3DBStore.instance = new Sqlite3DBManager(this.#sqlite3DBStore.filePath);
+        this.#sqlite3DBStore.instance = new Sqlite3DBManager(this.#sqlite3DBStore.filePath, log);
         return this.#sqlite3DBStore.instance;
     }
     
