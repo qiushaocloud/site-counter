@@ -160,6 +160,8 @@
     color: #6d9296;
     position: absolute;
     right: 14px;
+    border: none;
+    cursor: pointer;
 }
 
 @media (any-hover: hover) {

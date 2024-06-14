@@ -45,193 +45,204 @@
   ```javascript
     window.qiushaocloudSiteCounterNotice = function(type, data) {
         switch (type) {
-          case 'api:post:site_counter': {
-            if (data.err) {
-              console.error('api:post:site_counter error:', data.err, data.res);
-              return;
-            }
-
-            /**
-             * data.res 格式如下：
-                {
-                    "yesterday": { // 昨日统计数据
-                        "page_pv": 2, // 昨日页面访问量
-                        "page_uv": 1, // 昨日页面访客量
-                        "site_pv": 694, // 昨日站点访问量
-                        "site_uv": 6 // 昨日站点访客量
-                    },
-                    "page_pv": 3, // 当前页面访问量
-                    "page_uv": 2, // 当前页面访客量
-                    "site_pv": 695, // 当前站点访问量
-                    "site_uv": 7 // 当前站点访客量
+            case 'api:post:site_counter': { // 累计统计数据
+                if (data.err) {
+                    console.error('api:post:site_counter error:', data.err, data.res);
+                    return;
                 }
-             */
-            console.log('api:post:site_counter success, res:', data.res);
-            break;
-          }
-          case 'api:get:site_counter_ips_stats': {
-            if (data.err) {
-              console.error('api:get:site_counter_ips_stats error:', data.err, data.res);
-              return;
-            }
 
-            /**
-             * data.res 格式如下：
-                {
-                    "site_host": "www.qiushaocloud.top",
-                    "site_ips": {
-                        "2024-05-29": {
+                /**
+                 * data.res 格式如下：
+                    {
+                        "yesterday": { // 昨日统计数据
+                            "page_pv": 2, // 昨日页面访问量
+                            "page_uv": 1, // 昨日页面访客量
+                            "site_pv": 694, // 昨日站点访问量
+                            "site_uv": 6 // 昨日站点访客量
+                        },
+                        "page_pv": 3, // 当前页面访问量
+                        "page_uv": 2, // 当前页面访客量
+                        "site_pv": 695, // 当前站点访问量
+                        "site_uv": 7 // 当前站点访客量
+                    }
+                */
+                console.log('api:post:site_counter success, res:', data.res);
+                break;
+            }
+            case 'api:get:site_counter_ips_stats': { // IP 统计数据
+                if (data.err) {
+                    console.error('api:get:site_counter_ips_stats error:', data.err, data.res);
+                    return;
+                }
+
+                /**
+                 * data.res 格式如下：
+                    {
+                        "site_host": "www.qiushaocloud.top",
+                        "site_ips": {
+                            "2024-05-29": {
+                                "totalPages": 2,
+                                "totalCount": 200,
+                                "logCount": 1000,
+                                "pageSize": 100,
+                                "pageNo": 1,
+                                "ipDatas": {
+                                    "IPV4": [
+                                        访问次数,
+                                        IP地址信息,
+                                        最后访问时间
+                                    ],
+                                    "180.101.244.13": [
+                                        3,
+                                        "中国江苏省南京市电信",
+                                        1717427570853
+                                    ]                           
+                                }
+                            }
+                        },
+                        "page_ips": {
+                            "2024-05-29": {
+                                "totalPages": 1,
+                                "totalCount": 2,
+                                "logCount": 4,
+                                "pageSize": 100,
+                                "pageNo": 1,
+                                "ipDatas": {
+                                    "117.129.2.95": [
+                                        4,
+                                        "中国北京市昌平区移动",
+                                        1717427570853
+                                    ]
+                                }
+                            }
+                        },
+                        "site_page_pathname": "/common-static/qiushaocloud-site-counter-test-demo.html"
+                    }
+                */
+                console.log('api:get:site_counter_ips_stats success, res:', data.res);
+                break;
+            }
+            case 'api:get:site_counter_ips_stats:pagination': { // IP 统计分页数据
+                if (data.err) {
+                    console.error('api:get:site_counter_ips_stats:pagination error:', data.err, data.res, data.filterType, data.filterDay, data.pageNo);
+                    return;
+                }
+
+                /**
+                 * data.res 格式如下：
+                    {
+                        "site_host": "www.qiushaocloud.top",
+                        "site_ips": {
+                            "2024-05-29": {
+                                "totalPages": 2,
+                                "totalCount": 200,
+                                "logCount": 1000,
+                                "pageSize": 100,
+                                "pageNo": 2,
+                                "ipDatas": {
+                                    "IPV4": [
+                                        访问次数,
+                                        IP地址信息,
+                                        最后访问时间
+                                    ],
+                                    "180.101.244.13": [
+                                        3,
+                                        "中国江苏省南京市电信",
+                                        1717427570853
+                                    ]                           
+                                }
+                            }
+                        },
+                        "page_ips": {
+                            "2024-05-29": {
+                                "totalPages": 1,
+                                "totalCount": 2,
+                                "logCount": 4,
+                                "pageSize": 100,
+                                "pageNo": 1,
+                                "ipDatas": {
+                                    "117.129.2.95": [
+                                        4,
+                                        "中国北京市昌平区移动",
+                                        1717427570853
+                                    ]
+                                }
+                            }
+                        },
+                        "site_page_pathname": "/common-static/qiushaocloud-site-counter-test-demo.html"
+                    }
+                */
+
+                console.log('api:get:site_counter_ips_stats:pagination success, res:', data.res, ', filterType:'+ data.filterType+', filterDay:'+ data.filterDay+', pageNo:'+ data.pageNo);
+                break;
+            }
+            case 'api:get:site_counter_logs:ip': { // IP 访问记录数据
+                if (data.err) {
+                    console.error('api:get:site_counter_logs:ip error:', data.err, data.res, data.filterType, data.filterDay, data.filterIp);
+                    return;
+                }
+
+                /**
+                 * data.res 格式如下：
+                    {
+                        "site_host": "www.qiushaocloud.top",
+                        "site_logs": {
                             "totalPages": 1,
-                            "totalCount": 2,
-                            "logCount": 4,
+                            "totalCount": 1,
                             "pageSize": 100,
                             "pageNo": 1,
-                            "ipDatas": {
-                                "IPV4": [
-                                    访问次数,
+                            "logDatas": [
+                                [
+                                    访问时间戳,
+                                    IPV4,
                                     IP地址信息,
-                                    最后访问时间
+                                    浏览器信息,
+                                    访问页面
                                 ],
-                                "180.101.244.13": [
-                                    3,
-                                    "中国江苏省南京市电信",
-                                    1717427570853
-                                ]                           
-                            }
-                        }
-                    },
-                    "page_ips": {
-                        "2024-05-29": {
-                            "totalPages": 1,
-                            "totalCount": 2,
-                            "logCount": 4,
-                            "pageSize": 100,
-                            "pageNo": 1,
-                            "ipDatas": {
-                                "117.129.2.95": [
-                                    4,
-                                    "中国北京市昌平区移动",
-                                    1717427570853
+                                [
+                                    1717439942576,
+                                    "220.196.160.75",
+                                    "中国上海市联通",
+                                    "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+                                    "https://www.qiushaocloud.top/"
                                 ]
-                            }
-                        }
-                    },
-                    "site_page_pathname": "/common-static/qiushaocloud-site-counter-test-demo.html"
-                }
-            */
-            console.log('api:get:site_counter_ips_stats success, res:', data.res);
-            break;
-          }
-          case 'api:get:site_counter_ips_stats:pagination': {
-            if (data.err) {
-              console.error('api:get:site_counter_ips_stats:pagination error:', data.err, data.res, data.filterType, data.filterDay, data.pageNo);
-              return;
-            }
-
-            /**
-             * data.res 格式如下：
-                {
-                    "site_host": "www.qiushaocloud.top",
-                    "site_ips": {
-                        "2024-05-29": {
+                            ]
+                        },
+                        "page_logs": {
                             "totalPages": 1,
-                            "totalCount": 2,
-                            "logCount": 4,
+                            "totalCount": 1,
                             "pageSize": 100,
                             "pageNo": 1,
-                            "ipDatas": {
-                                "IPV4": [
-                                    访问次数,
-                                    IP地址信息,
-                                    最后访问时间
-                                ],
-                                "180.101.244.13": [
-                                    3,
-                                    "中国江苏省南京市电信",
-                                    1717427570853
-                                ]                           
-                            }
-                        }
-                    },
-                    "page_ips": {
-                        "2024-05-29": {
-                            "totalPages": 1,
-                            "totalCount": 2,
-                            "logCount": 4,
-                            "pageSize": 100,
-                            "pageNo": 1,
-                            "ipDatas": {
-                                "117.129.2.95": [
-                                    4,
+                            "logDatas": [
+                                [
+                                    1717427570853,
+                                    "117.129.2.39",
                                     "中国北京市昌平区移动",
-                                    1717427570853
+                                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+                                    "https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html?page=/common-static/qiushaocloud-site-counter-test-demo.html"
                                 ]
-                            }
-                        }
-                    },
-                    "site_page_pathname": "/common-static/qiushaocloud-site-counter-test-demo.html"
-                }
-            */
+                            ]
+                        },
+                        "site_page_pathname": "/common-static/qiushaocloud-site-counter-test-demo.html"
+                    }
+                */
 
-            console.log('api:get:site_counter_ips_stats:pagination success, res:', data.res, ', filterType:'+ data.filterType+', filterDay:'+ data.filterDay+', pageNo:'+ data.pageNo);
-            break;
-          }
-          case 'api:get:site_counter_logs:ip': {
-            if (data.err) {
-              console.error('api:get:site_counter_logs:ip error:', data.err, data.res, data.filterType, data.filterDay, data.filterIp);
-              return;
+                console.log('api:get:site_counter_logs:ip success, res:', data.res, ', filterType:'+ data.filterType+', filterDay:'+ data.filterDay+', filterIp:'+ data.filterIp);
+                break;
             }
-
-            /**
-             * data.res 格式如下：
-                {
-                    "site_host": "www.qiushaocloud.top",
-                    "site_logs": {
-                        "totalPages": 1,
-                        "totalCount": 1,
-                        "pageSize": 100,
-                        "pageNo": 1,
-                        "logDatas": [
-                            [
-                                访问时间戳,
-                                IPV4,
-                                IP地址信息,
-                                浏览器信息,
-                                访问页面
-                            ],
-                            [
-                                1717439942576,
-                                "220.196.160.75",
-                                "中国上海市联通",
-                                "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-                                "https://www.qiushaocloud.top/"
-                            ]
-                        ]
-                    },
-                    "page_logs": {
-                        "totalPages": 1,
-                        "totalCount": 1,
-                        "pageSize": 100,
-                        "pageNo": 1,
-                        "logDatas": [
-                            [
-                                1717427570853,
-                                "117.129.2.39",
-                                "中国北京市昌平区移动",
-                                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-                                "https://www.qiushaocloud.top/common-static/site-counter/examples/complex.html?page=/common-static/qiushaocloud-site-counter-test-demo.html"
-                            ]
-                        ]
-                    },
-                    "site_page_pathname": "/common-static/qiushaocloud-site-counter-test-demo.html"
-                }
-             */
-
-            console.log('api:get:site_counter_logs:ip success, res:', data.res, ', filterType:'+ data.filterType+', filterDay:'+ data.filterDay+', filterIp:'+ data.filterIp);
-            break;
-          }
         }
     }
+  ```
+* `window.requestQiushaocloudSiteCounterIpsStatsApiByPagination` Method，请求某一页的IP统计数据，用于自定义开发，自行处理数据
+  ```javascript
+  /** 
+   * 请求某一页的IP统计API
+   * @param filterType {site|site-page} 日志类型，'site' |'site-page'
+   * @param filterDay {string} 哪一天日志，格式：'2024-05-06'
+   * @param pageNo {number} [可选]第几页，默认1【注：第1页的数据自动请求了，可以通过监听 api:get:site_counter_ips_stats 拿到数据，因此一般从第2页开始请求】
+   * @param onCallback {function} [可选]请求成功回调函数，参数：(err, res)，res 数据格式参考 api:get:site_counter_ips_stats:pagination 的 data.res
+   */
+  window.requestQiushaocloudSiteCounterIpsStatsApiByPagination = function(filterType, filterDay, pageNo, onCallback);
   ```
 * `window.requestQiushaocloudSiteCounterLogsApiByFilter` Method，请求日志数据，用于自定义开发，自行处理数据
   ```javascript
@@ -240,11 +251,11 @@
      * @param filterType {site|site-page} 日志类型，'site' |'site-page'
      * @param filterDay {string} 哪一天日志，格式：'2024-05-06'
      * @param filterIp {string} [可选]过滤的客户端IP
+     * @param pageNo {number} [可选]第几页，默认1
      * @param onCallback {function} [可选]请求成功回调函数，参数：(err, res)，res 数据格式参考 api:get:site_counter_logs:ip 的 data.res
      */
     window.requestQiushaocloudSiteCounterLogsApiByFilter(filterType, filterDay, filterIp, onCallback);
   ```
-
 
 
 #### IP 统计数据
@@ -255,11 +266,12 @@
       网站 IP 统计节点元素
       元素ID: qiushaocloud_sitecounter_value_site_ips_stats
       可配置参数(非必选):
-        data-ips-stats-sort-name: 排序方式，可选值 desc/asc，默认 asc【只有 data-render-mode 为 ui/console 时生效】
-        data-logs-sort-name: 日志排序方式，可选值 desc/asc，默认 asc【只有 data-logs-print-mode 为 ui/console 时生效】
+        data-ips-stats-sort-name: 排序方式，可选值 desc/asc，默认 desc
+        data-logs-sort-name: 日志排序方式，可选值 desc/asc，默认 desc
         data-date-range: 日志日期范围，最多保留31天日志，不指定则获取当天的，格式：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
         data-render-mode: 渲染模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过 window.qiushaocloudSiteCounterNotice 监听结果后自行处理数据，用于自定义开发】
         data-logs-print-mode: 日志打印模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过 window.qiushaocloudSiteCounterNotice 监听结果后自行处理数据，用于自定义开发】
+        data-page-size: 每页日志条数，默认 100
     -->
    <div id="qiushaocloud_sitecounter_value_site_ips_stats"
         data-ips-stats-sort-name="desc"
@@ -267,17 +279,19 @@
         data-date-range="7days"
         data-render-mode="ui"
         data-logs-print-mode="ui"
+        data-page-size="100"
     ></div>
 
     <!--
       页面 IP 统计节点元素
       元素ID: qiushaocloud_sitecounter_value_site_page_ips_stats
       可配置参数(非必选):
-        data-ips-stats-sort-name: 排序方式，可选值 desc/asc，默认 asc【只有 data-render-mode 为 ui/console 时生效】
-        data-logs-sort-name: 日志排序方式，可选值 desc/asc，默认 asc【只有 data-logs-print-mode 为 ui/console 时生效】
+        data-ips-stats-sort-name: 排序方式，可选值 desc/asc，默认 desc
+        data-logs-sort-name: 日志排序方式，可选值 desc/asc，默认 desc
         data-date-range: 日志日期范围，最多保留31天日志，不指定则获取当天的，格式：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
         data-render-mode: 渲染模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过 window.qiushaocloudSiteCounterNotice 监听结果后自行处理数据，用于自定义开发】
         data-logs-print-mode: 日志打印模式，可选值 ui/console/none，默认 ui【ui:渲染结果元素到该元素内，console:在控制台输出结果，none:不进行任何输出，只用于请求数据，通过 window.qiushaocloudSiteCounterNotice 监听结果后自行处理数据，用于自定义开发】
+        data-page-size: 每页日志条数，默认 100
         data-site-page-pathname: 页面路径，默认当前页面路径，例如：/about.html
     -->
     <div id="qiushaocloud_sitecounter_value_site_page_ips_stats"
@@ -286,6 +300,7 @@
         data-date-range="7days"
         data-render-mode="ui"
         data-logs-print-mode="ui"
+        data-page-size="100"
         data-site-page-pathname="/about.html"
     ></div>
    ```
@@ -294,7 +309,7 @@
     > 参考 [示例 only-elements.html 演示](https://www.qiushaocloud.top/common-static/site-counter/examples/only-elements.html)：[代码](https://github.com/qiushaocloud/site-counter/blob/master/examples/only-elements.html)
    ```html
    <!-- qiushaocloud_sitecounter_value_site_ips_stats 里面的元素结构如下 -->
-   <div class="site-log-day">
+   <div class="site-log-day" data-day="2024-06-14" data-total-pages="1" data-page-no="1" data-total-count="1" data-log-count="31" data-page-size="100">
         <h5 class="site-log-day-title">
             <span class="day-pv-info">
                 <span class="day-content">2024-06-10</span>
@@ -322,7 +337,7 @@
     </div>
 
     <!-- qiushaocloud_sitecounter_value_site_page_ips_stats 里面的元素结构如下 -->
-    <div class="site-page-log-day">
+    <div class="site-page-log-day" data-day="2024-06-14" data-total-pages="1" data-page-no="1" data-total-count="1" data-log-count="81" data-page-size="100">
         <h5 class="site-page-log-day-title">
             <span class="day-pv-info">
                 <span class="day-content">2024-06-10</span>
@@ -398,14 +413,15 @@
    ```markdown
     支持 location.href 或者 script.src 进行参数配置，优先 script.src 中的参数配置
     例如：
-      * script.src: `<script src="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/js/ips-stats.js?qpage=self&qsortName=desc&qhideCloseBtn=false&qshowIpsStatsBox=true"></script>`
-      * location.href: `https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-iframe.html?qpage=self&qsortName=desc&qhideCloseBtn=false&qshowIpsStatsBox=true`
+      * script.src: `<script src="https://githubcdn.qiushaocloud.top/gh/qiushaocloud/site-counter@master/examples/js/ips-stats.js?qpage=self&qsortName=desc&qhideCloseBtn=false&qshowIpsStatsBox=true&qpageSize=100"></script>`
+      * location.href: `https://www.qiushaocloud.top/common-static/site-counter/examples/ips-stats-iframe.html?qpage=self&qsortName=desc&qhideCloseBtn=false&qshowIpsStatsBox=true&qpageSize=100`
     可配置的参数：
       * qpage: 页面路径，不指定则不请求页面 IP 统计数据，指定为 self 则表示请求当前页面，指定为其他路径则表示请求其他页面的，例如：/about.html
       * qsortName: 排序方式，可选值 desc/asc，默认 desc
       * qdateRange: 日志日期范围，最多保留31天日志，默认为 7days，格式：'31days' | '2024-05-06' | '2024-05-06,2024-05-10' | '2024-05-06 to 2024-05-10' ｜ '2024-05-06 to 2024-05-10,2024-05-15'
       * qhideCloseBtn: 是否隐藏关闭按钮，默认 false
       * qshowIpsStatsBox: 是否显示 IP 统计框，默认 false
+      * qpageSize: 每页显示日志条数，默认 100
 
     提供如下方法：
       * window.openIpsStatsBox(): 打开 IP 统计框

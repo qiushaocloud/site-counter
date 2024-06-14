@@ -251,7 +251,7 @@
           if (ipsStatsRenderMode === 'none') continue; // 日志打印模式为none，不在控制台打印IP详情，页面不渲染IP详情
 
           var ipsStatsSortName = ipsStatsEle.getAttribute('data-ips-stats-sort-name');
-          var ipsStatsDataDays = Object.keys(ipsStatsData).sort(function(a, b) {return ipsStatsSortName === 'desc' ? new Date(b).getTime() - new Date(a).getTime() : new Date(a).getTime() - new Date(b).getTime()});
+          var ipsStatsDataDays = Object.keys(ipsStatsData).sort(function(a, b) {return ipsStatsSortName === 'asc' ? new Date(a).getTime() - new Date(b).getTime() : new Date(b).getTime() - new Date(a).getTime()});
           // console.debug(ipsStatsKey + ' ipsStatsDataDays:', ipsStatsDataDays);
 
           if (ipsStatsRenderMode === 'console') { // 日志打印模式为console，只在控制台打印IP详情，页面不渲染IP详情
@@ -262,7 +262,7 @@
 
               console.group('==================== '+(ipsStatsKey ==='site' ? '网站' : sitePageTitle)+' '+logDay+' 访问IP详情 【totalPages:'+logDayData.totalPages+', pageNo:'+logDayData.pageNo+', totalCount:'+logDayData.totalCount+', logCount:'+logDayData.logCount+'】 ====================');
               var ipsTableData = [];
-              var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayIpDatas[b][2] - logDayIpDatas[a][2] : logDayIpDatas[a][2] - logDayIpDatas[b][2]});
+              var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'asc' ? logDayIpDatas[a][2] - logDayIpDatas[b][2] : logDayIpDatas[b][2] - logDayIpDatas[a][2]});
               for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
                 var ip = logDayKeys[j];
                 var ipCount = logDayIpDatas[ip][0];
@@ -305,7 +305,7 @@
                   if (ipsStatsKey === 'site') {
                     var siteLogsData = apiResult.site_logs;
                     var logs = siteLogsData.logDatas.slice(0);
-                    logs.sort(function(a, b) {return logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime()});
+                    logs.sort(function(a, b) {return logsSortName === 'asc' ? new Date(a[0]).getTime() - new Date(b[0]).getTime() : new Date(b[0]).getTime() - new Date(a[0]).getTime()});
                     
                     if (logsPrintMode === 'console') {
                       var tableData = [];
@@ -337,7 +337,7 @@
             
                     var sitePageLogsData = apiResult.page_logs;
                     var logs = sitePageLogsData.logDatas.slice(0);
-                    logs.sort(function(a, b) {return logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime()});
+                    logs.sort(function(a, b) {return logsSortName === 'asc' ? new Date(a[0]).getTime() - new Date(b[0]).getTime() : new Date(b[0]).getTime() - new Date(a[0]).getTime()});
                     
                     if (logsPrintMode === 'console') {
                       var tableData = [];
@@ -435,7 +435,7 @@
                   var logDayUlEle = logDayEle.querySelector('.'+ipsStatsKey+'-log-day-ul');
                   var ipsStatsSortName = ipsStatsEle.getAttribute('data-ips-stats-sort-name');
                   var logDayIpDatas = logDayData.ipDatas;
-                  var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayIpDatas[b][2] - logDayIpDatas[a][2] : logDayIpDatas[a][2] - logDayIpDatas[b][2]});
+                  var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'asc' ? logDayIpDatas[a][2] - logDayIpDatas[b][2] : logDayIpDatas[b][2] - logDayIpDatas[a][2]});
                   for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
                     var ip = logDayKeys[j];
                     var ipCount = logDayIpDatas[ip][0];
@@ -488,7 +488,7 @@
             logDayUlEle.className = ipsStatsKey+'-log-day-ul';
             logDayEle.appendChild(logDayUlEle);
 
-            var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'desc' ? logDayIpDatas[b][2] - logDayIpDatas[a][2] : logDayIpDatas[a][2] - logDayIpDatas[b][2]});
+            var logDayKeys = Object.keys(logDayIpDatas).sort(function(a, b) {return ipsStatsSortName === 'asc' ? logDayIpDatas[a][2] - logDayIpDatas[b][2] : logDayIpDatas[b][2] - logDayIpDatas[a][2]});
             for (var j=0,jlen=logDayKeys.length; j<jlen; j++) {
               var ip = logDayKeys[j];
               var ipCount = logDayIpDatas[ip][0];
@@ -519,10 +519,10 @@
   }, 100);
 
   /** 
-   * 请求分页IP统计API
+   * 请求某一页的IP统计API
    * @param filterType {site|site-page} 日志类型，'site' |'site-page'
    * @param filterDay {string} 哪一天日志，格式：'2024-05-06'
-   * @param pageNo {number} [可选]第几页，默认1
+   * @param pageNo {number} [可选]第几页，默认1【注：第1页的数据自动请求了，可以通过监听 api:get:site_counter_ips_stats 拿到数据，因此一般从第2页开始请求】
    * @param onCallback {function} [可选]请求成功回调函数，参数：(err, res)
    */
   window.requestQiushaocloudSiteCounterIpsStatsApiByPagination = function(
@@ -767,7 +767,7 @@
           var apiResult = JSON.parse(res);
           var logsData = ipsStatsKey === 'site'? apiResult.site_logs : apiResult.page_logs;
           var logsTmp = logsData.logDatas.slice(0);
-          logsTmp.sort(function(a, b) {return logsSortName === 'desc' ? new Date(b[0]).getTime() - new Date(a[0]).getTime() : new Date(a[0]).getTime() - new Date(b[0]).getTime()});
+          logsTmp.sort(function(a, b) {return logsSortName === 'asc' ? new Date(a[0]).getTime() - new Date(b[0]).getTime() : new Date(b[0]).getTime() - new Date(a[0]).getTime()});
           pageNo = logsData.pageNo;
           totalPages = logsData.totalPages;
           totalCount = logsData.totalCount;
