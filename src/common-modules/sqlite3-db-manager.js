@@ -103,14 +103,14 @@ class Sqlite3DBManager {
         this.#printlog('debug', 'call run, sql:', sql, 'params:', params);
         return new Promise((resolve, reject) => {
             const that = this;
-            this.db.run(sql, params, function (err) {
+            this.db.run(sql, params, function (err, res) {
                 if (err) {
                     that.#printlog('error', 'run => Error running sql: ' + sql);
                     that.#printlog('error', err);
                     reject(err);
                 } else {
-                    that.#printlog('debug', 'run => SQL executed successfully. sql: ' + sql, this.lastID);
-                    resolve({ id: this.lastID });
+                    that.#printlog('debug', 'run => SQL executed successfully. sql: ' + sql, this.lastID, this.changes);
+                    resolve({ id: this.lastID, changes: this.changes });
                 }
             });
         });
